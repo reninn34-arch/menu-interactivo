@@ -113,7 +113,7 @@ export default function App() {
         <AdminPanel onClose={() => setShowAdmin(false)} />
       )}
 
-      {showCart && <Cart onClose={() => setShowCart(false)} />}
+      <Cart isOpen={showCart} onClose={() => setShowCart(false)} />
 
       {/* Sidebar lateral para categ orías */}
       <AnimatePresence>
