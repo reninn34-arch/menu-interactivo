@@ -31,3 +31,15 @@
     touch-action: pan-y;
   }
 }
+
+/* Mejoras para visualización de hamburguesa en capas */
+.burger-container {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+/* Evitar arrastre accidental de imágenes */
+img {
+  user-select: none;
+  -webkit-user-drag: none;
+}

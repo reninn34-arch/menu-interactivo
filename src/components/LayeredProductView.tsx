@@ -34,10 +34,33 @@ export const LayeredProductView = ({
     }
   }
 
-  // Calcular translateY dinámicamente basado en el índice
+  // Grosores específicos por tipo de ingrediente (en px)
+  const ingredientHeights: Record<string, number> = {
+    'bun-top': 25,
+    'cheese': 12,
+    'meat': 28,
+    'tomato': 12,
+    'lettuce': 15,
+    'onion': 10,
+    'pickle': 8,
+    'bacon': 10,
+    'egg': 20,
+    'bun-bottom': 25,
+  };
+
+  // Calcular translateY acumulativo basado en los ingredientes reales presentes
   const calculateTranslateY = (index: number) => {
     if (!isCollapsed) return 0;
-    return -(index * 50); // 50px de superposición por cada ingrediente
+    
+    // Sumar las alturas de todos los ingredientes anteriores
+    let accumulatedHeight = 0;
+    for (let i = 0; i < index; i++) {
+      const ing = productIngredients[i];
+      const height = ingredientHeights[ing.type] || 20;
+      accumulatedHeight += height;
+    }
+    
+    return -accumulatedHeight;
   };
 
   // Calcular z-index dinámicamente
@@ -51,15 +74,15 @@ export const LayeredProductView = ({
         y: isCollapsed ? [0, -5, 0] : [0, -8, 0],
       }}
       transition={{ duration: isCollapsed ? 2 : 4, repeat: Infinity, ease: "easeInOut" }}
-      className="scale-90 sm:scale-100 lg:scale-110 relative" 
+      className="scale-90 sm:scale-100 lg:scale-110" 
     >
-      <motion.div 
-        className="flex flex-col items-center"
-        style={{ gap: 0 }}
-      >
+      <div className="relative w-64 h-80 mx-auto flex items-end justify-center">
         {productIngredients.map((ingredient, index) => {
-          const translateY = calculateTranslateY(index);
           const zIndex = calculateZIndex(index);
+          const overlapStep = 22; // Pixeles de solapamiento entre capas
+          // Invertir: el último ingrediente (index mayor) debe estar más abajo
+          const totalIngredients = productIngredients.length;
+          const bottomValue = (totalIngredients - 1 - index) * overlapStep;
           const isVariableIngredient = ingredient.id === product.variableIngredientId;
 
           // Si es el ingrediente variable, usar la imagen y estilo de la opción seleccionada
@@ -70,10 +93,10 @@ export const LayeredProductView = ({
             return (
               <motion.div
                 key={`${product.id}-${ingredient.id}`}
-                className="relative w-full flex justify-center"
+                className="absolute w-full flex justify-center"
                 style={{ zIndex }}
                 animate={{
-                  y: translateY,
+                  bottom: isCollapsed ? `${bottomValue}px` : `${(totalIngredients - 1 - index) * 65}px`,
                 }}
                 transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
               >
@@ -83,7 +106,7 @@ export const LayeredProductView = ({
                       key={variableOptionValue.id}
                       src={imageUrl}
                       alt={variableOptionValue.name}
-                      className="w-40 h-auto drop-shadow-2xl relative"
+                      className="w-40 h-auto drop-shadow-2xl"
                       initial={{ 
                         x: direction > 0 ? 100 : -100, 
                         opacity: 0,
@@ -150,13 +173,13 @@ export const LayeredProductView = ({
                 key={`${product.id}-${ingredient.id}`}
                 src={ingredient.image}
                 alt={ingredient.name}
-                className="w-40 h-auto drop-shadow-2xl relative"
+                className="absolute w-40 h-auto drop-shadow-2xl"
                 style={{ zIndex }}
                 animate={{
                   filter: isCollapsed
                     ? 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))'
                     : 'drop-shadow(0 20px 25px rgba(0,0,0,0.3))',
-                  y: translateY,
+                  bottom: isCollapsed ? `${bottomValue}px` : `${(totalIngredients - 1 - index) * 65}px`,
                 }}
                 transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
               />
@@ -166,7 +189,7 @@ export const LayeredProductView = ({
           // Si el ingrediente no tiene imagen, no renderizarlo
           return null;
         })}
-      </motion.div>
+      </div>
     </motion.div>
   );
 };
