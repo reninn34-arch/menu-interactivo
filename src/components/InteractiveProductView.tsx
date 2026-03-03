@@ -167,63 +167,65 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
   };
 
   return (
-    <div className="flex flex-col lg:flex-row items-start justify-center gap-6 lg:gap-8 xl:gap-16 py-4 lg:py-8">
+    <div className="flex flex-col lg:flex-row items-start justify-center gap-4 lg:gap-8 xl:gap-16 py-2 lg:py-8">
       {/* Product Visualization */}
       <div className="w-full lg:w-1/2 max-w-md mx-auto">
         <motion.div
-          className="relative flex flex-col items-center justify-center min-h-[300px] lg:min-h-[400px] bg-gradient-to-br from-white/5 to-white/5 backdrop-blur-md rounded-2xl lg:rounded-3xl border border-white/10 p-6 lg:p-8"
+          className="relative bg-gradient-to-br from-white/5 to-white/5 backdrop-blur-md rounded-2xl lg:rounded-3xl border border-white/10 overflow-hidden"
           animate={isAnimating ? { scale: [1, 0.95, 1.05, 1] } : {}}
           transition={{ duration: 0.6 }}
         >
           {/* Product Visualization: Layered View or Image */}
-          {product.useLayeredView && product.linkedOptionGroupId ? (
-            // Render LayeredProductView for products with layered animation
-            <div className="w-full h-48 lg:h-64 flex items-center justify-center">
-              <LayeredProductView
-                isCollapsed={isCollapsed}
-                product={product}
-                selectedOptions={Object.fromEntries(
-                  Array.from(selections.entries()).map(([groupId, valueIds]) => [
-                    groupId,
-                    Array.from(valueIds)[0] || ''
-                  ])
-                )}
-                direction={direction}
-              />
-            </div>
-          ) : (
-            // Standard image rendering for non-layered products
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`${product.id}-${getSelectionDescription()}`}
-                initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: -20 }}
-                transition={{ duration: 0.4 }}
-                className="w-full h-48 lg:h-64 flex items-center justify-center"
-              >
-                {product.image ? (
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="max-w-full max-h-full object-contain drop-shadow-2xl"
-                  />
-                ) : (
-                  <span className="text-7xl lg:text-9xl">
-                    {product.categoryId === 'drinks' && '🥤'}
-                    {product.categoryId === 'sides' && '🍟'}
-                    {product.categoryId === 'desserts' && '🍰'}
-                  </span>
-                )}
-              </motion.div>
-            </AnimatePresence>
-          )}
+          <div className="flex items-center justify-center py-6 lg:py-8 px-4">
+            {product.useLayeredView && product.linkedOptionGroupId ? (
+              // Render LayeredProductView for products with layered animation
+              <div className="w-full h-48 lg:h-64 flex items-center justify-center">
+                <LayeredProductView
+                  isCollapsed={isCollapsed}
+                  product={product}
+                  selectedOptions={Object.fromEntries(
+                    Array.from(selections.entries()).map(([groupId, valueIds]) => [
+                      groupId,
+                      Array.from(valueIds)[0] || ''
+                    ])
+                  )}
+                  direction={direction}
+                />
+              </div>
+            ) : (
+              // Standard image rendering for non-layered products
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`${product.id}-${getSelectionDescription()}`}
+                  initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.8, y: -20 }}
+                  transition={{ duration: 0.4 }}
+                  className="w-full h-48 lg:h-64 flex items-center justify-center"
+                >
+                  {product.image ? (
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="max-w-full max-h-full object-contain drop-shadow-2xl"
+                    />
+                  ) : (
+                    <span className="text-6xl lg:text-9xl">
+                      {product.categoryId === 'drinks' && '🥤'}
+                      {product.categoryId === 'sides' && '🍟'}
+                      {product.categoryId === 'desserts' && '🍰'}
+                    </span>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            )}
+          </div>
 
-          {/* Product Name & Description */}
-          <div className="mt-4 lg:mt-6 text-center px-2">
-            <h2 className="text-2xl lg:text-3xl font-bold text-white mb-2">{product.name}</h2>
+          {/* Product Name & Info - Bottom Section */}
+          <div className="bg-black/30 backdrop-blur-sm border-t border-white/10 p-4 lg:p-6 text-center">
+            <h2 className="text-xl lg:text-3xl font-bold text-white mb-1">{product.name}</h2>
             {product.description && (
-              <p className="text-gray-400 text-xs lg:text-sm">{product.description}</p>
+              <p className="text-gray-400 text-xs lg:text-sm mb-2">{product.description}</p>
             )}
             
             {/* Current Selection */}
@@ -231,9 +233,9 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-3 lg:mt-4 px-3 lg:px-4 py-2 bg-orange-500/20 border border-orange-500/30 rounded-xl"
+                className="mt-2 px-3 py-1.5 bg-orange-500/20 border border-orange-500/30 rounded-lg inline-flex"
               >
-                <p className="text-orange-400 text-xs lg:text-sm font-medium">
+                <p className="text-orange-400 text-xs font-medium">
                   {getSelectionDescription()}
                 </p>
               </motion.div>
@@ -241,10 +243,11 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
 
             {/* Nutritional Info */}
             {product.calories && (
-              <div className="flex gap-2 lg:gap-4 justify-center mt-3 lg:mt-4 text-xs lg:text-sm text-gray-400 flex-wrap">
-                <span>{product.calories} Cal</span>
-                {product.protein && <span>• {product.protein}g Proteína</span>}
-                {product.carbs && <span>• {product.carbs}g Carbos</span>}
+              <div className="flex gap-2 lg:gap-3 justify-center mt-2 text-xs text-gray-400 flex-wrap">
+                <span className="font-semibold">{product.calories} Cal</span>
+                {product.protein && <span>{product.protein}g Prot</span>}
+                {product.fat && <span>{product.fat}g Grasa</span>}
+                {product.carbs && <span>{product.carbs}g Carb</span>}
               </div>
             )}
           </div>
