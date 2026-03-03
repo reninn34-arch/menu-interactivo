@@ -8,8 +8,9 @@ export const Lettuce = ({ isCollapsed }: BurgerComponentProps) => (
       y: isCollapsed ? 0 : 0,
       opacity: 1,
     }} 
-    transition={{ delay: 0.3, type: 'spring', stiffness: 200, damping: 20 }}
+    transition={{ delay: 0.3, type: 'tween', duration: 0.2, ease: 'easeOut' }}
     className="relative z-10"
+    style={{ willChange: 'transform, opacity' }}
   >
     <div className="w-56 h-8 bg-gradient-to-b from-[#7CFC00] to-[#228B22] rounded-[20px] shadow-[inset_0_-5px_15px_rgba(0,0,0,0.6),inset_0_4px_10px_rgba(255,255,255,0.4),0_15px_25px_rgba(0,0,0,0.5)] relative">
       <div className="absolute -bottom-3 left-2 w-12 h-8 bg-gradient-to-b from-[#32CD32] to-[#006400] rounded-full shadow-lg" />

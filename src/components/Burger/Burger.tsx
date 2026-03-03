@@ -76,12 +76,13 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction, shouldAn
         y: isCollapsed ? [0, -5, 0] : [0, -8, 0],
       } : { y: 0 }}
       transition={{ 
-        duration: isCollapsed ? 2 : 4, 
+        duration: isCollapsed ? 1.5 : 3, 
         repeat: shouldAnimate ? Infinity : 0, 
         ease: "easeInOut",
         delay: shouldAnimate ? 0.2 : 0
       }}
-      className="scale-85 sm:scale-95 lg:scale-110" 
+      className="scale-85 sm:scale-95 lg:scale-110"
+      style={{ willChange: 'transform' }}
     >
       <div className="relative w-64 h-80 sm:h-80 mx-auto flex items-end justify-center">
         {productIngredients.map((ingredient, index) => {
@@ -102,15 +103,17 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction, shouldAn
                 key={`${product.id}-${ingredient.id}`}
                 src={ingredient.image}
                 alt={ingredient.name}
-                className="absolute w-40 h-auto drop-shadow-2xl"
-                style={{ zIndex }}
-                animate={{
-                  filter: isCollapsed
-                    ? 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))'
-                    : 'drop-shadow(0 20px 25px rgba(0,0,0,0.3))',
-                  bottom: isCollapsed ? `${bottomValueCollapsed}px` : `${bottomValueExpanded}px`,
+                className="absolute w-40 h-auto"
+                style={{ 
+                  zIndex,
+                  bottom: 0,
+                  willChange: 'transform',
+                  filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.4))'
                 }}
-                transition={{ duration: shouldAnimate ? 0.5 : 0.3, ease: "easeOut" }}
+                animate={{
+                  y: isCollapsed ? -bottomValueCollapsed : -bottomValueExpanded,
+                }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
               />
             );
           }
@@ -124,11 +127,15 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction, shouldAn
                 <motion.div
                   key={`${product.id}-${ingredient.id}`}
                   className="absolute w-full flex justify-center"
-                  style={{ zIndex }}
-                  animate={{
-                    bottom: isCollapsed ? `${bottomValueCollapsed}px` : `${bottomValueExpanded}px`,
+                  style={{ 
+                    zIndex,
+                    bottom: 0,
+                    willChange: 'transform'
                   }}
-                  transition={{ duration: shouldAnimate ? 0.5 : 0.3, ease: "easeOut" }}
+                  animate={{
+                    y: isCollapsed ? -bottomValueCollapsed : -bottomValueExpanded,
+                  }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
                 >
                   <AnimatePresence mode="wait">
                     <Meat
@@ -149,11 +156,15 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction, shouldAn
               <motion.div
                 key={`${product.id}-${ingredient.id}`}
                 className="absolute"
-                style={{ zIndex }}
-                animate={{
-                  bottom: isCollapsed ? `${bottomValueCollapsed}px` : `${bottomValueExpanded}px`,
+                style={{ 
+                  zIndex,
+                  bottom: 0,
+                  willChange: 'transform'
                 }}
-                transition={{ duration: shouldAnimate ? 0.5 : 0.3, ease: "easeOut" }}
+                animate={{
+                  y: isCollapsed ? -bottomValueCollapsed : -bottomValueExpanded,
+                }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
               >
                 <FallbackComponent isCollapsed={isCollapsed} />
               </motion.div>
