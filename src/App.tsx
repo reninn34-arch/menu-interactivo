@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, ArrowLeft, ShoppingCart } from 'lucide-react';
+import { MapPin, ShoppingCart, Menu, X } from 'lucide-react';
 import { Burger } from './components/Burger';
 import { MeatSelector } from './components/MeatSelector';
 import { CategorySelector } from './components/CategorySelector';
@@ -27,6 +27,7 @@ export default function App() {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showCart, setShowCart] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
 
   // Solo permitir acceso al admin si está autenticado
   const handleAdminAccess = () => {
@@ -114,6 +115,68 @@ export default function App() {
 
       {showCart && <Cart onClose={() => setShowCart(false)} />}
 
+      {/* Sidebar lateral para categ orías */}
+      <AnimatePresence>
+        {showSidebar && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSidebar(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            />
+            
+            {/* Sidebar */}
+            <motion.div
+              initial={{ x: -300 }}
+              animate={{ x: 0 }}
+              exit={{ x: -300 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed left-0 top-0 bottom-0 w-72 bg-gradient-to-b from-gray-900 via-gray-900 to-black border-r border-white/10 z-50 overflow-y-auto"
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-xl font-bold text-white">Menú</h2>
+                  <button
+                    onClick={() => setShowSidebar(false)}
+                    className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                  >
+                    <X className="w-5 h-5 text-white" />
+                  </button>
+                </div>
+                
+                <div className="space-y-2">
+                  {categories.map(category => (
+                    <button
+                      key={category.id}
+                      onClick={() => {
+                        setSelectedCategoryId(category.id);
+                        setShowSidebar(false);
+                      }}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${
+                        selectedCategoryId === category.id
+                          ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg'
+                          : 'bg-white/5 text-gray-300 hover:bg-white/10'
+                      }`}
+                    >
+                      <span className="text-2xl">{category.icon}</span>
+                      <div className="flex-1">
+                        <div className="font-semibold">{category.name}</div>
+                        {category.description && (
+                          <div className="text-xs opacity-75 line-clamp-1">{category.description}</div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       <div className="min-h-screen bg-gradient-to-br from-[#4A1410] via-[#2D0D0A] to-[#0A0604] text-white font-sans flex flex-col selection:bg-orange-500/30 overflow-hidden">
         
         {/* Decorative gradient overlay */}
@@ -121,39 +184,31 @@ export default function App() {
         
         {/* Header */}
         <header className="flex items-center justify-between p-4 sm:p-6 z-20 max-w-7xl mx-auto w-full relative">
-          <button className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/5 hover:bg-white/20 transition-colors">
-            <ArrowLeft className="w-5 h-5 text-white" />
+          {/* Botón de menú hamburguesa */}
+          <button
+            onClick={() => setShowSidebar(true)}
+            className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/5 hover:bg-white/20 transition-colors"
+          >
+            <Menu className="w-5 h-5 text-white" />
           </button>
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Cart Button */}
-            <button
-              onClick={() => setShowCart(true)}
-              className="relative w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/5 hover:bg-white/20 transition-colors"
-              title="Carrito de Compras"
-            >
-              <ShoppingCart className="w-5 h-5 text-white" />
-              {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                  {itemCount}
-                </span>
-              )}
-            </button>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
-              <span className="text-white font-bold text-lg">M</span>
-            </div>
-          </div>
+          
+          {/* Carrito */}
+          <button
+            onClick={() => setShowCart(true)}
+            className="relative w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/5 hover:bg-white/20 transition-colors"
+            title="Carrito de Compras"
+          >
+            <ShoppingCart className="w-5 h-5 text-white" />
+            {itemCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                {itemCount}
+              </span>
+            )}
+          </button>
         </header>
 
-        {/* Category Selector */}
-        <div className="max-w-7xl mx-auto w-full px-3 sm:px-4 z-20 relative">
-          <CategorySelector
-            categories={categories}
-            selectedId={selectedCategoryId}
-            onSelect={handleCategoryChange}
-          />
-        </div>
-
-        <main className="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-4 pb-8 sm:pb-12 relative">
+        {/* Contenido principal */}
+        <main className="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-6 pb-6 sm:pb-8 relative">
           {/* Vista de Hamburguesas */}
           {selectedCategoryId === 'burgers' && selectedProduct ? (
             <div className="flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8 xl:gap-16">
@@ -216,20 +271,9 @@ export default function App() {
           ) : showInteractiveView && selectedProduct ? (
             /* Vista Interactiva para Productos con Opciones */
             <div className="z-20">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 lg:mb-8"
-              >
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">{selectedCategory?.name}</h2>
-                {selectedCategory?.description && (
-                  <p className="text-sm sm:text-base text-gray-400">{selectedCategory.description}</p>
-                )}
-              </motion.div>
-
               {/* Product Selector si hay múltiples productos */}
               {categoryProducts.length > 1 && (
-                <div className="mb-6 lg:mb-8 flex gap-2 lg:gap-3 overflow-x-auto pb-3 lg:pb-4 scrollbar-hide">
+                <div className="mb-4 lg:mb-6 flex gap-2 lg:gap-3 overflow-x-auto pb-2 lg:pb-4 scrollbar-hide">
                   {categoryProducts.map((prod, index) => (
                     <button
                       key={prod.id}
