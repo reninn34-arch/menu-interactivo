@@ -221,6 +221,7 @@ export default function App() {
                   product={selectedProduct}
                   selectedMeat={selectedMeat}
                   direction={direction}
+                  shouldAnimate={!showSidebar && !showCart}
                 />
               </div>
 

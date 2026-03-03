@@ -13,9 +13,10 @@ interface BurgerProps {
   product: Product;
   selectedMeat: MeatOption;
   direction: number;
+  shouldAnimate?: boolean;
 }
 
-export const Burger = ({ isCollapsed, product, selectedMeat, direction }: BurgerProps) => {
+export const Burger = ({ isCollapsed, product, selectedMeat, direction, shouldAnimate = true }: BurgerProps) => {
   const { ingredients } = useMenu();
 
   // Obtener solo los ingredientes asignados a este producto
@@ -71,10 +72,10 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction }: Burger
 
   return (
     <motion.div 
-      animate={{ 
+      animate={shouldAnimate ? { 
         y: isCollapsed ? [0, -5, 0] : [0, -8, 0],
-      }}
-      transition={{ duration: isCollapsed ? 2 : 4, repeat: Infinity, ease: "easeInOut" }}
+      } : {}}
+      transition={{ duration: isCollapsed ? 2 : 4, repeat: shouldAnimate ? Infinity : 0, ease: "easeInOut" }}
       className="scale-90 sm:scale-100 lg:scale-110" 
     >
       <div className="relative w-64 h-80 mx-auto flex items-end justify-center">
@@ -100,7 +101,7 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction }: Burger
                     : 'drop-shadow(0 20px 25px rgba(0,0,0,0.3))',
                   bottom: isCollapsed ? `${bottomValue}px` : `${(totalIngredients - 1 - index) * 65}px`,
                 }}
-                transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
+                transition={{ duration: shouldAnimate ? 0.5 : 0.3, ease: "easeOut" }}
               />
             );
           }
@@ -121,7 +122,7 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction }: Burger
                   animate={{
                     bottom: isCollapsed ? `${bottomValue}px` : `${(totalIngredients - 1 - index) * 65}px`,
                   }}
-                  transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
+                  transition={{ duration: shouldAnimate ? 0.5 : 0.3, ease: "easeOut" }}
                 >
                   <AnimatePresence mode="wait">
                     <Meat
@@ -149,7 +150,7 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction }: Burger
                 animate={{
                   bottom: isCollapsed ? `${bottomValue}px` : `${(totalIngredients - 1 - index) * 65}px`,
                 }}
-                transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
+                transition={{ duration: shouldAnimate ? 0.5 : 0.3, ease: "easeOut" }}
               >
                 <FallbackComponent isCollapsed={isCollapsed} />
               </motion.div>
