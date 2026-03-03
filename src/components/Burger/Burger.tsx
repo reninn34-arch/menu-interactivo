@@ -81,15 +81,19 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction, shouldAn
         ease: "easeInOut",
         delay: shouldAnimate ? 0.2 : 0
       }}
-      className="scale-90 sm:scale-100 lg:scale-110" 
+      className="scale-85 sm:scale-95 lg:scale-110" 
     >
-      <div className="relative w-64 h-80 mx-auto flex items-end justify-center">
+      <div className="relative w-64 h-80 sm:h-80 mx-auto flex items-end justify-center">
         {productIngredients.map((ingredient, index) => {
           const zIndex = calculateZIndex(index);
           const overlapStep = 22; // Pixeles de solapamiento entre capas
-          // Invertir: el último ingrediente (index mayor) debe estar más abajo
           const totalIngredients = productIngredients.length;
-          const bottomValue = (totalIngredients - 1 - index) * overlapStep;
+          
+          // Posición colapsada (desde abajo)
+          const bottomValueCollapsed = (totalIngredients - 1 - index) * overlapStep;
+          
+          // Posición expandida (más espaciado pero manteniendo orden)
+          const bottomValueExpanded = (totalIngredients - 1 - index) * 55;
 
           // Renderizar imagen si existe
           if (ingredient.image) {
@@ -104,7 +108,7 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction, shouldAn
                   filter: isCollapsed
                     ? 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))'
                     : 'drop-shadow(0 20px 25px rgba(0,0,0,0.3))',
-                  bottom: isCollapsed ? `${bottomValue}px` : `${(totalIngredients - 1 - index) * 65}px`,
+                  bottom: isCollapsed ? `${bottomValueCollapsed}px` : `${bottomValueExpanded}px`,
                 }}
                 transition={{ duration: shouldAnimate ? 0.5 : 0.3, ease: "easeOut" }}
               />
@@ -116,16 +120,13 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction, shouldAn
           if (FallbackComponent) {
             // Caso especial para carne con animación de slide
             if (ingredient.type === 'meat') {
-              const overlapStep = 22;
-              const totalIngredients = productIngredients.length;
-              const bottomValue = (totalIngredients - 1 - index) * overlapStep;
               return (
                 <motion.div
                   key={`${product.id}-${ingredient.id}`}
                   className="absolute w-full flex justify-center"
                   style={{ zIndex }}
                   animate={{
-                    bottom: isCollapsed ? `${bottomValue}px` : `${(totalIngredients - 1 - index) * 65}px`,
+                    bottom: isCollapsed ? `${bottomValueCollapsed}px` : `${bottomValueExpanded}px`,
                   }}
                   transition={{ duration: shouldAnimate ? 0.5 : 0.3, ease: "easeOut" }}
                 >
@@ -144,16 +145,13 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction, shouldAn
             }
 
             // Otros ingredientes con fallback 3D
-            const overlapStep = 22;
-            const totalIngredients = productIngredients.length;
-            const bottomValue = (totalIngredients - 1 - index) * overlapStep;
             return (
               <motion.div
                 key={`${product.id}-${ingredient.id}`}
                 className="absolute"
                 style={{ zIndex }}
                 animate={{
-                  bottom: isCollapsed ? `${bottomValue}px` : `${(totalIngredients - 1 - index) * 65}px`,
+                  bottom: isCollapsed ? `${bottomValueCollapsed}px` : `${bottomValueExpanded}px`,
                 }}
                 transition={{ duration: shouldAnimate ? 0.5 : 0.3, ease: "easeOut" }}
               >

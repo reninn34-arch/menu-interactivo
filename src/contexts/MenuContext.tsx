@@ -438,9 +438,34 @@ const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
 
 const saveToStorage = <T,>(key: string, value: T): void => {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
+    const serialized = JSON.stringify(value);
+    const sizeInMB = new Blob([serialized]).size / 1024 / 1024;
+    
+    // Si el tamaño es mayor a 4MB, no guardar (localStorage típicamente tiene límite de 5-10MB)
+    if (sizeInMB > 4) {
+      console.warn(`${key} is too large (${sizeInMB.toFixed(2)}MB). Skipping localStorage save.`);
+      return;
+    }
+    
+    localStorage.setItem(key, serialized);
   } catch (error) {
-    console.error(`Error saving ${key} to localStorage:`, error);
+    if (error instanceof Error && error.name === 'QuotaExceededError') {
+      console.warn(`LocalStorage quota exceeded for ${key}. Attempting to clear old data...`);
+      
+      // Intentar limpiar datos antiguos y reintentar
+      try {
+        // Limpiar solo este key y reintentar
+        localStorage.removeItem(key);
+        const serialized = JSON.stringify(value);
+        localStorage.setItem(key, serialized);
+        console.log(`Successfully saved ${key} after clearing.`);
+      } catch (retryError) {
+        console.error(`Failed to save ${key} even after clearing:`, retryError);
+        // Si aún falla, no hacer nada - la app seguirá funcionando con datos en memoria
+      }
+    } else {
+      console.error(`Error saving ${key} to localStorage:`, error);
+    }
   }
 };
 

@@ -28,6 +28,8 @@ export default function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [showCart, setShowCart] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [showMeatSelector, setShowMeatSelector] = useState(false);
+  const [meatSelected, setMeatSelected] = useState(false);
 
   // Solo permitir acceso al admin si está autenticado
   const handleAdminAccess = () => {
@@ -214,14 +216,14 @@ export default function App() {
         </header>
 
         {/* Contenido principal */}
-        <main className="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-6 pb-6 sm:pb-8 relative">
+        <main className="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-6 pb-2 sm:pb-8 relative">
           {/* Vista de Hamburguesas */}
           {selectedCategoryId === 'burgers' && selectedProduct ? (
-            <div className="flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8 xl:gap-16">
+            <div className="flex flex-col lg:flex-row items-center justify-center gap-0 lg:gap-8 xl:gap-16">
               {/* Burger Visualization */}
-              <div className="w-full lg:w-1/2 relative flex flex-col items-center justify-center py-6 lg:py-8 z-10 min-h-[350px] lg:min-h-[400px]">
+              <div className="w-full lg:w-1/2 relative flex flex-col items-center justify-end py-0 lg:py-8 z-10 min-h-[160px] lg:min-h-[400px]">
                 <Burger 
-                  isCollapsed={isCollapsed}
+                  isCollapsed={!showMeatSelector}
                   product={selectedProduct}
                   selectedMeat={selectedMeat}
                   direction={direction}
@@ -230,17 +232,17 @@ export default function App() {
               </div>
 
               {/* Info Panel */}
-              <div className="w-full lg:w-1/2 flex flex-col z-20 bg-[#0A0A0A]/40 lg:bg-transparent p-5 sm:p-6 lg:p-0 rounded-2xl lg:rounded-[2rem] backdrop-blur-md border border-white/5 lg:border-none shadow-2xl lg:shadow-none">
+              <div className="w-full lg:w-1/2 flex flex-col z-20 bg-[#0A0A0A]/40 lg:bg-transparent p-3 sm:p-4 lg:p-0 rounded-2xl lg:rounded-[2rem] backdrop-blur-md border border-white/5 lg:border-none shadow-2xl lg:shadow-none">
                 <motion.div
                   key={selectedMeat.id + '-title'}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
-                  className="mb-5 lg:mb-6 xl:mb-8 text-center lg:text-left"
+                  className="mb-0 lg:mb-4 text-center lg:text-left"
                 >
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-2 lg:mb-3 tracking-tight">{selectedMeat.name}</h1>
-                  <div className="flex items-center justify-center lg:justify-start gap-2 text-gray-400 text-sm lg:text-base">
-                    <MapPin className="w-4 h-4" />
+                  <h1 className="text-lg sm:text-xl lg:text-4xl xl:text-5xl font-bold mb-0 lg:mb-3 tracking-tight">{selectedMeat.name}</h1>
+                  <div className="flex items-center justify-center lg:justify-start gap-1 text-gray-400 text-[10px] lg:text-base">
+                    <MapPin className="w-2.5 h-2.5 lg:w-4 lg:h-4" />
                     <span>Sucursal Principal</span>
                   </div>
                 </motion.div>
@@ -257,22 +259,77 @@ export default function App() {
                   shortName: selectedMeat.name,
                 }} />
 
-                <div className="mb-6">
-                  <h3 className="text-sm font-semibold text-gray-400 mb-3 text-center lg:text-left">Selecciona tu Carne</h3>
-                  <MeatSelector 
-                    meats={meats}
-                    selectedIndex={meatIndex}
-                    onSelect={handleMeatChange}
-                  />
-                </div>
+                {/* Botón Seleccionar con estilo glass */}
+                {!showMeatSelector && !meatSelected && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    onClick={() => {
+                      setShowMeatSelector(true);
+                    }}
+                    className="w-full mt-1 lg:mt-6 px-6 py-2.5 lg:py-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white font-semibold hover:bg-white/20 transition-all shadow-lg hover:shadow-xl text-sm lg:text-lg"
+                  >
+                    Seleccionar
+                  </motion.button>
+                )}
+                
+                {/* Botón Agregar (después de elegir) */}
+                {!showMeatSelector && meatSelected && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      addItem(selectedProduct, selectedMeat, undefined, 1);
+                      setShowCart(true);
+                      setMeatSelected(false);
+                    }}
+                    className="w-full mt-1 lg:mt-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full py-2.5 lg:py-4 px-6 text-white font-bold hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-sm lg:text-lg"
+                  >
+                    <ShoppingCart className="w-4 h-4 lg:w-5 lg:h-5" />
+                    Agregar al Carrito
+                  </motion.button>
+                )}
 
-                <OrderButton 
-                  price={selectedProduct.price + selectedMeat.price}
-                  onOrder={() => {
-                    addItem(selectedProduct, selectedMeat, undefined, 1);
-                    setShowCart(true);
-                  }}
-                />
+                <AnimatePresence>
+                  {showMeatSelector && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.3 }}
+                      className="mb-2 lg:mb-6"
+                    >
+                      <h3 className="text-xs font-semibold text-gray-400 mb-1 lg:mb-3 text-center lg:text-left">Selecciona tu Carne</h3>
+                      <MeatSelector 
+                        meats={meats}
+                        selectedIndex={meatIndex}
+                        onSelect={handleMeatChange}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {showMeatSelector && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 17 }}
+                    onClick={() => {
+                      setShowMeatSelector(false);
+                      setMeatSelected(true);
+                    }}
+                    className="w-full bg-gradient-to-r from-[#FF9F0A] to-[#FF7A00] text-white rounded-full py-2 sm:py-2.5 lg:py-4 px-4 sm:px-6 lg:px-8 flex items-center justify-center font-bold text-sm sm:text-base lg:text-xl shadow-[0_10px_25px_rgba(255,159,10,0.4)] relative overflow-hidden"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-[1.5s]" />
+                    <span className="relative z-10">Elegir</span>
+                  </motion.button>
+                )}
               </div>
             </div>
           ) : showInteractiveView && selectedProduct ? (
