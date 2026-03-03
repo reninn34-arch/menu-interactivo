@@ -74,8 +74,13 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction, shouldAn
     <motion.div 
       animate={shouldAnimate ? { 
         y: isCollapsed ? [0, -5, 0] : [0, -8, 0],
-      } : {}}
-      transition={{ duration: isCollapsed ? 2 : 4, repeat: shouldAnimate ? Infinity : 0, ease: "easeInOut" }}
+      } : { y: 0 }}
+      transition={{ 
+        duration: isCollapsed ? 2 : 4, 
+        repeat: shouldAnimate ? Infinity : 0, 
+        ease: "easeInOut",
+        delay: shouldAnimate ? 0.2 : 0
+      }}
       className="scale-90 sm:scale-100 lg:scale-110" 
     >
       <div className="relative w-64 h-80 mx-auto flex items-end justify-center">

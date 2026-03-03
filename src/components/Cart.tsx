@@ -26,7 +26,7 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.15 }}
             onClick={onClose}
             className="fixed inset-0 bg-black/60 z-40"
           />
@@ -36,7 +36,11 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
+            transition={{ 
+              type: 'tween',
+              duration: 0.2,
+              ease: [0.4, 0, 0.2, 1]
+            }}
             className="fixed right-0 top-0 h-full w-full sm:w-[450px] bg-gradient-to-b from-[#2D0D0A] to-[#0A0604] shadow-2xl z-50 flex flex-col"
             style={{ willChange: 'transform' }}
           >

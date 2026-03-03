@@ -124,7 +124,7 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.15 }}
               onClick={() => setShowSidebar(false)}
               className="fixed inset-0 bg-black/60 z-40"
             />
@@ -134,7 +134,11 @@ export default function App() {
               initial={{ x: -300 }}
               animate={{ x: 0 }}
               exit={{ x: -300 }}
-              transition={{ type: "tween", duration: 0.25, ease: "easeOut" }}
+              transition={{ 
+                type: "tween", 
+                duration: 0.2,
+                ease: [0.4, 0, 0.2, 1]
+              }}
               className="fixed left-0 top-0 bottom-0 w-72 bg-gradient-to-b from-gray-900 via-gray-900 to-black border-r border-white/10 z-50 overflow-y-auto"
               style={{ willChange: 'transform' }}
             >
