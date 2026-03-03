@@ -26,8 +26,9 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/60 z-40"
           />
 
           {/* Cart Drawer */}
@@ -35,8 +36,9 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
             className="fixed right-0 top-0 h-full w-full sm:w-[450px] bg-gradient-to-b from-[#2D0D0A] to-[#0A0604] shadow-2xl z-50 flex flex-col"
+            style={{ willChange: 'transform' }}
           >
             {/* Header */}
             <div className="p-6 border-b border-white/10">

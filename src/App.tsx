@@ -124,8 +124,9 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
               onClick={() => setShowSidebar(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+              className="fixed inset-0 bg-black/60 z-40"
             />
             
             {/* Sidebar */}
@@ -133,8 +134,9 @@ export default function App() {
               initial={{ x: -300 }}
               animate={{ x: 0 }}
               exit={{ x: -300 }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              transition={{ type: "tween", duration: 0.25, ease: "easeOut" }}
               className="fixed left-0 top-0 bottom-0 w-72 bg-gradient-to-b from-gray-900 via-gray-900 to-black border-r border-white/10 z-50 overflow-y-auto"
+              style={{ willChange: 'transform' }}
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-8">
