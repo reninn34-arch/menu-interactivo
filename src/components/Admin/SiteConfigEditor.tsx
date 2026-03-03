@@ -1,18 +1,33 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Save, Palette, AlertTriangle } from 'lucide-react';
+import { Save, Palette, AlertTriangle, Lock } from 'lucide-react';
 import { useMenu } from '../../contexts/MenuContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { ImageUploader } from './ImageUploader';
 
 export const SiteConfigEditor = () => {
   const { siteConfig, updateSiteConfig, resetToDefaults } = useMenu();
+  const { adminPassword, setAdminPassword } = useAuth();
   const [formData, setFormData] = useState(siteConfig);
+  const [newPassword, setNewPassword] = useState('');
   const [saved, setSaved] = useState(false);
+  const [passwordSaved, setPasswordSaved] = useState(false);
 
   const handleSave = () => {
     updateSiteConfig(formData);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handlePasswordChange = () => {
+    if (newPassword.length < 4) {
+      alert('La contraseña debe tener al menos 4 caracteres');
+      return;
+    }
+    setAdminPassword(newPassword);
+    setNewPassword('');
+    setPasswordSaved(true);
+    setTimeout(() => setPasswordSaved(false), 3000);
   };
 
   const colorPresets = [
@@ -270,10 +285,44 @@ export const SiteConfigEditor = () => {
           </div>
           <div>
             <h3 className="text-xl font-semibold text-white">Zona de Peligro</h3>
-            <p className="text-sm text-gray-400">Acciones irreversibles</p>
+            <p className="text-sm text-gray-400">Acciones irreversibles y seguridad</p>
           </div>
         </div>
         
+        {/* Cambiar Contraseña */}
+        <div className="bg-gray-900/50 rounded-xl p-4 border border-orange-500/30 mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Lock className="w-5 h-5 text-orange-500" />
+            <h4 className="text-white font-medium">Cambiar Contraseña del Administrador</h4>
+          </div>
+          <p className="text-sm text-gray-400 mb-4">
+            Contraseña actual: <code className="px-2 py-1 bg-gray-800 rounded text-orange-400">
+              {'•'.repeat(adminPassword.length)}
+            </code>
+          </p>
+          <div className="flex gap-3">
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Nueva contraseña (mín. 4 caracteres)"
+              className="flex-1 px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-orange-500"
+            />
+            <button
+              onClick={handlePasswordChange}
+              disabled={newPassword.length < 4}
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                passwordSaved
+                  ? 'bg-green-500 text-white'
+                  : 'bg-orange-500 hover:bg-orange-600 text-white disabled:bg-gray-600 disabled:cursor-not-allowed'
+              }`}
+            >
+              {passwordSaved ? '✓ Guardada' : 'Cambiar'}
+            </button>
+          </div>
+        </div>
+
+        {/* Resetear Datos */}
         <div className="bg-gray-900/50 rounded-xl p-4 border border-red-500/30">
           <h4 className="text-white font-medium mb-2">Resetear Todos los Datos</h4>
           <p className="text-sm text-gray-400 mb-4">

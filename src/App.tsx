@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, ArrowLeft, Settings, ShoppingCart } from 'lucide-react';
+import { MapPin, ArrowLeft, ShoppingCart } from 'lucide-react';
 import { Burger } from './components/Burger';
 import { MeatSelector } from './components/MeatSelector';
 import { CategorySelector } from './components/CategorySelector';
@@ -9,13 +9,16 @@ import { InteractiveProductView } from './components/InteractiveProductView';
 import { NutritionalInfo } from './components/NutritionalInfo';
 import { OrderButton } from './components/OrderButton';
 import { AdminPanel } from './components/Admin';
+import { AdminLogin } from './components/AdminLogin';
 import { Cart } from './components/Cart';
 import { useMenu } from './contexts/MenuContext';
 import { useCart } from './contexts/CartContext';
+import { useAuth } from './contexts/AuthContext';
 
 export default function App() {
   const { products, categories, optionGroups } = useMenu();
   const { itemCount, addItem } = useCart();
+  const { isAuthenticated } = useAuth();
   
   const [selectedCategoryId, setSelectedCategoryId] = useState('burgers');
   const [selectedProductIndex, setSelectedProductIndex] = useState(0);
@@ -24,6 +27,25 @@ export default function App() {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showCart, setShowCart] = useState(false);
+
+  // Solo permitir acceso al admin si está autenticado
+  const handleAdminAccess = () => {
+    if (isAuthenticated) {
+      setShowAdmin(true);
+    }
+  };
+
+  // Detectar combinación de teclas Ctrl+Shift+A para acceder al admin
+  useState(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+        e.preventDefault();
+        setShowAdmin(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  });
   
   // Obtener carnes desde el grupo de opciones "meat-type"
   const meatOptionGroup = optionGroups.find(g => g.id === 'meat-type');
@@ -72,6 +94,26 @@ export default function App() {
 
   return (
     <>
+      {/* Mostrar AdminLogin si intenta acceder sin autenticar */}
+      {showAdmin && !isAuthenticated && (
+        <div className="fixed inset-0 z-50">
+          <AdminLogin />
+          <button
+            onClick={() => setShowAdmin(false)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors z-10"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Mostrar AdminPanel solo si está autenticado */}
+      {showAdmin && isAuthenticated && (
+        <AdminPanel onClose={() => setShowAdmin(false)} />
+      )}
+
+      {showCart && <Cart onClose={() => setShowCart(false)} />}
+
       <div className="min-h-screen bg-gradient-to-br from-[#4A1410] via-[#2D0D0A] to-[#0A0604] text-white font-sans flex flex-col selection:bg-orange-500/30 overflow-hidden">
         
         {/* Decorative gradient overlay */}
@@ -95,13 +137,6 @@ export default function App() {
                   {itemCount}
                 </span>
               )}
-            </button>
-            <button
-              onClick={() => setShowAdmin(true)}
-              className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/5 hover:bg-white/20 transition-colors"
-              title="Panel de Administración"
-            >
-              <Settings className="w-5 h-5 text-white" />
             </button>
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
               <span className="text-white font-bold text-lg">M</span>
@@ -254,26 +289,12 @@ export default function App() {
               ) : (
                 <div className="text-center py-16 sm:py-20">
                   <p className="text-gray-400 text-base sm:text-lg">No hay productos disponibles en esta categoría</p>
-                  <button
-                    onClick={() => setShowAdmin(true)}
-                    className="mt-4 px-5 sm:px-6 py-2.5 sm:py-3 bg-orange-500 text-white text-sm sm:text-base rounded-lg hover:bg-orange-600 transition-colors"
-                  >
-                    Agregar Productos
-                  </button>
                 </div>
               )}
             </div>
           )}
         </main>
       </div>
-
-      {/* Admin Panel */}
-      <AnimatePresence>
-        {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
-      </AnimatePresence>
-
-      {/* Cart */}
-      <Cart isOpen={showCart} onClose={() => setShowCart(false)} />
     </>
   );
 }

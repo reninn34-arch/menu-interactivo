@@ -1,12 +1,13 @@
 import { useState, ElementType } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Salad, X, Settings, FolderOpen, Package, Sliders, Store, Palette } from 'lucide-react';
+import { Salad, X, Settings, FolderOpen, Package, Sliders, Store, Palette, LogOut } from 'lucide-react';
 import { IngredientEditor } from './IngredientEditor';
 import { SiteConfigEditor } from './SiteConfigEditor';
 import { CategoryEditor } from './CategoryEditor';
 import { ProductEditor } from './ProductEditor';
 import { OptionGroupEditor } from './OptionGroupEditor';
 import { useMenu } from '../../contexts/MenuContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface AdminPanelProps {
   onClose: () => void;
@@ -26,6 +27,14 @@ interface TabConfig {
 export const AdminPanel = ({ onClose }: AdminPanelProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('settings');
   const { products, categories, optionGroups, ingredients } = useMenu();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+      logout();
+      onClose();
+    }
+  };
 
   const tabs: TabConfig[] = [
     {
@@ -103,13 +112,22 @@ export const AdminPanel = ({ onClose }: AdminPanelProps) => {
                   <p className="text-xs text-gray-400 hidden md:block">Panel de Control</p>
                 </div>
               </div>
-              <button
-                onClick={onClose}
-                className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors group"
-                title="Cerrar"
-              >
-                <X className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleLogout}
+                  className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-red-600 flex items-center justify-center transition-colors group"
+                  title="Cerrar Sesión"
+                >
+                  <LogOut className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
+                </button>
+                <button
+                  onClick={onClose}
+                  className="w-9 h-9 rounded-lg bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors group"
+                  title="Cerrar"
+                >
+                  <X className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
+                </button>
+              </div>
             </div>
           </div>
 
