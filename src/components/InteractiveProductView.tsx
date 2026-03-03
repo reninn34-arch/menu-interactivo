@@ -176,7 +176,7 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
           transition={{ duration: 0.6 }}
         >
           {/* Product Visualization: Layered View or Image */}
-          <div className="flex items-center justify-center py-6 lg:py-8 px-4">
+          <div className="flex items-center justify-center py-4 lg:py-8 px-4">
             {product.useLayeredView && product.linkedOptionGroupId ? (
               // Render LayeredProductView for products with layered animation
               <div className="w-full h-48 lg:h-64 flex items-center justify-center">
@@ -184,7 +184,7 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
                   isCollapsed={isCollapsed}
                   product={product}
                   selectedOptions={Object.fromEntries(
-                    Array.from(selections.entries()).map(([groupId, valueIds]) => [
+                    Array.from(selections.entries() as IterableIterator<[string, Set<string>]>).map(([groupId, valueIds]) => [
                       groupId,
                       Array.from(valueIds)[0] || ''
                     ])
@@ -221,8 +221,8 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
             )}
           </div>
 
-          {/* Product Name & Info - Bottom Section */}
-          <div className="bg-black/30 backdrop-blur-sm border-t border-white/10 p-4 lg:p-6 text-center">
+          {/* Product Name & Info - Bottom Section with Overlap */}
+          <div className="-mt-32 lg:-mt-28 relative z-10 bg-black/50 backdrop-blur-lg border-t border-white/10 rounded-b-2xl lg:rounded-b-3xl p-4 lg:p-6 pt-8 lg:pt-10 text-center shadow-2xl">
             <h2 className="text-xl lg:text-3xl font-bold text-white mb-1">{product.name}</h2>
             {product.description && (
               <p className="text-gray-400 text-xs lg:text-sm mb-2">{product.description}</p>
