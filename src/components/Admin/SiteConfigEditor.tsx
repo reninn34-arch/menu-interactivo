@@ -64,6 +64,88 @@ export const SiteConfigEditor = () => {
         </button>
       </div>
 
+      {/* WHATSAPP Y DIRECCIÓN - SECCIÓN PRINCIPAL */}
+      <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-2xl p-6 border-2 border-green-400 shadow-xl space-y-4">
+        <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+          📱 WhatsApp y Dirección
+          <span className="text-sm font-normal bg-white/20 px-3 py-1 rounded-full">Importante</span>
+        </h3>
+        <p className="text-white/90 mb-4 text-sm">
+          Configura el número de WhatsApp para recibir pedidos y la dirección de tu restaurante
+        </p>
+        
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <label className="block text-sm font-bold text-white mb-2">
+              🏪 WhatsApp para RECOGER en Tienda
+            </label>
+            <input
+              type="text"
+              value={formData.whatsappNumberPickup || ''}
+              onChange={(e) => setFormData({ ...formData, whatsappNumberPickup: e.target.value })}
+              className="w-full px-4 py-3 bg-white/20 border-2 border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-white/30"
+              placeholder="Ej: 5212345678901 (número del restaurante)"
+            />
+            <p className="text-xs text-white/70 mt-2">
+              Este número recibirá los pedidos de RECOGER EN TIENDA
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-white mb-2">
+              🚚 WhatsApp para DELIVERY
+            </label>
+            <input
+              type="text"
+              value={formData.whatsappNumberDelivery || ''}
+              onChange={(e) => setFormData({ ...formData, whatsappNumberDelivery: e.target.value })}
+              className="w-full px-4 py-3 bg-white/20 border-2 border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-white/30"
+              placeholder="Ej: 5219876543210 (servicio de delivery)"
+            />
+            <p className="text-xs text-white/70 mt-2">
+              Este número recibirá los pedidos con DELIVERY (puede ser un servicio externo)
+            </p>
+            <p className="text-xs text-white/80 mt-1 font-medium">
+              Ejemplos: 🇲🇽 521234567890 | 🇺🇸 11234567890 | 🇪🇸 34612345678
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-white mb-2">
+              📍 Dirección del Restaurante
+            </label>
+            <textarea
+              value={formData.restaurantAddress || ''}
+              onChange={(e) => setFormData({ ...formData, restaurantAddress: e.target.value })}
+              className="w-full px-4 py-3 bg-white/20 border-2 border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-white/30 resize-none"
+              placeholder="Ej: Calle Principal #123, Colonia Centro, Ciudad de México"
+              rows={2}
+            />
+            <p className="text-xs text-white/70 mt-2">
+              Esta dirección aparecerá en los pedidos enviados por WhatsApp
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold text-white mb-2">
+              🚚 Costo de Delivery
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.deliveryCost || 0}
+              onChange={(e) => setFormData({ ...formData, deliveryCost: parseFloat(e.target.value) || 0 })}
+              className="w-full px-4 py-3 bg-white/20 border-2 border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-white/30"
+              placeholder="Ej: 2.50"
+            />
+            <p className="text-xs text-white/70 mt-2">
+              Este costo se agregará automáticamente a los pedidos con delivery
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Información Básica */}
       <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 space-y-4">
         <h3 className="text-xl font-semibold text-white mb-4">Información del Sitio</h3>

@@ -94,6 +94,11 @@ export interface SiteConfig {
   branchName: string;
   currency: string;
   currencySymbol: string;
+  whatsappNumber?: string; // Deprecated - mantener por compatibilidad
+  whatsappNumberPickup?: string;
+  whatsappNumberDelivery?: string;
+  restaurantAddress?: string;
+  deliveryCost?: number;
 }
 
 export interface BurgerComponentProps {

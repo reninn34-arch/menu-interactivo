@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
+import { useMenu } from '../contexts/MenuContext';
+import { CheckoutForm, CheckoutData } from './CheckoutForm';
 
 interface CartProps {
   isOpen: boolean;
@@ -9,10 +12,113 @@ interface CartProps {
 
 export const Cart = ({ isOpen, onClose }: CartProps) => {
   const { items, itemCount, total, removeItem, updateQuantity, clearCart } = useCart();
+  const { siteConfig } = useMenu();
+  const [showCheckoutForm, setShowCheckoutForm] = useState(false);
 
   const handleCheckout = () => {
     if (items.length === 0) return;
-    alert(`Total a pagar: $${total.toFixed(2)}\n\nPedido confirmado!\n${itemCount} items en tu orden.`);
+    setShowCheckoutForm(true);
+  };
+
+  const handleCheckoutSubmit = (customerData: CheckoutData) => {
+    // Generar número de orden único
+    const orderNumber = `ORD-${Date.now()}`;
+    
+    // Formatear mensaje de WhatsApp
+    let message = `🍔 *NUEVO PEDIDO* 🍔\n\n`;
+    message += `📋 *Orden:* ${orderNumber}\n`;
+    message += `🏪 *Sucursal:* ${siteConfig.branchName || siteConfig.siteName}\n\n`;
+    
+    // Datos del cliente
+    message += `*DATOS DEL CLIENTE:*\n`;
+    message += `👤 *Nombre:* ${customerData.customerName}\n`;
+    message += `📱 *Teléfono:* ${customerData.customerPhone}\n`;
+    message += `🚚 *Método:* ${customerData.deliveryMethod === 'delivery' ? '🏠 Delivery' : '🏪 Recoger en tienda'}\n`;
+    
+    if (customerData.deliveryMethod === 'delivery' && customerData.address) {
+      message += `📍 *Dirección de entrega:*\n${customerData.address}\n`;
+    }
+    
+    if (customerData.notes) {
+      message += `📝 *Notas:* ${customerData.notes}\n`;
+    }
+    
+    message += `\n`;
+    
+    // Agregar items del pedido
+    message += `*PRODUCTOS:*\n`;
+    message += `${'─'.repeat(30)}\n`;
+    
+    items.forEach((item, index) => {
+      // Calcular precio del item
+      const meatPrice = item.meat?.price || 0;
+      const optionsPrice = Array.isArray(item.selectedOptions) 
+        ? item.selectedOptions.reduce((sum, opt) => sum + opt.totalPrice, 0) 
+        : 0;
+      const itemBasePrice = item.product.price + meatPrice;
+      const itemTotalPrice = itemBasePrice + optionsPrice;
+      
+      message += `\n${index + 1}. *${item.product.name}* (x${item.quantity})\n`;
+      message += `   💰 ${siteConfig.currencySymbol}${itemBasePrice.toFixed(2)} c/u\n`;
+      
+      // Mostrar tipo de carne si aplica
+      if (item.meat) {
+        message += `   🥩 ${item.meat.name}\n`;
+      }
+      
+      // Mostrar opciones seleccionadas
+      if (item.selectedOptions && item.selectedOptions.length > 0) {
+        message += `   📝 Opciones:\n`;
+        item.selectedOptions.forEach(opt => {
+          opt.valueNames.forEach(valueName => {
+            const priceText = opt.totalPrice > 0 ? ` (+${siteConfig.currencySymbol}${opt.totalPrice.toFixed(2)})` : '';
+            message += `      • ${valueName}${priceText}\n`;
+          });
+        });
+      }
+      
+      message += `   Subtotal: ${siteConfig.currencySymbol}${(itemTotalPrice * item.quantity).toFixed(2)}\n`;
+    });
+    
+    message += `\n${'─'.repeat(30)}\n`;
+    message += `\n� *Subtotal productos:* ${siteConfig.currencySymbol}${total.toFixed(2)}\n`;
+    
+    // Agregar costo de delivery si aplica
+    const deliveryCost = customerData.deliveryMethod === 'delivery' ? (siteConfig.deliveryCost || 0) : 0;
+    if (deliveryCost > 0) {
+      message += `🚚 *Costo de delivery:* ${siteConfig.currencySymbol}${deliveryCost.toFixed(2)}\n`;
+    }
+    
+    const finalTotal = total + deliveryCost;
+    message += `\n💵 *TOTAL A PAGAR: ${siteConfig.currencySymbol}${finalTotal.toFixed(2)}*\n`;
+    message += `📦 *Cantidad de items:* ${itemCount}\n`;
+    
+    // Agregar dirección si está configurada
+    if (siteConfig.restaurantAddress) {
+      message += `\n📍 *Dirección:*\n${siteConfig.restaurantAddress}\n`;
+    }
+    
+    message += `\n_Pedido generado desde ${siteConfig.siteName}_`;
+    
+    // Obtener número de WhatsApp según el método de entrega
+    let whatsappNumber: string;
+    if (customerData.deliveryMethod === 'delivery') {
+      // Para delivery, usar whatsappNumberDelivery o fallback
+      whatsappNumber = siteConfig.whatsappNumberDelivery || siteConfig.whatsappNumber || '1234567890';
+    } else {
+      // Para pickup, usar whatsappNumberPickup o fallback
+      whatsappNumber = siteConfig.whatsappNumberPickup || siteConfig.whatsappNumber || '1234567890';
+    }
+    
+    // Codificar mensaje para URL
+    const encodedMessage = encodeURIComponent(message);
+    
+    // Abrir WhatsApp
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+    
+    // Cerrar formulario, limpiar carrito y cerrar drawer
+    setShowCheckoutForm(false);
     clearCart();
     onClose();
   };
@@ -107,8 +213,8 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
                         )}
                         {Array.isArray(item.selectedOptions) && item.selectedOptions.length > 0 && (
                           <div className="space-y-1 mb-2">
-                            {item.selectedOptions.map((option) => (
-                              <p key={option.groupId} className="text-gray-400 text-xs">
+                            {item.selectedOptions.map((option, optIndex) => (
+                              <p key={`${item.id}-${option.groupId}-${optIndex}`} className="text-gray-400 text-xs">
                                 {option.groupName}: {option.valueNames.join(', ')}
                                 {option.totalPrice > 0 && (
                                   <span className="text-orange-400 ml-1">+${option.totalPrice.toFixed(2)}</span>
@@ -197,6 +303,16 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
           </motion.div>
         </>
       )}
+      
+      {/* Formulario de Checkout */}
+      <CheckoutForm
+        isOpen={showCheckoutForm}
+        onClose={() => setShowCheckoutForm(false)}
+        onSubmit={handleCheckoutSubmit}
+        subtotal={total}
+        deliveryCost={siteConfig.deliveryCost || 0}
+        currencySymbol={siteConfig.currencySymbol}
+      />
     </AnimatePresence>
   );
 };

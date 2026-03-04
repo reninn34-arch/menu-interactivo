@@ -57,6 +57,11 @@ const DEFAULT_CONFIG: SiteConfig = {
   branchName: 'Sucursal Principal',
   currency: 'USD',
   currencySymbol: '$',
+  whatsappNumber: '1234567890',
+  whatsappNumberPickup: '1234567890',
+  whatsappNumberDelivery: '1234567890',
+  restaurantAddress: 'Calle Principal #123, Ciudad',
+  deliveryCost: 2.50,
 };
 
 const DEFAULT_OPTION_GROUPS: ProductOptionGroup[] = [
