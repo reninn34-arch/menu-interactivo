@@ -37,6 +37,29 @@ export const ProductEditor = () => {
   };
 
   const handleSave = () => {
+    // 1. Validaciones básicas
+    if (!formData.name?.trim()) {
+      alert('⚠️ El producto debe tener un nombre.');
+      return;
+    }
+    if (!formData.categoryId) {
+      alert('⚠️ El producto debe pertenecer a una categoría. Por favor crea una primero.');
+      return;
+    }
+    if (formData.price === undefined || formData.price < 0) {
+      alert('⚠️ El producto debe tener un precio válido (mayor o igual a 0).');
+      return;
+    }
+
+    // 2. Validación de la vista por capas (Layered View)
+    if (formData.useLayeredView) {
+      if (!formData.variableIngredientId || !formData.linkedOptionGroupId) {
+        alert('⚠️ Para usar la vista por capas debes seleccionar un Ingrediente Variable y un Grupo de Opciones Vinculado.');
+        return;
+      }
+    }
+
+    // 3. Guardado
     if (isAdding && formData.id) {
       addProduct(formData as Product);
       setIsAdding(false);
@@ -93,13 +116,21 @@ export const ProductEditor = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white">Gestión de Productos</h2>
-        <button
-          onClick={startAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Agregar Producto
-        </button>
+        <div className="relative">
+          <button
+            onClick={startAdd}
+            disabled={categories.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Plus className="w-5 h-5" />
+            Agregar Producto
+          </button>
+          {categories.length === 0 && (
+            <p className="text-xs text-red-400 mt-1 absolute right-0 top-full whitespace-nowrap">
+              ⚠️ Crea una categoría primero
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Filter by Category */}
@@ -137,9 +168,12 @@ export const ProductEditor = () => {
           className="bg-gray-800 rounded-2xl p-6 space-y-4 border border-gray-700"
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-semibold text-white">
-              {isAdding ? 'Nuevo Producto' : 'Editar Producto'}
-            </h3>
+            <div>
+              <h3 className="text-xl font-semibold text-white">
+                {isAdding ? 'Nuevo Producto' : 'Editar Producto'}
+              </h3>
+              <p className="text-xs text-gray-400 mt-1">Los campos con * son obligatorios</p>
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={handleSave}
@@ -160,11 +194,12 @@ export const ProductEditor = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Categoría</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Categoría*</label>
               <select
                 value={formData.categoryId || ''}
                 onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
                 className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-orange-500"
+                required
               >
                 {categories.map(category => (
                   <option key={category.id} value={category.id}>
@@ -175,13 +210,14 @@ export const ProductEditor = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Nombre</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Nombre*</label>
               <input
                 type="text"
                 value={formData.name || ''}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-orange-500"
                 placeholder="Ej: Cheeseburger Deluxe"
+                required
               />
             </div>
 
@@ -197,13 +233,18 @@ export const ProductEditor = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">Precio</label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Precio*</label>
               <input
                 type="number"
                 step="0.01"
-                value={formData.price || 0}
-                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                min="0"
+                value={formData.price ?? 0}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  setFormData({ ...formData, price: isNaN(val) ? 0 : val });
+                }}
                 className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-orange-500"
+                required
               />
             </div>
 
@@ -211,8 +252,12 @@ export const ProductEditor = () => {
               <label className="block text-sm font-medium text-gray-300 mb-2">Orden</label>
               <input
                 type="number"
-                value={formData.order || 0}
-                onChange={(e) => setFormData({ ...formData, order: parseInt(e.target.value) })}
+                min="1"
+                value={formData.order ?? 0}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  setFormData({ ...formData, order: isNaN(val) ? 0 : val });
+                }}
                 className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-orange-500"
               />
             </div>
@@ -226,40 +271,56 @@ export const ProductEditor = () => {
                 <label className="block text-sm font-medium text-gray-300 mb-2">Calorías</label>
                 <input
                   type="number"
-                  value={formData.calories || ''}
-                  onChange={(e) => setFormData({ ...formData, calories: e.target.value ? parseInt(e.target.value) : undefined })}
+                  value={formData.calories ?? ''}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setFormData({ ...formData, calories: e.target.value === '' ? undefined : (isNaN(val) ? undefined : val) });
+                  }}
                   className="w-full px-4 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white focus:outline-none focus:border-orange-500"
                   placeholder="kcal"
+                  min="0"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Proteína</label>
                 <input
                   type="number"
-                  value={formData.protein || ''}
-                  onChange={(e) => setFormData({ ...formData, protein: e.target.value ? parseInt(e.target.value) : undefined })}
+                  value={formData.protein ?? ''}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setFormData({ ...formData, protein: e.target.value === '' ? undefined : (isNaN(val) ? undefined : val) });
+                  }}
                   className="w-full px-4 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white focus:outline-none focus:border-orange-500"
                   placeholder="g"
+                  min="0"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Grasa</label>
                 <input
                   type="number"
-                  value={formData.fat || ''}
-                  onChange={(e) => setFormData({ ...formData, fat: e.target.value ? parseInt(e.target.value) : undefined })}
+                  value={formData.fat ?? ''}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setFormData({ ...formData, fat: e.target.value === '' ? undefined : (isNaN(val) ? undefined : val) });
+                  }}
                   className="w-full px-4 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white focus:outline-none focus:border-orange-500"
                   placeholder="g"
+                  min="0"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">Carbohidratos</label>
                 <input
                   type="number"
-                  value={formData.carbs || ''}
-                  onChange={(e) => setFormData({ ...formData, carbs: e.target.value ? parseInt(e.target.value) : undefined })}
+                  value={formData.carbs ?? ''}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setFormData({ ...formData, carbs: e.target.value === '' ? undefined : (isNaN(val) ? undefined : val) });
+                  }}
                   className="w-full px-4 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white focus:outline-none focus:border-orange-500"
                   placeholder="g"
+                  min="0"
                 />
               </div>
             </div>

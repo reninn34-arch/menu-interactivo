@@ -11,6 +11,7 @@ import { OrderButton } from './components/OrderButton';
 import { AdminPanel } from './components/Admin';
 import { AdminLogin } from './components/AdminLogin';
 import { Cart } from './components/Cart';
+import { ProductOptionsModal } from './components/ProductOptionsModal';
 import { useMenu } from './contexts/MenuContext';
 import { useCart } from './contexts/CartContext';
 import { useAuth } from './contexts/AuthContext';
@@ -30,6 +31,7 @@ export default function App() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [showMeatSelector, setShowMeatSelector] = useState(false);
   const [meatSelected, setMeatSelected] = useState(false);
+  const [showBurgerOptions, setShowBurgerOptions] = useState(false);
 
   // Solo permitir acceso al admin si está autenticado
   const handleAdminAccess = () => {
@@ -219,17 +221,39 @@ export default function App() {
         <main className="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-6 pb-2 sm:pb-8 relative">
           {/* Vista de Hamburguesas */}
           {selectedCategoryId === 'burgers' && selectedProduct ? (
-            <div className="flex flex-col lg:flex-row items-center justify-center gap-0 lg:gap-8 xl:gap-16">
-              {/* Burger Visualization */}
-              <div className="w-full lg:w-1/2 relative flex flex-col items-center justify-end py-0 lg:py-8 z-10 min-h-[160px] lg:min-h-[400px]">
-                <Burger 
-                  isCollapsed={!showMeatSelector}
-                  product={selectedProduct}
-                  selectedMeat={selectedMeat}
-                  direction={direction}
-                  shouldAnimate={!showSidebar && !showCart}
-                />
-              </div>
+            <div className="z-20 w-full">
+              
+              {/* ✨ NUEVO: Selector horizontal para cambiar de hamburguesa ✨ */}
+              {categoryProducts.length > 1 && (
+                <div className="mb-4 lg:mb-6 flex gap-2 lg:gap-3 overflow-x-auto pb-2 lg:pb-4 scrollbar-hide justify-center">
+                  {categoryProducts.map((prod, index) => (
+                    <button
+                      key={prod.id}
+                      onClick={() => setSelectedProductIndex(index)}
+                      className={`flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-medium transition-all ${
+                        selectedProductIndex === index
+                          ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30'
+                          : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                      }`}
+                    >
+                      {prod.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* El contenedor original de la hamburguesa */}
+              <div className="flex flex-col lg:flex-row items-center justify-center gap-0 lg:gap-8 xl:gap-16">
+                {/* Burger Visualization */}
+                <div className="w-full lg:w-1/2 relative flex flex-col items-center justify-end py-0 lg:py-8 z-10 min-h-[160px] lg:min-h-[400px]">
+                  <Burger 
+                    isCollapsed={!showMeatSelector}
+                    product={selectedProduct}
+                    selectedMeat={selectedMeat}
+                    direction={direction}
+                    shouldAnimate={!showSidebar && !showCart}
+                  />
+                </div>
 
               {/* Info Panel */}
               <div className="w-full lg:w-1/2 flex flex-col z-20 bg-[#0A0A0A]/40 lg:bg-transparent p-3 sm:p-4 lg:p-0 rounded-2xl lg:rounded-[2rem] backdrop-blur-md border border-white/5 lg:border-none shadow-2xl lg:shadow-none">
@@ -283,9 +307,18 @@ export default function App() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => {
-                      addItem(selectedProduct, selectedMeat, undefined, 1);
-                      setShowCart(true);
-                      setMeatSelected(false);
+                      // Verificamos si la hamburguesa tiene otros grupos de opciones asignados aparte de la carne
+                      const extraOptions = selectedProduct.optionGroupIds?.filter(id => id !== 'meat-type') || [];
+                      
+                      if (extraOptions.length > 0) {
+                        // Si tiene extras (ej: Tamaño de Combo, Sin Cebolla), mostramos el modal
+                        setShowBurgerOptions(true);
+                      } else {
+                        // Si no tiene más opciones, va directo al carrito
+                        addItem(selectedProduct, selectedMeat, undefined, 1);
+                        setShowCart(true);
+                        setMeatSelected(false);
+                      }
                     }}
                     className="w-full mt-1 lg:mt-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full py-2.5 lg:py-4 px-6 text-white font-bold hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-sm lg:text-lg"
                   >
@@ -332,6 +365,24 @@ export default function App() {
                 )}
               </div>
             </div>
+
+            {/* ✨ NUEVO: Modal que se abrirá con las opciones extra de la hamburguesa */}
+            {showBurgerOptions && (
+              <ProductOptionsModal
+                product={selectedProduct}
+                isOpen={showBurgerOptions}
+                onClose={() => setShowBurgerOptions(false)}
+                excludedGroupIds={['meat-type']} // Ocultamos la carne para que no la pida doble
+                basePriceOverride={selectedProduct.price + selectedMeat.price} // Le pasamos el precio con la carne incluida
+                onConfirm={(selectedOptions) => {
+                  addItem(selectedProduct, selectedMeat, selectedOptions, 1);
+                  setShowCart(true);
+                  setShowBurgerOptions(false);
+                  setMeatSelected(false);
+                }}
+              />
+            )}
+            </div>
           ) : showInteractiveView && selectedProduct ? (
             /* Vista Interactiva para Productos con Opciones */
             <div className="z-20">
@@ -355,7 +406,6 @@ export default function App() {
               )}
 
               <InteractiveProductView
-                key={selectedProduct.id}
                 product={selectedProduct}
                 onAddToCart={(selectedOptions) => {
                   addItem(selectedProduct, undefined, selectedOptions, 1);
@@ -381,7 +431,7 @@ export default function App() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
                   {categoryProducts.map((product) => (
                     <ProductCard
-                      key={product.id}
+                      {...{ key: product.id }}
                       product={product}
                       onOrder={() => {
                         addItem(product, undefined, undefined, 1);

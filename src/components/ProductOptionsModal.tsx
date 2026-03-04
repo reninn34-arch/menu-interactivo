@@ -8,15 +8,17 @@ interface ProductOptionsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (selectedOptions: SelectedOption[]) => void;
+  excludedGroupIds?: string[]; // ✨ NUEVO: Permite ocultar grupos
+  basePriceOverride?: number;  // ✨ NUEVO: Permite ajustar el precio base
 }
 
-export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm }: ProductOptionsModalProps) => {
+export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, excludedGroupIds = [], basePriceOverride }: ProductOptionsModalProps) => {
   const { optionGroups } = useMenu();
   const [selections, setSelections] = useState<Map<string, Set<string>>>(new Map());
 
-  // Obtener los grupos de opciones para este producto
+  // ✨ MODIFICADO: Ignora los grupos que enviemos en excludedGroupIds
   const productOptionGroups = optionGroups.filter(
-    group => product.optionGroupIds?.includes(group.id) && group.enabled
+    group => product.optionGroupIds?.includes(group.id) && group.enabled && !excludedGroupIds.includes(group.id)
   );
 
   // Inicializar selecciones con valores por defecto
@@ -59,7 +61,8 @@ export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm }: Pro
   };
 
   const calculateTotal = () => {
-    let total = product.price;
+    // ✨ MODIFICADO: Usa el precio base sobreescrito si existe
+    let total = basePriceOverride !== undefined ? basePriceOverride : product.price;
     
     selections.forEach((valueIds, groupId) => {
       const group = optionGroups.find(g => g.id === groupId);
