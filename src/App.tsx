@@ -223,23 +223,72 @@ export default function App() {
           {selectedCategoryId === 'burgers' && selectedProduct ? (
             <div className="z-20 w-full">
               
-              {/* ✨ NUEVO: Selector horizontal para cambiar de hamburguesa ✨ */}
+              {/* ✨ Selector de productos - Carrusel en móvil, botones en desktop ✨ */}
               {categoryProducts.length > 1 && (
-                <div className="mb-4 lg:mb-6 flex gap-2 lg:gap-3 overflow-x-auto pb-2 lg:pb-4 scrollbar-hide justify-center">
-                  {categoryProducts.map((prod, index) => (
-                    <button
-                      key={prod.id}
-                      onClick={() => setSelectedProductIndex(index)}
-                      className={`flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-medium transition-all ${
-                        selectedProductIndex === index
-                          ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30'
-                          : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                      }`}
-                    >
-                      {prod.name}
-                    </button>
-                  ))}
-                </div>
+                <>
+                  {/* Desktop: Botones horizontales */}
+                  <div className="hidden md:flex gap-2 lg:gap-3 pb-2 lg:pb-4 mb-4 lg:mb-6 justify-center flex-wrap">
+                    {categoryProducts.map((prod, index) => (
+                      <button
+                        key={prod.id}
+                        onClick={() => setSelectedProductIndex(index)}
+                        className={`flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-medium transition-all ${
+                          selectedProductIndex === index
+                            ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30'
+                            : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                        }`}
+                      >
+                        {prod.name}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Móvil: Carrusel con drag */}
+                  <div className="md:hidden mb-4">
+                    <div className="relative overflow-hidden">
+                      <motion.div
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={0.2}
+                        onDragEnd={(e, { offset, velocity }) => {
+                          const swipe = Math.abs(offset.x) * velocity.x;
+                          if (swipe < -500 && selectedProductIndex < categoryProducts.length - 1) {
+                            setSelectedProductIndex(selectedProductIndex + 1);
+                          } else if (swipe > 500 && selectedProductIndex > 0) {
+                            setSelectedProductIndex(selectedProductIndex - 1);
+                          }
+                        }}
+                        className="cursor-grab active:cursor-grabbing"
+                      >
+                        <motion.div
+                          key={selectedProductIndex}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="flex justify-center px-4"
+                        >
+                          <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 px-6 py-3 rounded-xl text-center font-medium max-w-full">
+                            {categoryProducts[selectedProductIndex].name}
+                          </div>
+                        </motion.div>
+                      </motion.div>
+                    </div>
+                    {/* Indicadores de carrusel */}
+                    <div className="flex justify-center gap-1.5 mt-3">
+                      {categoryProducts.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setSelectedProductIndex(index)}
+                          className={`h-1.5 rounded-full transition-all ${
+                            selectedProductIndex === index
+                              ? 'w-6 bg-orange-500'
+                              : 'w-1.5 bg-gray-600 hover:bg-gray-500'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
 
               {/* El contenedor original de la hamburguesa */}
@@ -386,23 +435,72 @@ export default function App() {
           ) : showInteractiveView && selectedProduct ? (
             /* Vista Interactiva para Productos con Opciones */
             <div className="z-20">
-              {/* Product Selector si hay múltiples productos */}
+              {/* Product Selector si hay múltiples productos - Responsive */}
               {categoryProducts.length > 1 && (
-                <div className="mb-4 lg:mb-6 flex gap-2 lg:gap-3 overflow-x-auto pb-2 lg:pb-4 scrollbar-hide">
-                  {categoryProducts.map((prod, index) => (
-                    <button
-                      key={prod.id}
-                      onClick={() => setSelectedProductIndex(index)}
-                      className={`flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-medium transition-all ${
-                        selectedProductIndex === index
-                          ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30'
-                          : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                      }`}
-                    >
-                      {prod.name}
-                    </button>
-                  ))}
-                </div>
+                <>
+                  {/* Desktop: Botones horizontales */}
+                  <div className="hidden md:flex gap-2 lg:gap-3 pb-2 lg:pb-4 mb-4 lg:mb-6 justify-center flex-wrap">
+                    {categoryProducts.map((prod, index) => (
+                      <button
+                        key={prod.id}
+                        onClick={() => setSelectedProductIndex(index)}
+                        className={`flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-medium transition-all ${
+                          selectedProductIndex === index
+                            ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30'
+                            : 'bg-white/10 text-gray-300 hover:bg-white/20'
+                        }`}
+                      >
+                        {prod.name}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Móvil: Carrusel con drag */}
+                  <div className="md:hidden mb-4">
+                    <div className="relative overflow-hidden">
+                      <motion.div
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={0.2}
+                        onDragEnd={(e, { offset, velocity }) => {
+                          const swipe = Math.abs(offset.x) * velocity.x;
+                          if (swipe < -500 && selectedProductIndex < categoryProducts.length - 1) {
+                            setSelectedProductIndex(selectedProductIndex + 1);
+                          } else if (swipe > 500 && selectedProductIndex > 0) {
+                            setSelectedProductIndex(selectedProductIndex - 1);
+                          }
+                        }}
+                        className="cursor-grab active:cursor-grabbing"
+                      >
+                        <motion.div
+                          key={selectedProductIndex}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="flex justify-center px-4"
+                        >
+                          <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 px-6 py-3 rounded-xl text-center font-medium max-w-full">
+                            {categoryProducts[selectedProductIndex].name}
+                          </div>
+                        </motion.div>
+                      </motion.div>
+                    </div>
+                    {/* Indicadores de carrusel */}
+                    <div className="flex justify-center gap-1.5 mt-3">
+                      {categoryProducts.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setSelectedProductIndex(index)}
+                          className={`h-1.5 rounded-full transition-all ${
+                            selectedProductIndex === index
+                              ? 'w-6 bg-orange-500'
+                              : 'w-1.5 bg-gray-600 hover:bg-gray-500'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
 
               <InteractiveProductView
