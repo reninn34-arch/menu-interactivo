@@ -26,6 +26,7 @@ interface MenuContextType {
   deleteOptionGroup: (id: string) => void;
   updateSiteConfig: (updates: Partial<SiteConfig>) => void;
   resetToDefaults: () => void;
+  invalidateCache: () => void;
 }
 
 const MenuContext = createContext<MenuContextType | undefined>(undefined);
@@ -49,6 +50,8 @@ const DEFAULT_CATEGORIES: Category[] = [
 const DEFAULT_CONFIG: SiteConfig = {
   siteName: 'Burger House',
   tagline: 'Las mejores hamburguesas de la ciudad',
+  logoWidth: 120,
+  logoHeight: 40,
   primaryColor: '#FF9F0A',
   secondaryColor: '#FF7A00',
   backgroundColor: '#1A110C',
@@ -429,10 +432,43 @@ const STORAGE_KEYS = {
   optionGroups: 'menu_optionGroups',
   ingredients: 'menu_ingredients',
   siteConfig: 'menu_siteConfig',
+  cacheTimestamp: 'menu_cache_timestamp',
+};
+
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
+
+const isCacheValid = (): boolean => {
+  try {
+    const timestamp = localStorage.getItem(STORAGE_KEYS.cacheTimestamp);
+    if (!timestamp) return false;
+    
+    const lastModified = parseInt(timestamp, 10);
+    const now = Date.now();
+    const timeDiff = now - lastModified;
+    
+    return timeDiff < CACHE_DURATION;
+  } catch {
+    return false;
+  }
+};
+
+const updateCacheTimestamp = (): void => {
+  try {
+    localStorage.setItem(STORAGE_KEYS.cacheTimestamp, Date.now().toString());
+  } catch (error) {
+    console.error('Error updating cache timestamp:', error);
+  }
 };
 
 const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
   try {
+    // Verificar si el caché es válido antes de cargar
+    if (!isCacheValid()) {
+      console.log('Cache expired or invalid, using default values');
+      updateCacheTimestamp(); // Actualizar timestamp para el nuevo caché
+      return defaultValue;
+    }
+    
     const stored = localStorage.getItem(key);
     return stored ? JSON.parse(stored) : defaultValue;
   } catch (error) {
@@ -453,6 +489,9 @@ const saveToStorage = <T,>(key: string, value: T): void => {
     }
     
     localStorage.setItem(key, serialized);
+    
+    // Actualizar timestamp del caché cuando se guarden cambios
+    updateCacheTimestamp();
   } catch (error) {
     if (error instanceof Error && error.name === 'QuotaExceededError') {
       console.warn(`LocalStorage quota exceeded for ${key}. Attempting to clear old data...`);
@@ -463,6 +502,7 @@ const saveToStorage = <T,>(key: string, value: T): void => {
         localStorage.removeItem(key);
         const serialized = JSON.stringify(value);
         localStorage.setItem(key, serialized);
+        updateCacheTimestamp(); // Actualizar timestamp después de guardar
         console.log(`Successfully saved ${key} after clearing.`);
       } catch (retryError) {
         console.error(`Failed to save ${key} even after clearing:`, retryError);
@@ -601,6 +641,12 @@ export const MenuProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const invalidateCache = () => {
+    // Fuerza una actualización del timestamp para invalidar el caché
+    updateCacheTimestamp();
+    console.log('Cache invalidated - will reload on next page refresh');
+  };
+
   return (
     <MenuContext.Provider value={{
       meats,
@@ -626,6 +672,7 @@ export const MenuProvider = ({ children }: { children: ReactNode }) => {
       deleteOptionGroup,
       updateSiteConfig,
       resetToDefaults,
+      invalidateCache,
     }}>
       {children}
     </MenuContext.Provider>

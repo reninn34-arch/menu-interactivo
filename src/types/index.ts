@@ -89,6 +89,8 @@ export interface SiteConfig {
   siteName: string;
   tagline: string;
   logo?: string;
+  logoWidth?: number;  // Ancho del logo en pixeles (default: 120)
+  logoHeight?: number; // Alto del logo en pixeles (default: 40)
   primaryColor: string;
   secondaryColor: string;
   backgroundColor: string;

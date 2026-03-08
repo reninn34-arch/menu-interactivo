@@ -1,17 +1,71 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Save, Palette, AlertTriangle, Lock } from 'lucide-react';
+import { Save, Palette, AlertTriangle, Lock, RefreshCw } from 'lucide-react';
 import { useMenu } from '../../contexts/MenuContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { ImageUploader } from './ImageUploader';
 
 export const SiteConfigEditor = () => {
-  const { siteConfig, updateSiteConfig, resetToDefaults } = useMenu();
+  const { siteConfig, updateSiteConfig, resetToDefaults, invalidateCache } = useMenu();
   const { adminPassword, setAdminPassword } = useAuth();
   const [formData, setFormData] = useState(siteConfig);
   const [newPassword, setNewPassword] = useState('');
   const [saved, setSaved] = useState(false);
   const [passwordSaved, setPasswordSaved] = useState(false);
+  const [cacheInfo, setCacheInfo] = useState<{ lastUpdate: number; isValid: boolean } | null>(null);
+
+  // Obtener información del caché
+  useEffect(() => {
+    const getCacheInfo = () => {
+      try {
+        const timestamp = localStorage.getItem('menu_cache_timestamp');
+        if (timestamp) {
+          const lastUpdate = parseInt(timestamp, 10);
+          const timeDiff = Date.now() - lastUpdate;
+          const isValid = timeDiff < 24 * 60 * 60 * 1000; // 24 horas
+          setCacheInfo({ lastUpdate, isValid });
+        }
+      } catch {
+        setCacheInfo(null);
+      }
+    };
+    
+    getCacheInfo();
+    const interval = setInterval(getCacheInfo, 60000); // Actualizar cada minuto
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatTimeSince = (timestamp: number): string => {
+    const diff = Date.now() - timestamp;
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+      return `hace ${hours}h ${minutes}m`;
+    }
+    return `hace ${minutes}m`;
+  };
+
+  const handleInvalidateCache = () => {
+    if (confirm('¿Quieres forzar una actualización del caché? Los clientes verán los cambios más recientes en su próxima visita.')) {
+      invalidateCache();
+      const getCacheInfo = () => {
+        try {
+          const timestamp = localStorage.getItem('menu_cache_timestamp');
+          if (timestamp) {
+            const lastUpdate = parseInt(timestamp, 10);
+            const timeDiff = Date.now() - lastUpdate;
+            const isValid = timeDiff < 24 * 60 * 60 * 1000;
+            setCacheInfo({ lastUpdate, isValid });
+          }
+        } catch {
+          setCacheInfo(null);
+        }
+      };
+      getCacheInfo();
+      alert('Caché actualizado. Los cambios se verán reflejados la próxima vez que se cargue el menú.');
+    }
+  };
 
   const handleSave = () => {
     updateSiteConfig(formData);
@@ -330,6 +384,40 @@ export const SiteConfigEditor = () => {
             label="Logo del Sitio"
           />
         </div>
+
+        {/* Tamaño del logo */}
+        {formData.logo && (
+          <div className="grid grid-cols-2 gap-4 pt-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Ancho del logo (px)
+              </label>
+              <input
+                type="number"
+                value={formData.logoWidth || 120}
+                onChange={(e) => setFormData({ ...formData, logoWidth: parseInt(e.target.value) || 120 })}
+                min="40"
+                max="300"
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:border-orange-500"
+                placeholder="120"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Alto del logo (px)
+              </label>
+              <input
+                type="number"
+                value={formData.logoHeight || 40}
+                onChange={(e) => setFormData({ ...formData, logoHeight: parseInt(e.target.value) || 40 })}
+                min="20"
+                max="100"
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:border-orange-500"
+                placeholder="40"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Colores del Tema */}
@@ -515,7 +603,58 @@ export const SiteConfigEditor = () => {
             </button>
           </div>
         </div>
+      </div>
 
+      {/* Gestión de Caché */}
+      <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
+        <div className="flex items-center gap-2 mb-4">
+          <RefreshCw className="w-6 h-6 text-blue-500" />
+          <h3 className="text-xl font-semibold text-white">Gestión de Caché</h3>
+        </div>
+        <div className="space-y-4">
+          <div className="bg-gray-700/50 rounded-xl p-4 border border-gray-600">
+            <h4 className="text-white font-medium mb-2">Estado del Caché</h4>
+            <p className="text-sm text-gray-400 mb-3">
+              El caché mejora el rendimiento guardando datos por 24 horas. Se actualiza automáticamente 
+              cuando guardas cambios desde el panel admin.
+            </p>
+            
+            {cacheInfo && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-400">Última actualización:</span>
+                  <span className="text-white font-medium">{formatTimeSince(cacheInfo.lastUpdate)}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-400">Estado:</span>
+                  <span className={`font-medium ${cacheInfo.isValid ? 'text-green-400' : 'text-yellow-400'}`}>
+                    {cacheInfo.isValid ? '✓ Válido (< 24h)' : '⚠ Expirado (> 24h)'}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={handleInvalidateCache}
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-all hover:scale-105 flex items-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Forzar Actualización de Caché
+          </button>
+          <p className="text-xs text-gray-500">
+            Usa esto si necesitas que los clientes vean los cambios inmediatamente sin esperar 24 horas.
+          </p>
+        </div>
+      </div>
+
+      {/* Zona de Peligro */}
+      <div className="bg-red-900/20 rounded-2xl p-6 border-2 border-red-500/50">
+        <div className="flex items-center gap-2 mb-4">
+          <AlertTriangle className="w-6 h-6 text-red-500" />
+          <h3 className="text-xl font-semibold text-red-400">Zona de Peligro</h3>
+        </div>
+        <div className="space-y-4">
         {/* Resetear Datos */}
         <div className="bg-gray-900/50 rounded-xl p-4 border border-red-500/30">
           <h4 className="text-white font-medium mb-2">Resetear Todos los Datos</h4>
@@ -530,6 +669,7 @@ export const SiteConfigEditor = () => {
           >
             Resetear a Valores por Defecto
           </button>
+        </div>
         </div>
       </div>
     </div>

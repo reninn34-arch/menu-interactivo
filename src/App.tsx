@@ -207,6 +207,28 @@ export default function App() {
           >
             <Menu className="w-5 h-5 text-white" aria-hidden="true" />
           </button>
+
+          {/* Logo del restaurante */}
+          {siteConfig.logo ? (
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+              <img
+                src={siteConfig.logo}
+                alt={siteConfig.siteName}
+                style={{
+                  width: siteConfig.logoWidth ? `${siteConfig.logoWidth}px` : '120px',
+                  height: siteConfig.logoHeight ? `${siteConfig.logoHeight}px` : '40px',
+                  objectFit: 'contain'
+                }}
+                className="drop-shadow-lg"
+              />
+            </div>
+          ) : (
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+              <h1 className="text-white font-bold text-lg sm:text-xl drop-shadow-lg">
+                {siteConfig.siteName}
+              </h1>
+            </div>
+          )}
           
           {/* Carrito */}
           <button
