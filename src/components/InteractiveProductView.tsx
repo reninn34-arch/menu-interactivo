@@ -7,13 +7,13 @@ import { ProductBadges } from './ProductBadges';
 
 interface InteractiveProductViewProps {
   product: Product;
-  onAddToCart: (selectedOptions: SelectedOption[], notes?: string) => void; // ✨ Agregado notes
+  onAddToCart: (selectedOptions: SelectedOption[], notes?: string) => void;
 }
 
 export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProductViewProps) => {
   const { optionGroups } = useMenu();
   const [selections, setSelections] = useState<Map<string, Set<string>>>(new Map());
-  const [notes, setNotes] = useState<string>(''); // ✨ Estado para notas
+  const [notes, setNotes] = useState<string>('');
   const [isAnimating, setIsAnimating] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [direction, setDirection] = useState(1);
@@ -148,7 +148,7 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
       }
     });
 
-    onAddToCart(selectedOptions, notes || undefined); // ✨ Pasar notas
+    onAddToCart(selectedOptions, notes || undefined);
   };
 
   // Obtener descripción de selecciones actuales para mostrar

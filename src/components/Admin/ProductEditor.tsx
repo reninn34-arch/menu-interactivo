@@ -37,7 +37,7 @@ export const ProductEditor = () => {
   };
 
   const handleSave = () => {
-    // 1. Validaciones básicas
+    // Validaciones básicas
     if (!formData.name?.trim()) {
       alert('⚠️ El producto debe tener un nombre.');
       return;
@@ -51,7 +51,7 @@ export const ProductEditor = () => {
       return;
     }
 
-    // 2. Validación de la vista por capas (Layered View)
+    // Validar vista por capas si está activada
     if (formData.useLayeredView) {
       if (!formData.variableIngredientId || !formData.linkedOptionGroupId) {
         alert('⚠️ Para usar la vista por capas debes seleccionar un Ingrediente Variable y un Grupo de Opciones Vinculado.');
@@ -59,7 +59,7 @@ export const ProductEditor = () => {
       }
     }
 
-    // 3. Guardado
+    // Guardar
     if (isAdding && formData.id) {
       addProduct(formData as Product);
       setIsAdding(false);

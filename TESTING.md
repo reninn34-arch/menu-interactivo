@@ -43,17 +43,30 @@ npm run test:coverage
    - ✅ Retorna mensaje "Abierto 24/7" cuando no hay horarios
    - ✅ Formatea correctamente el horario de todos los días de la semana
 
-**Resultado**: ✅ **7 de 7 tests pasando**
+### 📁 `src/utils/imageCompression.test.ts` (5 tests)
+
+3. **compressImage()**
+   - ✅ Comprime imágenes grandes correctamente
+   - ✅ Omite compresión para imágenes pequeñas (<100KB)
+   - ✅ Maneja errores de compresión gracefully (retorna original)
+
+4. **compressAndConvertToBase64()**
+   - ✅ Comprime y convierte imagen a base64
+   - ✅ Rechaza correctamente en caso de error de FileReader
+
+**Resultado**: ✅ **12 de 12 tests pasando**
 
 ## Estructura de Tests
 
 ```
 src/
 ├── test/
-│   └── setup.ts              # Configuración global de tests
+│   └── setup.ts                    # Configuración global de tests
 └── utils/
-    ├── openingHours.ts       # Código fuente
-    └── openingHours.test.ts  # Tests
+    ├── openingHours.ts             # Utilidades de horarios
+    ├── openingHours.test.ts        # Tests de horarios (7 tests)
+    ├── imageCompression.ts         # Utilidades de compresión
+    └── imageCompression.test.ts    # Tests de compresión (5 tests)
 ```
 
 ## Cómo Escribir Nuevos Tests

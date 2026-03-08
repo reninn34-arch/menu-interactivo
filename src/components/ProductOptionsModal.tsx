@@ -7,17 +7,17 @@ interface ProductOptionsModalProps {
   product: Product;
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (selectedOptions: SelectedOption[], notes?: string) => void; // ✨ Agregado notes
-  excludedGroupIds?: string[]; // ✨ NUEVO: Permite ocultar grupos
-  basePriceOverride?: number;  // ✨ NUEVO: Permite ajustar el precio base
+  onConfirm: (selectedOptions: SelectedOption[], notes?: string) => void;
+  excludedGroupIds?: string[]; // Permite ocultar grupos específicos
+  basePriceOverride?: number;  // Ajusta el precio base si es necesario
 }
 
 export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, excludedGroupIds = [], basePriceOverride }: ProductOptionsModalProps) => {
   const { optionGroups } = useMenu();
   const [selections, setSelections] = useState<Map<string, Set<string>>>(new Map());
-  const [notes, setNotes] = useState<string>(''); // ✨ Estado para notas
+  const [notes, setNotes] = useState<string>('');
 
-  // ✨ MODIFICADO: Ignora los grupos que enviemos en excludedGroupIds
+  // Filtrar grupos de opciones excluyendo los que no queremos mostrar
   const productOptionGroups = optionGroups.filter(
     group => product.optionGroupIds?.includes(group.id) && group.enabled && !excludedGroupIds.includes(group.id)
   );
@@ -35,7 +35,7 @@ export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, exclu
         }
       });
       setSelections(initialSelections);
-      setNotes(''); // ✨ Limpiar notas al abrir
+      setNotes('');
     }
   }, [isOpen, product.id]);
 
@@ -63,7 +63,7 @@ export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, exclu
   };
 
   const calculateTotal = () => {
-    // ✨ MODIFICADO: Usa el precio base sobreescrito si existe
+    // Usar precio base sobreescrito si existe
     let total = basePriceOverride !== undefined ? basePriceOverride : product.price;
     
     selections.forEach((valueIds, groupId) => {
@@ -123,7 +123,7 @@ export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, exclu
       }
     });
 
-    onConfirm(selectedOptions, notes || undefined); // ✨ Pasar notas
+    onConfirm(selectedOptions, notes || undefined);
     onClose();
   };
 
@@ -227,7 +227,7 @@ export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, exclu
               );
             })}
           </div>
-          {/* ✨ NUEVO: Campo de notas especiales */}
+          {/* Campo de notas especiales */}
           <div className="px-6 pb-4">
             <label className="block text-sm font-medium text-gray-300 mb-2">
               Notas especiales (opcional)

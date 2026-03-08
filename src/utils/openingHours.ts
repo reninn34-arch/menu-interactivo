@@ -23,11 +23,9 @@ const dayKeys: Array<keyof NonNullable<SiteConfig['openingHours']>> = [
   'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'
 ];
 
-/**
- * Check if the restaurant is currently open based on opening hours
- */
+// Verifica si el restaurante está abierto ahora
 export function isRestaurantOpen(siteConfig: SiteConfig): RestaurantStatus {
-  // If no opening hours configured, assume always open
+  // Sin horarios configurados = siempre abierto
   if (!siteConfig.openingHours) {
     return {
       isOpen: true,
@@ -35,7 +33,7 @@ export function isRestaurantOpen(siteConfig: SiteConfig): RestaurantStatus {
     };
   }
 
-  // If orders are allowed outside hours, always return open
+  // Si permiten pedidos 24/7, ya está
   if (siteConfig.allowOrdersOutsideHours) {
     return {
       isOpen: true,
@@ -45,13 +43,12 @@ export function isRestaurantOpen(siteConfig: SiteConfig): RestaurantStatus {
 
   const now = new Date();
   const currentDay = dayKeys[now.getDay()];
-  const currentTime = now.getHours() * 60 + now.getMinutes(); // minutes since midnight
+  const currentTime = now.getHours() * 60 + now.getMinutes();
 
   const todayHours = siteConfig.openingHours[currentDay];
 
-  // If today is marked as closed
+  // Día cerrado? buscar el próximo que abran
   if (!todayHours || todayHours.closed) {
-    // Find next open day
     const nextOpen = findNextOpenDay(siteConfig.openingHours, now.getDay());
     return {
       isOpen: false,
@@ -60,13 +57,13 @@ export function isRestaurantOpen(siteConfig: SiteConfig): RestaurantStatus {
     };
   }
 
-  // Parse opening and closing times
+  // Convertir horarios a minutos para comparar fácil
   const [openHour, openMin] = todayHours.open.split(':').map(Number);
   const [closeHour, closeMin] = todayHours.close.split(':').map(Number);
   const openTime = openHour * 60 + openMin;
   const closeTime = closeHour * 60 + closeMin;
 
-  // Check if currently within opening hours
+  // Dentro del horario?
   if (currentTime >= openTime && currentTime < closeTime) {
     return {
       isOpen: true,
@@ -92,13 +89,12 @@ export function isRestaurantOpen(siteConfig: SiteConfig): RestaurantStatus {
   };
 }
 
-/**
- * Find the next day the restaurant will be open
- */function findNextOpenDay(
+// Busca el próximo día que abren
+function findNextOpenDay(
   openingHours: NonNullable<SiteConfig['openingHours']>,
   currentDayIndex: number
 ): { day: string; time: string } | undefined {
-  // Check next 7 days
+  // Revisar los próximos 7 días
   for (let i = 1; i <= 7; i++) {
     const nextDayIndex = (currentDayIndex + i) % 7;
     const nextDayKey = dayKeys[nextDayIndex];
@@ -116,9 +112,7 @@ export function isRestaurantOpen(siteConfig: SiteConfig): RestaurantStatus {
   return undefined;
 }
 
-/**
- * Get a formatted schedule string for display
- */
+// Formatea el horario para mostrar en UI
 export function getScheduleDisplay(siteConfig: SiteConfig): string[] {
   if (!siteConfig.openingHours) {
     return ['Abierto 24/7'];

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { compressAndConvertToBase64 } from '../../utils/imageCompression';
 
 interface ImageUploaderProps {
   currentImage?: string;
@@ -11,17 +12,22 @@ interface ImageUploaderProps {
 export const ImageUploader = ({ currentImage, onImageChange, label = 'Imagen' }: ImageUploaderProps) => {
   const [preview, setPreview] = useState<string>(currentImage || '');
   const [isDragging, setIsDragging] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileChange = (file: File) => {
+  const handleFileChange = async (file: File) => {
     if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setPreview(result);
-        onImageChange(result);
-      };
-      reader.readAsDataURL(file);
+      try {
+        setIsCompressing(true);
+        const compressedBase64 = await compressAndConvertToBase64(file);
+        setPreview(compressedBase64);
+        onImageChange(compressedBase64);
+      } catch (error) {
+        console.error('Error processing image:', error);
+        alert('❌ Error al procesar la imagen. Por favor intenta con otra.');
+      } finally {
+        setIsCompressing(false);
+      }
     }
   };
 
@@ -91,11 +97,14 @@ export const ImageUploader = ({ currentImage, onImageChange, label = 'Imagen' }:
             accept="image/*"
             onChange={(e) => e.target.files?.[0] && handleFileChange(e.target.files[0])}
             className="hidden"
+            disabled={isCompressing}
           />
           
           <div className="flex flex-col items-center gap-3">
             <div className="w-16 h-16 rounded-full bg-gray-700 flex items-center justify-center">
-              {isDragging ? (
+              {isCompressing ? (
+                <Loader2 className="w-8 h-8 text-orange-500 animate-spin" />
+              ) : isDragging ? (
                 <Upload className="w-8 h-8 text-orange-500 animate-bounce" />
               ) : (
                 <ImageIcon className="w-8 h-8 text-gray-400" />
@@ -103,16 +112,25 @@ export const ImageUploader = ({ currentImage, onImageChange, label = 'Imagen' }:
             </div>
             
             <div className="space-y-2">
-              <p className="text-sm text-gray-300">
-                Arrastra una imagen aquí o{' '}
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="text-orange-500 hover:text-orange-400 font-medium"
-                >
-                  examina
-                </button>
-              </p>
-              <p className="text-xs text-gray-500">PNG, JPG, GIF hasta 5MB</p>
+              {isCompressing ? (
+                <p className="text-sm text-orange-500 font-medium">
+                  Comprimiendo imagen...
+                </p>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-300">
+                    Arrastra una imagen aquí o{' '}
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-orange-500 hover:text-orange-400 font-medium"
+                      disabled={isCompressing}
+                    >
+                      examina
+                    </button>
+                  </p>
+                  <p className="text-xs text-gray-500">PNG, JPG, GIF - Se optimizará automáticamente</p>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -125,7 +143,8 @@ export const ImageUploader = ({ currentImage, onImageChange, label = 'Imagen' }:
           placeholder="O pega una URL de imagen..."
           value={preview}
           onChange={(e) => handleUrlInput(e.target.value)}
-          className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors"
+          disabled={isCompressing}
+          className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </div>
     </div>

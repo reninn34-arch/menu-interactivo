@@ -51,7 +51,7 @@ export interface Product {
   useLayeredView?: boolean; // Activa la visualización con capas tipo burger
   variableIngredientId?: string; // ID del ingrediente que cambia con opciones
   linkedOptionGroupId?: string; // ID del grupo de opciones vinculado a la capa variable
-  // ✨ NUEVO: Disponibilidad y tiempo
+  // Disponibilidad y tiempo de preparación
   inStock?: boolean; // Si hay inventario disponible (default: true)
   estimatedTime?: number; // Tiempo de preparación en minutos
 }
@@ -102,7 +102,7 @@ export interface SiteConfig {
   whatsappNumberDelivery?: string;
   restaurantAddress?: string;
   deliveryCost?: number;
-  // ✨ NUEVO: Horarios de operación
+  // Horarios de operación del restaurante
   openingHours?: {
     monday: { open: string; close: string; closed: boolean };
     tuesday: { open: string; close: string; closed: boolean };
