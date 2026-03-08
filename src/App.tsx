@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, ShoppingCart, Menu, X, Clock } from 'lucide-react';
+import { MapPin, ShoppingCart, Menu, X, Clock, Loader2, AlertCircle } from 'lucide-react';
 import { Burger } from './components/Burger';
 import { MeatSelector } from './components/MeatSelector';
 import { CategorySelector } from './components/CategorySelector';
@@ -18,7 +18,7 @@ import { useAuth } from './contexts/AuthContext';
 import { isRestaurantOpen, getScheduleDisplay } from './utils/openingHours';
 
 export default function App() {
-  const { products, categories, optionGroups, siteConfig } = useMenu();
+  const { products, categories, optionGroups, siteConfig, isLoading, error } = useMenu();
   const { itemCount, addItem } = useCart();
   const { isAuthenticated } = useAuth();
   
@@ -34,6 +34,37 @@ export default function App() {
   const [showMeatSelector, setShowMeatSelector] = useState(false);
   const [meatSelected, setMeatSelected] = useState(false);
   const [showBurgerOptions, setShowBurgerOptions] = useState(false);
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#4A1410] via-[#2D0D0A] to-[#0A0604] flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
+          <p className="text-white text-lg">Cargando menú...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#4A1410] via-[#2D0D0A] to-[#0A0604] flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-white text-2xl font-bold mb-2">Error al cargar datos</h2>
+          <p className="text-gray-400 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Restaurant status
   const restaurantStatus = isRestaurantOpen(siteConfig);

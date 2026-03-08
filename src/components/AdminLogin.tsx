@@ -1,23 +1,34 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { Lock, Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
+const STORAGE_MODE = import.meta.env.VITE_STORAGE_MODE || 'localStorage';
+
 export const AdminLogin = () => {
+  const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState(false);
-  const { login } = useAuth();
+  const [localError, setLocalError] = useState(false);
+  const { login, isLoading, error } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = login(password);
+    setLocalError(false);
+    
+    const success = await login(
+      password,
+      STORAGE_MODE === 'api' ? username : undefined
+    );
+    
     if (!success) {
-      setError(true);
+      setLocalError(true);
       setPassword('');
-      setTimeout(() => setError(false), 3000);
+      setTimeout(() => setLocalError(false), 3000);
     }
   };
+
+  const displayError = localError || error;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#4A1410] via-[#2D0D0A] to-[#0A0604] flex items-center justify-center p-4">
@@ -32,7 +43,11 @@ export const AdminLogin = () => {
             <Lock className="w-10 h-10 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Panel de Administración</h1>
-          <p className="text-gray-400">Ingresa tu contraseña para continuar</p>
+          <p className="text-gray-400">
+            {STORAGE_MODE === 'api' 
+              ? 'Ingresa tus credenciales para continuar' 
+              : 'Ingresa tu contraseña para continuar'}
+          </p>
         </div>
 
         {/* Login Form */}
@@ -41,6 +56,22 @@ export const AdminLogin = () => {
           className="bg-gray-900/50 backdrop-blur-md border border-gray-800 rounded-2xl p-8 shadow-2xl"
         >
           <div className="space-y-6">
+            {STORAGE_MODE === 'api' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Usuario
+                </label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all"
+                  placeholder="admin"
+                  autoComplete="username"
+                />
+              </div>
+            )}
+            
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-2">
                 Contraseña
@@ -51,15 +82,17 @@ export const AdminLogin = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className={`w-full px-4 py-3 pr-12 bg-gray-800 border rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-orange-500 transition-all ${
-                    error ? 'border-red-500 shake' : 'border-gray-700'
+                    displayError ? 'border-red-500 shake' : 'border-gray-700'
                   }`}
                   placeholder="Ingresa tu contraseña"
-                  autoFocus
+                  autoComplete="current-password"
+                  autoFocus={STORAGE_MODE !== 'api'}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  tabIndex={-1}
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -70,22 +103,32 @@ export const AdminLogin = () => {
               </div>
             </div>
 
-            {error && (
+            {displayError && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/50 rounded-lg"
               >
                 <AlertCircle className="w-5 h-5 text-red-500" />
-                <span className="text-sm text-red-400">Contraseña incorrecta</span>
+                <span className="text-sm text-red-400">
+                  {error || 'Contraseña incorrecta'}
+                </span>
               </motion.div>
             )}
 
             <button
               type="submit"
-              className="w-full py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50"
+              disabled={isLoading}
+              className="w-full py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Acceder
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Ingresando...</span>
+                </>
+              ) : (
+                'Acceder'
+              )}
             </button>
           </div>
         </motion.form>
@@ -93,7 +136,11 @@ export const AdminLogin = () => {
         {/* Info */}
         <div className="mt-6 text-center">
           <p className="text-xs text-gray-500">
-            Contraseña por defecto: <code className="px-2 py-1 bg-gray-800 rounded">admin123</code>
+            {STORAGE_MODE === 'api' ? (
+              <>Usuario/contraseña default: <code className="px-2 py-1 bg-gray-800 rounded">admin / admin1234</code></>
+            ) : (
+              <>Contraseña por defecto: <code className="px-2 py-1 bg-gray-800 rounded">admin1234</code></>
+            )}
           </p>
           <p className="text-xs text-gray-500 mt-2">
             Puedes cambiarla desde Configuración → Zona de Peligro

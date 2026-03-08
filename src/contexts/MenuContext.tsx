@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
 import { MeatOption, Ingredient, Category, Product, SiteConfig, ProductOptionGroup } from '../types';
 import { MEATS } from '../constants/meats';
+import { storageAdapter } from '../services/storageAdapter';
 
 interface MenuContextType {
   meats: MeatOption[];
@@ -9,24 +10,27 @@ interface MenuContextType {
   products: Product[];
   optionGroups: ProductOptionGroup[];
   siteConfig: SiteConfig;
+  isLoading: boolean;
+  error: string | null;
   updateMeat: (id: string, updates: Partial<MeatOption>) => void;
   addMeat: (meat: MeatOption) => void;
   deleteMeat: (id: string) => void;
-  updateIngredient: (id: string, updates: Partial<Ingredient>) => void;
-  addIngredient: (ingredient: Ingredient) => void;
-  deleteIngredient: (id: string) => void;
-  updateCategory: (id: string, updates: Partial<Category>) => void;
-  addCategory: (category: Category) => void;
-  deleteCategory: (id: string) => void;
-  updateProduct: (id: string, updates: Partial<Product>) => void;
-  addProduct: (product: Product) => void;
-  deleteProduct: (id: string) => void;
-  updateOptionGroup: (id: string, updates: Partial<ProductOptionGroup>) => void;
-  addOptionGroup: (group: ProductOptionGroup) => void;
-  deleteOptionGroup: (id: string) => void;
-  updateSiteConfig: (updates: Partial<SiteConfig>) => void;
+  updateIngredient: (id: string, updates: Partial<Ingredient>) => Promise<void>;
+  addIngredient: (ingredient: Ingredient) => Promise<void>;
+  deleteIngredient: (id: string) => Promise<void>;
+  updateCategory: (id: string, updates: Partial<Category>) => Promise<void>;
+  addCategory: (category: Category) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
+  updateProduct: (id: string, updates: Partial<Product>) => Promise<void>;
+  addProduct: (product: Product) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
+  updateOptionGroup: (id: string, updates: Partial<ProductOptionGroup>) => Promise<void>;
+  addOptionGroup: (group: ProductOptionGroup) => Promise<void>;
+  deleteOptionGroup: (id: string) => Promise<void>;
+  updateSiteConfig: (updates: Partial<SiteConfig>) => Promise<void>;
   resetToDefaults: () => void;
   invalidateCache: () => void;
+  refetchData: () => Promise<void>;
 }
 
 const MenuContext = createContext<MenuContextType | undefined>(undefined);
@@ -425,133 +429,87 @@ const DEFAULT_PRODUCTS: Product[] = [
   },
 ];
 
-// Funciones de persistencia
-const STORAGE_KEYS = {
-  categories: 'menu_categories',
-  products: 'menu_products',
-  optionGroups: 'menu_optionGroups',
-  ingredients: 'menu_ingredients',
-  siteConfig: 'menu_siteConfig',
-  cacheTimestamp: 'menu_cache_timestamp',
-};
-
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
-
-const isCacheValid = (): boolean => {
-  try {
-    const timestamp = localStorage.getItem(STORAGE_KEYS.cacheTimestamp);
-    if (!timestamp) return false;
-    
-    const lastModified = parseInt(timestamp, 10);
-    const now = Date.now();
-    const timeDiff = now - lastModified;
-    
-    return timeDiff < CACHE_DURATION;
-  } catch {
-    return false;
-  }
-};
-
-const updateCacheTimestamp = (): void => {
-  try {
-    localStorage.setItem(STORAGE_KEYS.cacheTimestamp, Date.now().toString());
-  } catch (error) {
-    console.error('Error updating cache timestamp:', error);
-  }
-};
-
-const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
-  try {
-    // Verificar si el caché es válido antes de cargar
-    if (!isCacheValid()) {
-      console.log('Cache expired or invalid, using default values');
-      updateCacheTimestamp(); // Actualizar timestamp para el nuevo caché
-      return defaultValue;
-    }
-    
-    const stored = localStorage.getItem(key);
-    return stored ? JSON.parse(stored) : defaultValue;
-  } catch (error) {
-    console.error(`Error loading ${key} from localStorage:`, error);
-    return defaultValue;
-  }
-};
-
-const saveToStorage = <T,>(key: string, value: T): void => {
-  try {
-    const serialized = JSON.stringify(value);
-    const sizeInMB = new Blob([serialized]).size / 1024 / 1024;
-    
-    // Si el tamaño es mayor a 4MB, no guardar (localStorage típicamente tiene límite de 5-10MB)
-    if (sizeInMB > 4) {
-      console.warn(`${key} is too large (${sizeInMB.toFixed(2)}MB). Skipping localStorage save.`);
-      return;
-    }
-    
-    localStorage.setItem(key, serialized);
-    
-    // Actualizar timestamp del caché cuando se guarden cambios
-    updateCacheTimestamp();
-  } catch (error) {
-    if (error instanceof Error && error.name === 'QuotaExceededError') {
-      console.warn(`LocalStorage quota exceeded for ${key}. Attempting to clear old data...`);
-      
-      // Intentar limpiar datos antiguos y reintentar
-      try {
-        // Limpiar solo este key y reintentar
-        localStorage.removeItem(key);
-        const serialized = JSON.stringify(value);
-        localStorage.setItem(key, serialized);
-        updateCacheTimestamp(); // Actualizar timestamp después de guardar
-        console.log(`Successfully saved ${key} after clearing.`);
-      } catch (retryError) {
-        console.error(`Failed to save ${key} even after clearing:`, retryError);
-        // Si aún falla, no hacer nada - la app seguirá funcionando con datos en memoria
-      }
-    } else {
-      console.error(`Error saving ${key} to localStorage:`, error);
-    }
-  }
-};
+const STORAGE_MODE = import.meta.env.VITE_STORAGE_MODE || 'localStorage';
 
 export const MenuProvider = ({ children }: { children: ReactNode }) => {
   const [meats, setMeats] = useState<MeatOption[]>(MEATS);
-  const [ingredients, setIngredients] = useState<Ingredient[]>(() => 
-    loadFromStorage(STORAGE_KEYS.ingredients, DEFAULT_INGREDIENTS)
-  );
-  const [categories, setCategories] = useState<Category[]>(() => 
-    loadFromStorage(STORAGE_KEYS.categories, DEFAULT_CATEGORIES)
-  );
-  const [products, setProducts] = useState<Product[]>(() => 
-    loadFromStorage(STORAGE_KEYS.products, DEFAULT_PRODUCTS)
-  );
-  const [optionGroups, setOptionGroups] = useState<ProductOptionGroup[]>(() => 
-    loadFromStorage(STORAGE_KEYS.optionGroups, DEFAULT_OPTION_GROUPS)
-  );
-  const [siteConfig, setSiteConfig] = useState<SiteConfig>(() => 
-    loadFromStorage(STORAGE_KEYS.siteConfig, DEFAULT_CONFIG)
-  );
+  const [ingredients, setIngredients] = useState<Ingredient[]>(DEFAULT_INGREDIENTS);
+  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
+  const [products, setProducts] = useState<Product[]>(DEFAULT_PRODUCTS);
+  const [optionGroups, setOptionGroups] = useState<ProductOptionGroup[]>(DEFAULT_OPTION_GROUPS);
+  const [siteConfig, setSiteConfig] = useState<SiteConfig>(DEFAULT_CONFIG);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Guardar en localStorage cuando cambien los datos
+  // Load initial data
+  const loadInitialData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const [
+        loadedIngredients,
+        loadedCategories,
+        loadedProducts,
+        loadedOptionGroups,
+        loadedSiteConfig
+      ] = await Promise.all([
+        storageAdapter.loadIngredients(DEFAULT_INGREDIENTS),
+        storageAdapter.loadCategories(DEFAULT_CATEGORIES),
+        storageAdapter.loadProducts(DEFAULT_PRODUCTS),
+        storageAdapter.loadOptionGroups(DEFAULT_OPTION_GROUPS),
+        storageAdapter.loadSiteConfig(DEFAULT_CONFIG),
+      ]);
+
+      setIngredients(loadedIngredients);
+      setCategories(loadedCategories);
+      setProducts(loadedProducts);
+      setOptionGroups(loadedOptionGroups);
+      setSiteConfig(loadedSiteConfig);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
+      setError(errorMessage);
+      console.error('Error loading initial data:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  //Load data once on mount
   useEffect(() => {
-    saveToStorage(STORAGE_KEYS.ingredients, ingredients);
-  }, [ingredients]);
+    loadInitialData();
+  }, [loadInitialData]);
+
+  // Auto-save to storage when data changes (only for localStorage mode)
+  useEffect(() => {
+    if (STORAGE_MODE === 'localStorage' && !isLoading) {
+      storageAdapter.saveIngredients(ingredients);
+    }
+  }, [ingredients, isLoading]);
 
   useEffect(() => {
-    saveToStorage(STORAGE_KEYS.categories, categories);
-  }, [categories]);
+    if (STORAGE_MODE === 'localStorage' && !isLoading) {
+      storageAdapter.saveCategories(categories);
+    }
+  }, [categories, isLoading]);
 
   useEffect(() => {
-    saveToStorage(STORAGE_KEYS.products, products);
-  }, [products]);
+    if (STORAGE_MODE === 'localStorage' && !isLoading) {
+      storageAdapter.saveProducts(products);
+    }
+  }, [products, isLoading]);
 
   useEffect(() => {
-    saveToStorage(STORAGE_KEYS.optionGroups, optionGroups);
-  }, [optionGroups]);
+    if (STORAGE_MODE === 'localStorage' && !isLoading) {
+      storageAdapter.saveOptionGroups(optionGroups);
+    }
+  }, [optionGroups, isLoading]);
 
   useEffect(() => {
-    saveToStorage(STORAGE_KEYS.siteConfig, siteConfig);
-  }, [siteConfig]);
+    if (STORAGE_MODE === 'localStorage' && !isLoading) {
+      storageAdapter.saveSiteConfig(siteConfig);
+    }
+  }, [siteConfig, isLoading]);
 
   const updateMeat = (id: string, updates: Partial<MeatOption>) => {
     setMeats(prev => prev.map(meat => 
@@ -567,66 +525,165 @@ export const MenuProvider = ({ children }: { children: ReactNode }) => {
     setMeats(prev => prev.filter(meat => meat.id !== id));
   };
 
-  const updateIngredient = (id: string, updates: Partial<Ingredient>) => {
-    setIngredients(prev => prev.map(ing => 
-      ing.id === id ? { ...ing, ...updates } : ing
-    ));
+  const updateIngredient = async (id: string, updates: Partial<Ingredient>) => {
+    try {
+      const ingredient = ingredients.find(i => i.id === id);
+      if (!ingredient) return;
+      
+      const updated = { ...ingredient, ...updates };
+      await storageAdapter.updateIngredient(id, updated);
+      
+      setIngredients(prev => prev.map(ing => 
+        ing.id === id ? updated : ing
+      ));
+    } catch (err) {
+      console.error('Failed to update ingredient:', err);
+      setError(err instanceof Error ? err.message : 'Update failed');
+    }
   };
 
-  const addIngredient = (ingredient: Ingredient) => {
-    setIngredients(prev => [...prev, ingredient]);
+  const addIngredient = async (ingredient: Ingredient) => {
+    try {
+      await storageAdapter.addIngredient(ingredient);
+      setIngredients(prev => [...prev, ingredient]);
+    } catch (err) {
+      console.error('Failed to add ingredient:', err);
+      setError(err instanceof Error ? err.message : 'Add failed');
+    }
   };
 
-  const deleteIngredient = (id: string) => {
-    setIngredients(prev => prev.filter(ing => ing.id !== id));
+  const deleteIngredient = async (id: string) => {
+    try {
+      await storageAdapter.deleteIngredient(id);
+      setIngredients(prev => prev.filter(ing => ing.id !== id));
+    } catch (err) {
+      console.error('Failed to delete ingredient:', err);
+      setError(err instanceof Error ? err.message : 'Delete failed');
+    }
   };
 
-  const updateCategory = (id: string, updates: Partial<Category>) => {
-    setCategories(prev => prev.map(cat => 
-      cat.id === id ? { ...cat, ...updates } : cat
-    ));
+  const updateCategory = async (id: string, updates: Partial<Category>) => {
+    try {
+      const category = categories.find(c => c.id === id);
+      if (!category) return;
+      
+      const updated = { ...category, ...updates };
+      await storageAdapter.updateCategory(id, updated);
+      
+      setCategories(prev => prev.map(cat => 
+        cat.id === id ? updated : cat
+      ));
+    } catch (err) {
+      console.error('Failed to update category:', err);
+      setError(err instanceof Error ? err.message : 'Update failed');
+    }
   };
 
-  const addCategory = (category: Category) => {
-    setCategories(prev => [...prev, category]);
+  const addCategory = async (category: Category) => {
+    try {
+      await storageAdapter.addCategory(category);
+      setCategories(prev => [...prev, category]);
+    } catch (err) {
+      console.error('Failed to add category:', err);
+      setError(err instanceof Error ? err.message : 'Add failed');
+    }
   };
 
-  const deleteCategory = (id: string) => {
-    setCategories(prev => prev.filter(cat => cat.id !== id));
-    // También eliminar productos de esa categoría
-    setProducts(prev => prev.filter(prod => prod.categoryId !== id));
+  const deleteCategory = async (id: string) => {
+    try {
+      await storageAdapter.deleteCategory(id);
+      setCategories(prev => prev.filter(cat => cat.id !== id));
+      // También eliminar productos de esa categoría
+      setProducts(prev => prev.filter(prod => prod.categoryId !== id));
+    } catch (err) {
+      console.error('Failed to delete category:', err);
+      setError(err instanceof Error ? err.message : 'Delete failed');
+    }
   };
 
-  const updateProduct = (id: string, updates: Partial<Product>) => {
-    setProducts(prev => prev.map(prod => 
-      prod.id === id ? { ...prod, ...updates } : prod
-    ));
+  const updateProduct = async (id: string, updates: Partial<Product>) => {
+    try {
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+      
+      const updated = { ...product, ...updates };
+      await storageAdapter.updateProduct(id, updated);
+      
+      setProducts(prev => prev.map(prod => 
+        prod.id === id ? updated : prod
+      ));
+    } catch (err) {
+      console.error('Failed to update product:', err);
+      setError(err instanceof Error ? err.message : 'Update failed');
+    }
   };
 
-  const addProduct = (product: Product) => {
-    setProducts(prev => [...prev, product]);
+  const addProduct = async (product: Product) => {
+    try {
+      await storageAdapter.addProduct(product);
+      setProducts(prev => [...prev, product]);
+    } catch (err) {
+      console.error('Failed to add product:', err);
+      setError(err instanceof Error ? err.message : 'Add failed');
+    }
   };
 
-  const deleteProduct = (id: string) => {
-    setProducts(prev => prev.filter(prod => prod.id !== id));
+  const deleteProduct = async (id: string) => {
+    try {
+      await storageAdapter.deleteProduct(id);
+      setProducts(prev => prev.filter(prod => prod.id !== id));
+    } catch (err) {
+      console.error('Failed to delete product:', err);
+      setError(err instanceof Error ? err.message : 'Delete failed');
+    }
   };
 
-  const updateOptionGroup = (id: string, updates: Partial<ProductOptionGroup>) => {
-    setOptionGroups(prev => prev.map(group => 
-      group.id === id ? { ...group, ...updates } : group
-    ));
+  const updateOptionGroup = async (id: string, updates: Partial<ProductOptionGroup>) => {
+    try {
+      const group = optionGroups.find(g => g.id === id);
+      if (!group) return;
+      
+      const updated = { ...group, ...updates };
+      await storageAdapter.updateOptionGroup(id, updated);
+      
+      setOptionGroups(prev => prev.map(g => 
+        g.id === id ? updated : g
+      ));
+    } catch (err) {
+      console.error('Failed to update option group:', err);
+      setError(err instanceof Error ? err.message : 'Update failed');
+    }
   };
 
-  const addOptionGroup = (group: ProductOptionGroup) => {
-    setOptionGroups(prev => [...prev, group]);
+  const addOptionGroup = async (group: ProductOptionGroup) => {
+    try {
+      await storageAdapter.addOptionGroup(group);
+      setOptionGroups(prev => [...prev, group]);
+    } catch (err) {
+      console.error('Failed to add option group:', err);
+      setError(err instanceof Error ? err.message : 'Add failed');
+    }
   };
 
-  const deleteOptionGroup = (id: string) => {
-    setOptionGroups(prev => prev.filter(group => group.id !== id));
+  const deleteOptionGroup = async (id: string) => {
+    try {
+      await storageAdapter.deleteOptionGroup(id);
+      setOptionGroups(prev => prev.filter(group => group.id !== id));
+    } catch (err) {
+      console.error('Failed to delete option group:', err);
+      setError(err instanceof Error ? err.message : 'Delete failed');
+    }
   };
 
-  const updateSiteConfig = (updates: Partial<SiteConfig>) => {
-    setSiteConfig(prev => ({ ...prev, ...updates }));
+  const updateSiteConfig = async (updates: Partial<SiteConfig>) => {
+    try {
+      const updated = { ...siteConfig, ...updates };
+      await storageAdapter.saveSiteConfig(updated);
+      setSiteConfig(updated);
+    } catch (err) {
+      console.error('Failed to update site config:', err);
+      setError(err instanceof Error ? err.message : 'Update failed');
+    }
   };
 
   const resetToDefaults = () => {
@@ -636,15 +693,20 @@ export const MenuProvider = ({ children }: { children: ReactNode }) => {
       setProducts(DEFAULT_PRODUCTS);
       setOptionGroups(DEFAULT_OPTION_GROUPS);
       setSiteConfig(DEFAULT_CONFIG);
-      // Limpiar localStorage
-      Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
+      // Limpiar localStorage si está en ese modo
+      if (STORAGE_MODE === 'localStorage') {
+        localStorage.clear();
+      }
     }
   };
 
   const invalidateCache = () => {
-    // Fuerza una actualización del timestamp para invalidar el caché
-    updateCacheTimestamp();
+    storageAdapter.invalidateCache();
     console.log('Cache invalidated - will reload on next page refresh');
+  };
+
+  const refetchData = async () => {
+    await loadInitialData();
   };
 
   return (
@@ -655,6 +717,8 @@ export const MenuProvider = ({ children }: { children: ReactNode }) => {
       products,
       optionGroups,
       siteConfig,
+      isLoading,
+      error,
       updateMeat,
       addMeat,
       deleteMeat,
@@ -673,6 +737,7 @@ export const MenuProvider = ({ children }: { children: ReactNode }) => {
       updateSiteConfig,
       resetToDefaults,
       invalidateCache,
+      refetchData,
     }}>
       {children}
     </MenuContext.Provider>
