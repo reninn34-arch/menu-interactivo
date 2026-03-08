@@ -566,7 +566,7 @@ Puedes **eliminar** o **modificar** todo desde el panel admin.
 
 ## 🎯 Calidad del Código
 
-### Características Profesionales Implementadas
+### Características Implementadas
 
 #### Frontend
 - ✅ **TypeScript**: Tipado fuerte en todo el código
@@ -592,7 +592,6 @@ Puedes **eliminar** o **modificar** todo desde el panel admin.
 - ✅ **Error Handling**: Middleware centralizado de errores
 - ✅ **Environment Variables**: Configuración segura con dotenv
 
-**Calificación**: 🏆 **9.5/10** - Nivel profesional
 
 ### Arquitectura
 - 📐 **REST API**: Backend desacoplado del frontend
@@ -676,9 +675,8 @@ Para adquirir licencias adicionales o uso multi-sitio, contacte al desarrollador
 
 Para consultas comerciales, soporte técnico o personalización:
 
-- 📧 **Email**: [Configurar tu email aquí]
-- 💬 **WhatsApp**: [Configurar tu número aquí]
-- 🌐 **Sitio Web**: [Configurar tu sitio aquí]
+- 📧 **Email**: [erik@clemetinepure.com]
+- 💬 **WhatsApp**: [0958828771]
 - 📝 **Documentación**: Ver este README y `/backend/README.md`
 
 ### Soporte Incluido:
