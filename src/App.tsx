@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, ShoppingCart, Menu, X, Clock, Loader2, AlertCircle } from 'lucide-react';
 import { Burger } from './components/Burger';
@@ -34,6 +34,18 @@ export default function App() {
   const [showMeatSelector, setShowMeatSelector] = useState(false);
   const [meatSelected, setMeatSelected] = useState(false);
   const [showBurgerOptions, setShowBurgerOptions] = useState(false);
+
+  // Detectar combinación de teclas Ctrl+Shift+A para acceder al admin
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+        e.preventDefault();
+        setShowAdmin(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
 
   // Loading state
   if (isLoading) {
@@ -75,18 +87,6 @@ export default function App() {
       setShowAdmin(true);
     }
   };
-
-  // Detectar combinación de teclas Ctrl+Shift+A para acceder al admin
-  useState(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
-        e.preventDefault();
-        setShowAdmin(true);
-      }
-    };
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  });
   
   // Obtener carnes desde el grupo de opciones "meat-type"
   const meatOptionGroup = optionGroups.find(g => g.id === 'meat-type');
