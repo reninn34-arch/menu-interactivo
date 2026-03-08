@@ -1,30 +1,45 @@
-import { useState } from 'react';
+import { useState, memo, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { Product } from '../types';
 import { ProductOptionsModal } from './ProductOptionsModal';
+import { ProductBadges } from './ProductBadges';
 
 interface ProductCardProps {
   product: Product;
   onOrder?: () => void;
-  onOrderWithOptions?: (selectedOptions: any[]) => void;
+  onOrderWithOptions?: (selectedOptions: any[], notes?: string) => void;
 }
 
-export const ProductCard = ({ product, onOrder, onOrderWithOptions }: ProductCardProps) => {
+/**
+ * ProductCard - Displays a product with image, price, and order button
+ * 
+ * Features:
+ * - Product image or fallback icon
+ * - Stock availability badges
+ * - Estimated preparation time
+ * - Nutritional information
+ * - Options modal for customizable products
+ * 
+ * @param product - Product data including name, price, availability
+ * @param onOrder - Callback for products without options
+ * @param onOrderWithOptions - Callback for products with customization options
+ */
+export const ProductCard = memo(({ product, onOrder, onOrderWithOptions }: ProductCardProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const hasOptions = product.optionGroupIds && product.optionGroupIds.length > 0;
 
-  const handleOrderClick = () => {
+  const handleOrderClick = useCallback(() => {
     if (hasOptions) {
       setIsModalOpen(true);
     } else {
       onOrder?.();
     }
-  };
+  }, [hasOptions, onOrder]);
 
-  const handleConfirmOptions = (selectedOptions: any[]) => {
-    onOrderWithOptions?.(selectedOptions);
+  const handleConfirmOptions = useCallback((selectedOptions: any[], notes?: string) => {
+    onOrderWithOptions?.(selectedOptions, notes);
     setIsModalOpen(false);
-  };
+  }, [onOrderWithOptions]);
 
   return (
     <>
@@ -35,7 +50,7 @@ export const ProductCard = ({ product, onOrder, onOrderWithOptions }: ProductCar
         className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10 hover:border-orange-500/30 transition-all group"
       >
         {/* Imagen del producto */}
-        <div className="w-full h-40 sm:h-48 mb-3 sm:mb-4 rounded-lg sm:rounded-xl overflow-hidden bg-black/20 flex items-center justify-center">
+        <div className="relative w-full h-40 sm:h-48 mb-3 sm:mb-4 rounded-lg sm:rounded-xl overflow-hidden bg-black/20 flex items-center justify-center">
           {product.image ? (
             <img
               src={product.image}
@@ -49,6 +64,9 @@ export const ProductCard = ({ product, onOrder, onOrderWithOptions }: ProductCar
               {product.categoryId === 'desserts' && '🍰'}
             </span>
           )}
+          
+          {/* Badges de estado */}
+          <ProductBadges product={product} className="absolute top-2 right-2" />
         </div>
 
         {/* Info del producto */}
@@ -84,11 +102,19 @@ export const ProductCard = ({ product, onOrder, onOrderWithOptions }: ProductCar
             </div>
             <motion.button
               onClick={handleOrderClick}
-              whileTap={{ scale: 0.95 }}
-              whileHover={{ scale: 1.05 }}
-              className="px-4 sm:px-6 py-1.5 sm:py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-full font-medium text-xs sm:text-sm shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 transition-all"
+              disabled={product.inStock === false}
+              whileTap={product.inStock !== false ? { scale: 0.95 } : {}}
+              whileHover={product.inStock !== false ? { scale: 1.05 } : {}}
+              className={`
+                px-4 sm:px-6 py-1.5 sm:py-2 rounded-full font-medium text-xs sm:text-sm transition-all
+                ${
+                  product.inStock === false
+                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50'
+                }
+              `}
             >
-              Ordenar
+              {product.inStock === false ? 'No disponible' : 'Ordenar'}
             </motion.button>
           </div>
         </div>
@@ -105,4 +131,4 @@ export const ProductCard = ({ product, onOrder, onOrderWithOptions }: ProductCar
       )}
     </>
   );
-};
+});

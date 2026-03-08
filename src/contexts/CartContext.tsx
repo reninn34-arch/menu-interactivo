@@ -5,6 +5,18 @@ interface CartContextType {
   items: CartItem[];
   itemCount: number;
   total: number;
+  /**
+   * Adds a product to the cart with optional customizations
+   * 
+   * @param product - The product to add
+   * @param meat - Selected meat type (optional)
+   * @param selectedOptions - Array of selected options/extras
+   * @param quantity - Number of items to add (default: 1)
+   * @param notes - Special instructions from customer (e.g., "no onions", "extra cheese")
+   * 
+   * @example
+   * addItem(burger, beefMeat, [{groupName: 'Size', values: ['Large']}], 1, 'Well done')
+   */
   addItem: (product: Product, meat?: MeatOption, selectedOptions?: SelectedOption[], quantity?: number, notes?: string) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;

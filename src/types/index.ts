@@ -51,6 +51,9 @@ export interface Product {
   useLayeredView?: boolean; // Activa la visualización con capas tipo burger
   variableIngredientId?: string; // ID del ingrediente que cambia con opciones
   linkedOptionGroupId?: string; // ID del grupo de opciones vinculado a la capa variable
+  // ✨ NUEVO: Disponibilidad y tiempo
+  inStock?: boolean; // Si hay inventario disponible (default: true)
+  estimatedTime?: number; // Tiempo de preparación en minutos
 }
 
 export interface ProductOptionValue {
@@ -99,6 +102,17 @@ export interface SiteConfig {
   whatsappNumberDelivery?: string;
   restaurantAddress?: string;
   deliveryCost?: number;
+  // ✨ NUEVO: Horarios de operación
+  openingHours?: {
+    monday: { open: string; close: string; closed: boolean };
+    tuesday: { open: string; close: string; closed: boolean };
+    wednesday: { open: string; close: string; closed: boolean };
+    thursday: { open: string; close: string; closed: boolean };
+    friday: { open: string; close: string; closed: boolean };
+    saturday: { open: string; close: string; closed: boolean };
+    sunday: { open: string; close: string; closed: boolean };
+  };
+  allowOrdersOutsideHours?: boolean; // Permitir pedidos fuera de horario
 }
 
 export interface BurgerComponentProps {

@@ -146,6 +146,118 @@ export const SiteConfigEditor = () => {
         </div>
       </div>
 
+      {/* HORARIOS DE OPERACIÓN */}
+      <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl p-6 border-2 border-blue-400 shadow-xl space-y-4">
+        <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+          🕐 Horarios de Operación
+          <span className="text-sm font-normal bg-white/20 px-3 py-1 rounded-full">Importante</span>
+        </h3>
+        <p className="text-white/90 mb-4 text-sm">
+          Configura los días y horarios en los que aceptas pedidos
+        </p>
+
+        {/* Allow Orders Outside Hours Toggle */}
+        <div className="bg-white/10 rounded-xl p-4 mb-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formData.allowOrdersOutsideHours || false}
+              onChange={(e) => setFormData({ ...formData, allowOrdersOutsideHours: e.target.checked })}
+              className="mt-1 w-5 h-5 rounded border-2 border-white/50 bg-white/20 checked:bg-orange-500 focus:ring-2 focus:ring-orange-500"
+            />
+            <div>
+              <span className="text-white font-semibold">Permitir pedidos fuera de horario</span>
+              <p className="text-xs text-white/70 mt-1">
+                Si está activado, los clientes podrán hacer pedidos incluso cuando estés cerrado
+              </p>
+            </div>
+          </label>
+        </div>
+
+        {/* Days Schedule */}
+        <div className="space-y-3">
+          {(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const).map((day) => {
+            const dayNames = {
+              monday: 'Lunes',
+              tuesday: 'Martes',
+              wednesday: 'Miércoles',
+              thursday: 'Jueves',
+              friday: 'Viernes',
+              saturday: 'Sábado',
+              sunday: 'Domingo'
+            };
+
+            const dayData = formData.openingHours?.[day] || { open: '09:00', close: '22:00', closed: false };
+
+            return (
+              <div key={day} className="bg-white/10 rounded-xl p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  {/* Day Name and Closed Toggle */}
+                  <div className="flex items-center gap-3 sm:w-40">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={!dayData.closed}
+                        onChange={(e) => {
+                          const newHours = {
+                            ...formData.openingHours,
+                            [day]: { ...dayData, closed: !e.target.checked }
+                          };
+                          setFormData({ ...formData, openingHours: newHours });
+                        }}
+                        className="w-4 h-4 rounded border-2 border-white/50 bg-white/20 checked:bg-green-500"
+                      />
+                      <span className="text-white font-semibold">{dayNames[day]}</span>
+                    </label>
+                  </div>
+
+                  {/* Time Inputs */}
+                  {!dayData.closed ? (
+                    <div className="flex items-center gap-2 flex-1">
+                      <div className="flex-1">
+                        <label className="block text-xs text-white/70 mb-1">Abre</label>
+                        <input
+                          type="time"
+                          value={dayData.open}
+                          onChange={(e) => {
+                            const newHours = {
+                              ...formData.openingHours,
+                              [day]: { ...dayData, open: e.target.value }
+                            };
+                            setFormData({ ...formData, openingHours: newHours });
+                          }}
+                          className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white focus:outline-none focus:border-white"
+                        />
+                      </div>
+                      <span className="text-white/70 mt-5">-</span>
+                      <div className="flex-1">
+                        <label className="block text-xs text-white/70 mb-1">Cierra</label>
+                        <input
+                          type="time"
+                          value={dayData.close}
+                          onChange={(e) => {
+                            const newHours = {
+                              ...formData.openingHours,
+                              [day]: { ...dayData, close: e.target.value }
+                            };
+                            setFormData({ ...formData, openingHours: newHours });
+                          }}
+                          className="w-full px-3 py-2 bg-white/20 border border-white/30 rounded-lg text-white focus:outline-none focus:border-white"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex-1 py-2">
+                      <span className="text-white/60 italic">Cerrado</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Información Básica */}
       <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 space-y-4">
         <h3 className="text-xl font-semibold text-white mb-4">Información del Sitio</h3>

@@ -3,15 +3,17 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Product, ProductOptionGroup, SelectedOption } from '../types';
 import { useMenu } from '../contexts/MenuContext';
 import { LayeredProductView } from './LayeredProductView';
+import { ProductBadges } from './ProductBadges';
 
 interface InteractiveProductViewProps {
   product: Product;
-  onAddToCart: (selectedOptions: SelectedOption[]) => void;
+  onAddToCart: (selectedOptions: SelectedOption[], notes?: string) => void; // ✨ Agregado notes
 }
 
 export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProductViewProps) => {
   const { optionGroups } = useMenu();
   const [selections, setSelections] = useState<Map<string, Set<string>>>(new Map());
+  const [notes, setNotes] = useState<string>(''); // ✨ Estado para notas
   const [isAnimating, setIsAnimating] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [direction, setDirection] = useState(1);
@@ -102,6 +104,9 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
   };
 
   const isValid = () => {
+    // Check if product is in stock
+    if (product.inStock === false) return false;
+
     return productOptionGroups.every(group => {
       const selected = selections.get(group.id) || new Set();
       const count = selected.size;
@@ -143,7 +148,7 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
       }
     });
 
-    onAddToCart(selectedOptions);
+    onAddToCart(selectedOptions, notes || undefined); // ✨ Pasar notas
   };
 
   // Obtener descripción de selecciones actuales para mostrar
@@ -175,6 +180,9 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
           animate={isAnimating ? { scale: [1, 0.95, 1.05, 1] } : {}}
           transition={{ duration: 0.6 }}
         >
+          {/* Status Badges */}
+          <ProductBadges product={product} className="absolute top-3 right-3 z-20" />
+
           {/* Product Visualization: Layered View or Image */}
           <div className="flex items-center justify-center py-4 lg:py-8 px-4">
             {product.useLayeredView && product.linkedOptionGroupId ? (
@@ -345,6 +353,22 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
           })}
         </div>
 
+        {/* ✨ NUEVO: Campo de notas especiales */}
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            Notas especiales (opcional)
+          </label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Ej: Sin cebolla, extra queso, poco picante..."
+            maxLength={200}
+            rows={2}
+            className="w-full px-3 py-2 lg:px-4 lg:py-3 bg-gray-800/50 border border-gray-700 rounded-lg lg:rounded-xl text-white text-sm lg:text-base placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 resize-none transition-all"
+          />
+          <p className="text-xs text-gray-500 mt-1">{notes.length}/200 caracteres</p>
+        </div>
+
         {/* Add to Cart Button */}
         <motion.button
           onClick={handleAddToCart}
@@ -352,12 +376,14 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
           whileHover={isValid() ? { scale: 1.02 } : {}}
           whileTap={isValid() ? { scale: 0.98 } : {}}
           className={`w-full py-3 lg:py-4 rounded-lg lg:rounded-xl font-bold text-sm lg:text-lg transition-all ${
-            isValid()
+            product.inStock === false
+              ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+              : isValid()
               ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/50 hover:shadow-orange-500/70'
               : 'bg-gray-700 text-gray-500 cursor-not-allowed'
           }`}
         >
-          Agregar - ${calculateTotal().toFixed(2)}
+          {product.inStock === false ? 'No disponible' : `Agregar - $${calculateTotal().toFixed(2)}`}
         </motion.button>
       </div>
     </div>

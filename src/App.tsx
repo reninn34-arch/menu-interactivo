@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, ShoppingCart, Menu, X } from 'lucide-react';
+import { MapPin, ShoppingCart, Menu, X, Clock } from 'lucide-react';
 import { Burger } from './components/Burger';
 import { MeatSelector } from './components/MeatSelector';
 import { CategorySelector } from './components/CategorySelector';
@@ -15,9 +15,10 @@ import { ProductOptionsModal } from './components/ProductOptionsModal';
 import { useMenu } from './contexts/MenuContext';
 import { useCart } from './contexts/CartContext';
 import { useAuth } from './contexts/AuthContext';
+import { isRestaurantOpen, getScheduleDisplay } from './utils/openingHours';
 
 export default function App() {
-  const { products, categories, optionGroups } = useMenu();
+  const { products, categories, optionGroups, siteConfig } = useMenu();
   const { itemCount, addItem } = useCart();
   const { isAuthenticated } = useAuth();
   
@@ -29,9 +30,13 @@ export default function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [showCart, setShowCart] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showMeatSelector, setShowMeatSelector] = useState(false);
   const [meatSelected, setMeatSelected] = useState(false);
   const [showBurgerOptions, setShowBurgerOptions] = useState(false);
+
+  // Restaurant status
+  const restaurantStatus = isRestaurantOpen(siteConfig);
 
   // Solo permitir acceso al admin si está autenticado
   const handleAdminAccess = () => {
@@ -197,25 +202,126 @@ export default function App() {
           {/* Botón de menú hamburguesa */}
           <button
             onClick={() => setShowSidebar(true)}
+            aria-label="Abrir menú de navegación"
             className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/5 hover:bg-white/20 transition-colors"
           >
-            <Menu className="w-5 h-5 text-white" />
+            <Menu className="w-5 h-5 text-white" aria-hidden="true" />
           </button>
           
           {/* Carrito */}
           <button
             onClick={() => setShowCart(true)}
+            aria-label={`Abrir carrito de compras, ${itemCount} ${itemCount === 1 ? 'producto' : 'productos'}`}
             className="relative w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/5 hover:bg-white/20 transition-colors"
-            title="Carrito de Compras"
           >
-            <ShoppingCart className="w-5 h-5 text-white" />
+            <ShoppingCart className="w-5 h-5 text-white" aria-hidden="true" />
             {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+              <span 
+                className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
+                aria-live="polite"
+              >
                 {itemCount}
               </span>
             )}
           </button>
         </header>
+
+        {/* Restaurant Status Banner */}
+        {siteConfig.openingHours && (
+          <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 mb-2 sm:mb-4 z-20 relative">
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className={`rounded-xl p-3 sm:p-4 backdrop-blur-md border flex items-center justify-between gap-3 ${
+                restaurantStatus.isOpen
+                  ? 'bg-green-500/20 border-green-500/40'
+                  : 'bg-red-500/20 border-red-500/40'
+              }`}
+            >
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Clock className={`w-5 h-5 sm:w-6 sm:h-6 ${
+                  restaurantStatus.isOpen ? 'text-green-400' : 'text-red-400'
+                }`} />
+                <div>
+                  <p className={`font-bold text-sm sm:text-base ${
+                    restaurantStatus.isOpen ? 'text-green-400' : 'text-red-400'
+                  }`}>
+                    {restaurantStatus.isOpen ? '✅ Abierto' : '❌ Cerrado'}
+                  </p>
+                  <p className="text-xs sm:text-sm text-white/80">
+                    {restaurantStatus.message}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowScheduleModal(true)}
+                className="text-xs sm:text-sm text-white/70 hover:text-white transition-colors underline"
+              >
+                Ver horarios
+              </button>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Schedule Modal */}
+        <AnimatePresence>
+          {showScheduleModal && (
+            <>
+              {/* Backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowScheduleModal(false)}
+                className="fixed inset-0 bg-black/60 z-50"
+              />
+              
+              {/* Modal */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md mx-4 bg-gray-900 rounded-2xl border border-white/10 shadow-2xl z-50 overflow-hidden"
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-2xl font-bold text-white flex items-center gap-2">
+                      <Clock className="w-6 h-6 text-orange-500" />
+                      Horarios de Atención
+                    </h3>
+                    <button
+                      onClick={() => setShowScheduleModal(false)}
+                      className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+                    >
+                      <X className="w-5 h-5 text-white" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {getScheduleDisplay(siteConfig).map((day, index) => (
+                      <div
+                        key={index}
+                        className="flex justify-between items-center p-3 bg-white/5 rounded-lg"
+                      >
+                        <span className="text-white font-medium">{day.split(':')[0]}</span>
+                        <span className="text-gray-400">{day.split(':')[1]}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {siteConfig.allowOrdersOutsideHours && (
+                    <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+                      <p className="text-sm text-green-400 text-center">
+                        ✅ Pedidos disponibles 24/7
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
 
         {/* Contenido principal */}
         <main className="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-6 pb-2 sm:pb-8 relative">
@@ -423,8 +529,8 @@ export default function App() {
                 onClose={() => setShowBurgerOptions(false)}
                 excludedGroupIds={['meat-type']} // Ocultamos la carne para que no la pida doble
                 basePriceOverride={selectedProduct.price + selectedMeat.price} // Le pasamos el precio con la carne incluida
-                onConfirm={(selectedOptions) => {
-                  addItem(selectedProduct, selectedMeat, selectedOptions, 1);
+                onConfirm={(selectedOptions, notes) => {
+                  addItem(selectedProduct, selectedMeat, selectedOptions, 1, notes);
                   setShowCart(true);
                   setShowBurgerOptions(false);
                   setMeatSelected(false);
@@ -505,8 +611,8 @@ export default function App() {
 
               <InteractiveProductView
                 product={selectedProduct}
-                onAddToCart={(selectedOptions) => {
-                  addItem(selectedProduct, undefined, selectedOptions, 1);
+                onAddToCart={(selectedOptions, notes) => {
+                  addItem(selectedProduct, undefined, selectedOptions, 1, notes);
                   setShowCart(true);
                 }}
               />
@@ -535,8 +641,8 @@ export default function App() {
                         addItem(product, undefined, undefined, 1);
                         setShowCart(true);
                       }}
-                      onOrderWithOptions={(selectedOptions) => {
-                        addItem(product, undefined, selectedOptions, 1);
+                      onOrderWithOptions={(selectedOptions, notes) => {
+                        addItem(product, undefined, selectedOptions, 1, notes);
                         setShowCart(true);
                       }}
                     />

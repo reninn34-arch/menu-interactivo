@@ -261,6 +261,44 @@ export const ProductEditor = () => {
                 className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-orange-500"
               />
             </div>
+
+            {/* ✨ NUEVO: Disponibilidad */}
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Tiempo de Preparación (minutos)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={formData.estimatedTime ?? ''}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  setFormData({ ...formData, estimatedTime: e.target.value === '' ? undefined : (isNaN(val) ? undefined : val) });
+                }}
+                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-orange-500"
+                placeholder="Ej: 15"
+              />
+            </div>
+          </div>
+
+          {/* ✨ NUEVO: Control de disponibilidad */}
+          <div className="flex items-center gap-6 p-4 bg-gray-700 rounded-lg">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.inStock !== false} // Por defecto true
+                onChange={(e) => setFormData({ ...formData, inStock: e.target.checked })}
+                className="w-5 h-5 rounded bg-gray-600 border-gray-500 text-orange-500 focus:ring-orange-500"
+              />
+              <span className="text-sm text-gray-300">
+                ✅ Producto en stock (disponible para ordenar)
+              </span>
+            </label>
+            {formData.inStock === false && (
+              <span className="text-xs text-red-400 bg-red-500/10 px-3 py-1 rounded-full">
+                ⚠️ Los clientes no podrán ordenar este producto
+              </span>
+            )}
           </div>
 
           {/* Información Nutricional (Opcional) */}

@@ -7,7 +7,7 @@ interface ProductOptionsModalProps {
   product: Product;
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (selectedOptions: SelectedOption[]) => void;
+  onConfirm: (selectedOptions: SelectedOption[], notes?: string) => void; // ✨ Agregado notes
   excludedGroupIds?: string[]; // ✨ NUEVO: Permite ocultar grupos
   basePriceOverride?: number;  // ✨ NUEVO: Permite ajustar el precio base
 }
@@ -15,6 +15,7 @@ interface ProductOptionsModalProps {
 export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, excludedGroupIds = [], basePriceOverride }: ProductOptionsModalProps) => {
   const { optionGroups } = useMenu();
   const [selections, setSelections] = useState<Map<string, Set<string>>>(new Map());
+  const [notes, setNotes] = useState<string>(''); // ✨ Estado para notas
 
   // ✨ MODIFICADO: Ignora los grupos que enviemos en excludedGroupIds
   const productOptionGroups = optionGroups.filter(
@@ -34,6 +35,7 @@ export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, exclu
         }
       });
       setSelections(initialSelections);
+      setNotes(''); // ✨ Limpiar notas al abrir
     }
   }, [isOpen, product.id]);
 
@@ -121,7 +123,7 @@ export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, exclu
       }
     });
 
-    onConfirm(selectedOptions);
+    onConfirm(selectedOptions, notes || undefined); // ✨ Pasar notas
     onClose();
   };
 
@@ -225,7 +227,21 @@ export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, exclu
               );
             })}
           </div>
-
+          {/* ✨ NUEVO: Campo de notas especiales */}
+          <div className="px-6 pb-4">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Notas especiales (opcional)
+            </label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Ej: Sin cebolla, extra queso, poco picante..."
+              maxLength={200}
+              rows={3}
+              className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 resize-none transition-all"
+            />
+            <p className="text-xs text-gray-500 mt-1">{notes.length}/200 caracteres</p>
+          </div>
           {/* Footer */}
           <div className="sticky bottom-0 bg-[#2A1810] border-t border-orange-500/20 p-6">
             <button
