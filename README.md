@@ -659,28 +659,46 @@ npm test
 
 ## 📄 Licencia
 
-MIT License - Libre para uso comercial y personal
+**Licencia Comercial Propietaria**
 
-## 🤝 Contribuir
+Este software es un producto comercial protegido por derechos de autor. Todos los derechos reservados.
 
-Las contribuciones son bienvenidas. Por favor:
-1. Fork el proyecto
-2. Crea una rama para tu feature (`git checkout -b feature/amazing-feature`)
-3. Commit tus cambios (`git commit -m 'Add amazing feature'`)
-4. Push a la rama (`git push origin feature/amazing-feature`)
-5. Abre un Pull Request
+### Términos de Uso:
+- ✅ Permitido el uso para un sitio/restaurante por licencia
+- ✅ Personalización y modificación del código para uso propio
+- ✅ Soporte técnico incluido durante el período de garantía
+- ❌ Prohibida la redistribución o reventa del código fuente
+- ❌ Prohibido el uso en proyectos de terceros sin licencia adicional
 
-## 📧 Soporte
+Para adquirir licencias adicionales o uso multi-sitio, contacte al desarrollador.
 
-Para consultas o soporte:
-- 📧 Email: tu@email.com
-- 💬 WhatsApp: +52 123 456 7890
-- 🐛 Issues: GitHub Issues
+## 📧 Soporte y Contacto
+
+Para consultas comerciales, soporte técnico o personalización:
+
+- 📧 **Email**: [Configurar tu email aquí]
+- 💬 **WhatsApp**: [Configurar tu número aquí]
+- 🌐 **Sitio Web**: [Configurar tu sitio aquí]
+- 📝 **Documentación**: Ver este README y `/backend/README.md`
+
+### Soporte Incluido:
+- ✅ Instalación y configuración inicial
+- ✅ Resolución de bugs y errores
+- ✅ Consultas técnicas básicas
+- ✅ Actualizaciones de seguridad (6 meses)
+
+### Servicios Adicionales (Opcionales):
+- 🎨 Personalización de diseño y branding
+- 🔧 Desarrollo de funcionalidades específicas
+- 🚀 Configuración de hosting y dominio
+- 📱 Integración con otros sistemas (POS, delivery, etc.)
+- 🎓 Capacitación para el equipo del restaurante
 
 ---
 
-**Desarrollado con ❤️ para restaurantes que quieren modernizarse**
+**Sistema Profesional de Menú Digital para Restaurantes**
 
 **Versión**: 1.0.0  
 **Última actualización**: Marzo 2026  
-**Estado**: ✅ Producción - Estable
+**Estado**: ✅ Producción - Probado y Estable  
+**Tecnología**: React + TypeScript + Node.js + PostgreSQL

@@ -1,7 +1,10 @@
 {
-  "name": "react-example",
+  "name": "menu-interactivo-frontend",
+  "version": "1.0.0",
+  "description": "Sistema profesional de menú digital interactivo para restaurantes",
+  "author": "[Tu Nombre o Empresa]",
+  "license": "UNLICENSED",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",

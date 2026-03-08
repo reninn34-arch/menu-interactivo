@@ -253,4 +253,8 @@ Para migrar datos existentes del frontend:
 
 ## 📄 Licencia
 
-ISC
+**Licencia Comercial Propietaria** - Todos los derechos reservados.
+
+Este software es parte de un producto comercial. El uso está limitado según los términos de la licencia adquirida.
+
+Para más información sobre términos de uso y licencias adicionales, consulte el README principal del proyecto.

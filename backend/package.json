@@ -13,10 +13,12 @@
     "menu",
     "restaurant",
     "api",
-    "postgresql"
+    "postgresql",
+    "digital-menu",
+    "food-ordering"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "[Tu Nombre o Empresa]",
+  "license": "UNLICENSED",
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
