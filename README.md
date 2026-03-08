@@ -46,9 +46,68 @@ Este proyecto tiene dos modos de operación:
 
 **Recomendación**: Usa localStorage para prototipos y PostgreSQL para producción.
 
+## ⚙️ Configuración de Modo de Almacenamiento
+
+El sistema se configura mediante variables de entorno en el archivo `.env`:
+
+### Modo localStorage (Por Defecto)
+```bash
+# .env
+VITE_STORAGE_MODE=localStorage
+```
+- ✅ Sin necesidad de backend
+- ✅ Datos persistentes en el navegador
+- ✅ Ideal para desarrollo y demos
+- ⚠️ Los datos se pierden si se limpia el navegador
+- ⚠️ No compartido entre dispositivos
+
+### Modo API (Producción)
+```bash
+# .env
+VITE_STORAGE_MODE=api
+VITE_API_URL=http://localhost:3001/api
+```
+- ✅ Datos centralizados en PostgreSQL
+- ✅ Sincronización entre dispositivos
+- ✅ Autenticación con JWT
+- ✅ Backups automáticos de base de datos
+- 🔧 Requiere backend en ejecución
+
+### Cambiar de Modo
+
+1. **Copiar archivo de ejemplo**:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Editar `.env`** y cambiar `VITE_STORAGE_MODE`:
+   ```bash
+   # Para localStorage
+   VITE_STORAGE_MODE=localStorage
+   
+   # Para API
+   VITE_STORAGE_MODE=api
+   VITE_API_URL=http://localhost:3001/api
+   ```
+
+3. **Reiniciar el servidor de desarrollo**:
+   ```bash
+   npm run dev
+   ```
+
+### Diferencias de Autenticación
+
+| Característica | localStorage | API |
+|---------------|--------------|-----|
+| Login | Solo contraseña | Usuario + contraseña |
+| Credenciales por defecto | `admin1234` | `admin` / `admin1234` |
+| Tokens JWT | ❌ No | ✅ Sí |
+| Multi-usuario | ❌ No | ✅ Sí |
+| Sesión persistente | localStorage | Token con expiración |
+
 ## 🚀 Inicio Rápido
 
-### Opción A: Frontend Solo (localStorage)
+### Opción A: Frontend Solo (localStorage) - Recomendado para Empezar
 
 #### Requisitos Previos
 - Node.js 18+ 
@@ -64,12 +123,20 @@ cd menu-interactivo
 # Instalar dependencias
 npm install
 
+# Crear archivo de configuración
+cp .env.example .env
+# Por defecto ya usa localStorage, no necesita cambios
+
 # Iniciar servidor de desarrollo
 npm run dev
 
 # Abrir en navegador
 http://localhost:5173
 ```
+
+✅ **¡Listo!** El sistema está funcionando con almacenamiento local.  
+📝 **Nota**: Los datos se guardan automáticamente en el navegador.  
+🔐 **Login admin**: Solo contraseña `admin1234`
 
 #### Construir para Producción
 
@@ -81,7 +148,7 @@ npm run build
 npm run preview
 ```
 
-### Opción B: Backend + PostgreSQL
+### Opción B: Backend + PostgreSQL (Producción)
 
 #### Requisitos Previos
 - Node.js 18+
@@ -90,16 +157,7 @@ npm run preview
 
 #### Instalación
 
-**1. Frontend:**
-```bash
-# Instalar dependencias del frontend
-npm install
-
-# Iniciar frontend en modo desarrollo
-npm run dev
-```
-
-**2. Backend:**
+**1. Backend:**
 ```bash
 # Navegar al directorio backend
 cd backend
@@ -119,15 +177,38 @@ psql -U postgres -d menu_interactivo -f database/schema.sql
 
 # Iniciar servidor backend
 npm run dev
+# Backend corriendo en http://localhost:3001
 ```
+
+**2. Frontend:**
+```bash
+# Volver a la raíz del proyecto
+cd ..
+
+# Instalar dependencias (si no lo hiciste antes)
+npm install
+
+# Configurar modo API
+cp .env.example .env
+# Editar .env y cambiar:
+# VITE_STORAGE_MODE=api
+# VITE_API_URL=http://localhost:3001/api
+
+# Iniciar frontend en modo desarrollo
+npm run dev
+```
+
+✅ **¡Sistema completo funcionando!**  
+🔐 **Login admin**: Usuario `admin` + contraseña `admin1234`  
+📖 **Documentación completa**: [backend/README.md](backend/README.md)
 
 **3. Migrar datos de localStorage (opcional):**
 ```bash
-# Si ya tienes datos en localStorage, ábrelo en el navegador:
-# DevTools → Console → Pega el script migrate-from-localstorage.js
-```
+# Si ya tienes datos en localStorage y quieres migrarlos al backend:
+# 1. Abrir frontend en modo localStorage
+# 2. DevTools → Console → Copiar datos del localStorage
+# 3. Usar script de migración (ver backend/README.md)
 
-📖 **Ver documentación completa del backend**: [backend/README.md](backend/README.md)
 
 ## 🧪 Testing
 
@@ -227,18 +308,151 @@ src/
 │   ├── MenuContext.tsx    # Productos, categorías, config
 │   ├── CartContext.tsx    # Carrito de compras
 │   └── AuthContext.tsx    # Autenticación admin
+├── services/           # Capa de servicios
+│   ├── api.ts             # Cliente REST API
+│   └── storageAdapter.ts  # Abstracción de almacenamiento
 ├── types/              # TypeScript interfaces
 │   └── index.ts        # Definiciones de tipos
 ├── utils/              # Funciones de utilidad
 │   ├── openingHours.ts     # Lógica de horarios
-│   └── openingHours.test.ts # Tests de horarios
+│   ├── openingHours.test.ts # Tests de horarios
+│   └── imageCompression.ts # Compresión de imágenes
 ├── constants/          # Datos constantes
 │   └── meats.ts        # Tipos de carne predefinidos
 ├── test/               # Configuración de testing
 │   └── setup.ts        # Setup global de vitest
 ├── App.tsx             # Componente principal
-└── main.tsx            # Entry point
+├── main.tsx            # Entry point
+└── vite-env.d.ts       # TypeScript definitions para Vite
 ```
+
+## 🔧 Arquitectura Técnica del Sistema Dual-Mode
+
+### Storage Adapter Pattern
+
+El sistema utiliza un **Storage Adapter** que abstrae la lógica de persistencia, permitiendo cambiar entre localStorage y API sin modificar el código de los componentes.
+
+```typescript
+// Detección automática del modo
+const STORAGE_MODE = import.meta.env.VITE_STORAGE_MODE || 'localStorage';
+
+// Interfaz unificada
+export const storageAdapter = {
+  // Todas las operaciones retornan Promises
+  loadProducts: async (): Promise<Product[]> => {...},
+  saveProduct: async (product: Product): Promise<void> => {...},
+  deleteProduct: async (id: string): Promise<void> => {...},
+  // ... más métodos para categories, ingredients, etc.
+}
+```
+
+### Flujo de Datos
+
+#### Modo localStorage:
+```
+Component → StorageAdapter → localStorage
+                             ↓
+                      Browser Storage
+```
+
+#### Modo API:
+```
+Component → StorageAdapter → API Client → Backend API → PostgreSQL
+                             ↓
+                    Transform Layer
+                    (snake_case ↔ camelCase)
+```
+
+### API Client (`services/api.ts`)
+
+Cliente REST completo con:
+- **JWT Authentication**: Token automático en headers
+- **Auto-retry**: Reintentos en error 401
+- **Data Transform**: snake_case (API) ↔ camelCase (Frontend)
+- **Type Safety**: Completamente tipado con TypeScript
+
+```typescript
+// Ejemplo de uso
+import { productsApi } from './services/api';
+
+// Create
+const newProduct = await productsApi.create(productData);
+
+// Read
+const products = await productsApi.getAll();
+const product = await productsApi.getById('id-123');
+
+// Update
+await productsApi.update('id-123', updatedData);
+
+// Delete
+await productsApi.delete('id-123');
+```
+
+### Context Architecture
+
+Todos los contexts son **async-first** y soportan ambos modos:
+
+```typescript
+// MenuContext.tsx
+export const MenuContext = createContext({
+  // Data
+  products: Product[],
+  categories: Category[],
+  
+  // Loading states
+  isLoading: boolean,
+  error: string | null,
+  
+  // Async operations
+  updateProduct: (product: Product) => Promise<void>,
+  addProduct: (product: Product) => Promise<void>,
+  deleteProduct: (id: string) => Promise<void>,
+  
+  // Refetch capability
+  refetchData: () => Promise<void>,
+});
+```
+
+### Error Handling
+
+El sistema maneja errores de forma consistente:
+
+```typescript
+try {
+  setIsLoading(true);
+  const result = await storageAdapter.saveProduct(product);
+  // Actualizar estado local
+  setProducts(prev => [...prev, result]);
+} catch (error) {
+  setError(`Error al guardar producto: ${error.message}`);
+  console.error('Error details:', error);
+} finally {
+  setIsLoading(false);
+}
+```
+
+### Cache Management (localStorage mode)
+
+Sistema de cache con TTL de 24 horas:
+
+```typescript
+// Cache validation
+const isCacheValid = () => {
+  const timestamp = localStorage.getItem('cache_timestamp');
+  if (!timestamp) return false;
+  const age = Date.now() - parseInt(timestamp);
+  return age < 24 * 60 * 60 * 1000; // 24h
+};
+
+// Auto-invalidation
+if (!isCacheValid()) {
+  // Clear cache and reload
+  localStorage.clear();
+  window.location.reload();
+}
+```
+
 
 ## 🎨 Personalización
 
