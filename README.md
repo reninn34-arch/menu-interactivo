@@ -28,13 +28,33 @@ Sistema completo de menú digital interactivo con carrito de compras, panel de a
 - 💰 **Costos de Delivery**: Configuración de precios de envío
 - 📱 **Múltiples WhatsApp**: Números separados para pickup y delivery
 
+## 🏗️ Arquitectura
+
+Este proyecto tiene dos modos de operación:
+
+### 1. **Modo Frontend-Only** (localStorage)
+- Ideal para demos y proyectos pequeños
+- Sin necesidad de servidor backend
+- Almacenamiento local en el navegador
+- Configuración cero
+
+### 2. **Modo Backend + PostgreSQL** (Producción)
+- Backend REST API con Node.js + Express
+- Base de datos PostgreSQL
+- Autenticación JWT
+- Escalable para múltiples usuarios
+
+**Recomendación**: Usa localStorage para prototipos y PostgreSQL para producción.
+
 ## 🚀 Inicio Rápido
 
-### Requisitos Previos
+### Opción A: Frontend Solo (localStorage)
+
+#### Requisitos Previos
 - Node.js 18+ 
 - npm o yarn
 
-### Instalación
+#### Instalación
 
 ```bash
 # Clonar el repositorio
@@ -48,10 +68,10 @@ npm install
 npm run dev
 
 # Abrir en navegador
-http://localhost:3000
+http://localhost:5173
 ```
 
-### Construir para Producción
+#### Construir para Producción
 
 ```bash
 # Genera build optimizado en carpeta /dist
@@ -60,6 +80,54 @@ npm run build
 # Preview del build
 npm run preview
 ```
+
+### Opción B: Backend + PostgreSQL
+
+#### Requisitos Previos
+- Node.js 18+
+- PostgreSQL 14+
+- npm o yarn
+
+#### Instalación
+
+**1. Frontend:**
+```bash
+# Instalar dependencias del frontend
+npm install
+
+# Iniciar frontend en modo desarrollo
+npm run dev
+```
+
+**2. Backend:**
+```bash
+# Navegar al directorio backend
+cd backend
+
+# Instalar dependencias
+npm install
+
+# Configurar variables de entorno
+cp .env.example .env
+# Editar .env con tus credenciales de PostgreSQL
+
+# Crear la base de datos
+createdb -U postgres menu_interactivo
+
+# Inicializar el schema
+psql -U postgres -d menu_interactivo -f database/schema.sql
+
+# Iniciar servidor backend
+npm run dev
+```
+
+**3. Migrar datos de localStorage (opcional):**
+```bash
+# Si ya tienes datos en localStorage, ábrelo en el navegador:
+# DevTools → Console → Pega el script migrate-from-localstorage.js
+```
+
+📖 **Ver documentación completa del backend**: [backend/README.md](backend/README.md)
 
 ## 🧪 Testing
 
@@ -211,14 +279,58 @@ src/
 
 ### State & Data
 - **State Management**: React Context API
-- **Persistencia**: localStorage
+- **Persistencia**: localStorage / PostgreSQL (modo backend)
 - **Error Handling**: react-error-boundary
 - **Image Optimization**: browser-image-compression
+
+### Backend (Opcional)
+- **Runtime**: Node.js
+- **Framework**: Express
+- **Base de Datos**: PostgreSQL
+- **ORM/Query**: pg (node-postgres)
+- **Autenticación**: JWT + bcrypt
+- **CORS**: cors middleware
 
 ### Testing
 - **Framework**: Vitest
 - **Component Testing**: @testing-library/react
 - **DOM Matchers**: @testing-library/jest-dom
+
+## 📁 Estructura del Proyecto
+
+```
+menu-interactivo/
+├── src/                      # Frontend React
+│   ├── components/           # Componentes React
+│   │   ├── Admin/           # Panel de administración
+│   │   ├── Burger/          # Componentes 3D de hamburguesa
+│   │   ├── Cart.tsx         # Carrito de compras
+│   │   └── ...              
+│   ├── contexts/            # State Management (Context API)
+│   │   ├── MenuContext.tsx  # Productos, categorías, config
+│   │   ├── CartContext.tsx  # Carrito de compras
+│   │   └── AuthContext.tsx  # Autenticación admin
+│   ├── types/               # TypeScript interfaces
+│   ├── utils/               # Funciones de utilidad
+│   │   ├── openingHours.ts      # Lógica de horarios
+│   │   ├── imageCompression.ts  # Optimización de imágenes
+│   │   └── *.test.ts            # Tests unitarios
+│   └── ...
+├── backend/                 # Backend Node.js (Opcional)
+│   ├── src/
+│   │   ├── routes/          # Endpoints REST API
+│   │   ├── middleware/      # Auth JWT
+│   │   ├── config/          # Configuración DB
+│   │   └── server.js        # Servidor Express
+│   ├── database/
+│   │   ├── schema.sql       # Schema PostgreSQL
+│   │   └── migrate-from-localstorage.js
+│   └── README.md            # Documentación backend
+├── package.json
+├── vite.config.ts
+├── vitest.config.ts
+└── README.md                # Este archivo
+```
 
 ## 📦 Datos de Muestra
 
@@ -241,6 +353,8 @@ Puedes **eliminar** o **modificar** todo desde el panel admin.
 ## 🎯 Calidad del Código
 
 ### Características Profesionales Implementadas
+
+#### Frontend
 - ✅ **TypeScript**: Tipado fuerte en todo el código
 - ✅ **JSDoc**: Documentación de funciones críticas
 - ✅ **React.memo**: Optimización de performance
@@ -250,33 +364,81 @@ Puedes **eliminar** o **modificar** todo desde el panel admin.
 - ✅ **Image Optimization**: Compresión automática de imágenes
 - ✅ **Code Reusability**: Componentes reutilizables (ProductBadges)
 - ✅ **Clean Code**: Separación de concerns y buenas prácticas
+- ✅ **24h Cache System**: Sistema de caché inteligente para optimizar recursos
+
+#### Backend (PostgreSQL)
+- ✅ **RESTful API**: Endpoints organizados y semánticos
+- ✅ **JWT Authentication**: Seguridad con tokens
+- ✅ **Password Hashing**: bcrypt con factor 10
+- ✅ **Connection Pooling**: Gestión eficiente de conexiones
+- ✅ **CORS Configured**: Headers de seguridad configurados
+- ✅ **SQL Injection Protection**: Prepared statements con pg
+- ✅ **Database Triggers**: Auto-actualización de timestamps
+- ✅ **Transaction Support**: ACID compliance en operaciones complejas
+- ✅ **Error Handling**: Middleware centralizado de errores
+- ✅ **Environment Variables**: Configuración segura con dotenv
 
 **Calificación**: 🏆 **9.5/10** - Nivel profesional
 
+### Arquitectura
+- 📐 **REST API**: Backend desacoplado del frontend
+- 🗄️ **Relational DB**: PostgreSQL con esquema normalizado
+- 🔄 **Stateless Backend**: Escalable horizontalmente
+- 💾 **Persistent Storage**: Datos seguros en BD relacional
+- 🔐 **Secure Auth**: JWT con expiración de 24h
+
 ## 📚 Documentación Adicional
 
+- [backend/README.md](backend/README.md) - Documentación completa del backend API
 - [TESTING.md](TESTING.md) - Guía completa de testing
 - [Vitest](https://vitest.dev/) - Framework de testing
 - [React Testing Library](https://testing-library.com/react) - Testing de componentes
+- [PostgreSQL Docs](https://www.postgresql.org/docs/) - Documentación de PostgreSQL
+- [Express.js](https://expressjs.com/) - Framework web para Node.js
+Frontend
 
-## 🐛 Troubleshooting
-
-### El panel admin no se abre
+#### El panel admin no se abre
 - Verifica que estés usando `Ctrl+Shift+A` (Windows/Linux) o `Cmd+Shift+A` (Mac)
 - Asegúrate de tener JavaScript habilitado en tu navegador
 
-### Los pedidos no se envían por WhatsApp
+#### Los pedidos no se envían por WhatsApp
 - Verifica que el número esté en formato internacional (sin +, espacios ni guiones)
 - Ejemplo correcto: `521234567890`
 
-### localStorage lleno
+#### localStorage lleno
 - El sistema maneja automáticamente errores de QuotaExceeded
 - Si las imágenes son muy grandes, considera usar URLs externas
+- O migra al backend PostgreSQL para almacenamiento ilimitado
 
-### Tests fallan
+#### Tests fallan
 ```bash
 # Limpiar y reinstalar dependencias
 rm -rf node_modules package-lock.json
+npm install
+npm test
+```
+
+### Backend
+
+#### Error: "password authentication failed"
+- Verifica las credenciales en `.env`
+- Confirma que el usuario PostgreSQL existe
+- Revisa que PostgreSQL esté en ejecución
+
+#### Error: "database does not exist"
+- Crea la base de datos: `createdb -U postgres menu_interactivo`
+- O desde psql: `CREATE DATABASE menu_interactivo;`
+
+#### Error: "relation does not exist"
+- Ejecuta el schema: `psql -U postgres -d menu_interactivo -f database/schema.sql`
+
+#### Error: "Port 3001 already in use"
+- Cambia el puerto en `.env` (PORT=3002)
+- O mata el proceso: `lsof -ti:3001 | xargs kill` (Unix/Mac)
+
+#### CORS errors en frontend
+- Verifica que `FRONTEND_URL` en `.env` coincida con tu frontend
+- Default: `http://localhost:5173 -rf node_modules package-lock.json
 npm install
 npm test
 ```
