@@ -7,8 +7,26 @@ const pool = require('./config/database');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Configuración de CORS para permitir múltiples orígenes
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://192.168.1.2:3000',
+  'http://192.168.1.8:3000',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Permitir requests sin origin (como mobile apps o curl)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
