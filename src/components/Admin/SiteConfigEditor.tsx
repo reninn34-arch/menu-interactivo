@@ -138,7 +138,7 @@ export const SiteConfigEditor = () => {
               value={formData.whatsappNumberPickup || ''}
               onChange={(e) => setFormData({ ...formData, whatsappNumberPickup: e.target.value })}
               className="w-full px-4 py-3 bg-white/20 border-2 border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-white/30"
-              placeholder="Ej: 5212345678901 (número del restaurante)"
+              placeholder="Ej: 593987654321 (número del restaurante)"
             />
             <p className="text-xs text-white/70 mt-2">
               Este número recibirá los pedidos de RECOGER EN TIENDA
@@ -154,13 +154,13 @@ export const SiteConfigEditor = () => {
               value={formData.whatsappNumberDelivery || ''}
               onChange={(e) => setFormData({ ...formData, whatsappNumberDelivery: e.target.value })}
               className="w-full px-4 py-3 bg-white/20 border-2 border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-white/30"
-              placeholder="Ej: 5219876543210 (servicio de delivery)"
+              placeholder="Ej: 593998765432 (servicio de delivery)"
             />
             <p className="text-xs text-white/70 mt-2">
               Este número recibirá los pedidos con DELIVERY (puede ser un servicio externo)
             </p>
             <p className="text-xs text-white/80 mt-1 font-medium">
-              Ejemplos: 🇲🇽 521234567890 | 🇺🇸 11234567890 | 🇪🇸 34612345678
+              🇪🇨 Formato Ecuador: 593 + 9 dígitos | Ejemplo: 593987654321
             </p>
           </div>
 
@@ -172,7 +172,7 @@ export const SiteConfigEditor = () => {
               value={formData.restaurantAddress || ''}
               onChange={(e) => setFormData({ ...formData, restaurantAddress: e.target.value })}
               className="w-full px-4 py-3 bg-white/20 border-2 border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-white/30 resize-none"
-              placeholder="Ej: Calle Principal #123, Colonia Centro, Ciudad de México"
+              placeholder="Ej: Av. 9 de Octubre y Malecón, Guayaquil, Ecuador"
               rows={2}
             />
             <p className="text-xs text-white/70 mt-2">

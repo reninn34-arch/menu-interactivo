@@ -244,14 +244,15 @@ Ver [TESTING.md](TESTING.md) para documentación completa de testing.
 
 ### Formato del Número
 ```
-[Código País][Código Área][Número]
+[Código País][Número]
 Sin espacios, guiones ni símbolos
 ```
 
-**Ejemplos**:
-- 🇲🇽 México: `521234567890` (52 + 10 dígitos)
-- 🇺🇸 USA: `11234567890` (1 + 10 dígitos)
-- 🇪🇸 España: `34612345678` (34 + 9 dígitos)
+**Ejemplo para Ecuador**:
+- 🇪🇨 Ecuador: `593987654321` (593 + 9 dígitos)
+- Código país: `593`
+- Números móviles comienzan con `9`
+- Total: 12 dígitos (593 + 9)
 
 ### Configurar desde Admin
 1. Panel Admin → Configuración General
@@ -616,7 +617,7 @@ Frontend
 
 #### Los pedidos no se envían por WhatsApp
 - Verifica que el número esté en formato internacional (sin +, espacios ni guiones)
-- Ejemplo correcto: `521234567890`
+- Ejemplo correcto: `593987654321` (\ud83c\uddea\ud83c\udde8 Ecuador: 593 + 9 d\u00edgitos)
 
 #### localStorage lleno
 - El sistema maneja automáticamente errores de QuotaExceeded
