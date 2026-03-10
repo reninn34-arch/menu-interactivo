@@ -2,8 +2,6 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
-const fs = require('fs');
-const path = require('path');
 
 router.get('/', async (req, res) => {
   try {
@@ -30,48 +28,8 @@ router.put('/', authenticateToken, async (req, res) => {
       restaurant_address, delivery_cost, allow_orders_outside_hours, opening_hours
     } = req.body;
     
-    const publicDir = path.join(__dirname, '..', '..', '..', 'public');
-    const pwaIconPath = path.join(publicDir, 'pwa-icon.png');
-    
-    // Si el logo está vacío o null, eliminar archivo físico
-    if (!logo || logo === '') {
-      try {
-        if (fs.existsSync(pwaIconPath)) {
-          fs.unlinkSync(pwaIconPath);
-          console.log('🗑️ Logo eliminado: pwa-icon.png');
-        }
-      } catch (error) {
-        console.error('Error eliminando logo:', error);
-      }
-      logo = null; // Guardar como null en la BD
-    }
-    // Si el logo es base64, guardarlo como archivo en public/
-    else if (logo && logo.startsWith('data:image')) {
-      try {
-        // Extraer tipo de imagen y datos base64
-        const matches = logo.match(/^data:image\/(\w+);base64,(.+)$/);
-        if (matches) {
-          const imageType = matches[1]; // png, jpg, etc.
-          const base64Data = matches[2];
-          const buffer = Buffer.from(base64Data, 'base64');
-          
-          // Crear directorio si no existe
-          if (!fs.existsSync(publicDir)) {
-            fs.mkdirSync(publicDir, { recursive: true });
-          }
-          
-          // Guardar como pwa-icon.png (siempre PNG para compatibilidad)
-          fs.writeFileSync(pwaIconPath, buffer);
-          
-          // Actualizar logo con la ruta del archivo
-          logo = '/pwa-icon.png';
-          console.log(`✅ Logo guardado en: ${pwaIconPath}`);
-        }
-      } catch (error) {
-        console.error('Error guardando logo como archivo:', error);
-        // Si falla, continuar con base64
-      }
-    }
+    // Ya NO guardamos archivos físicos. El frontend ya comprime el logo a Base64,
+    // así que lo guardamos directo en la Base de Datos para evitar problemas en Railway.
     
     const result = await pool.query(
       `UPDATE site_config 

@@ -17,86 +17,42 @@ router.get('/manifest.json', async (req, res) => {
     const siteName = config.site_name || 'Menú Interactivo';
     const shortName = siteName.length > 12 ? siteName.substring(0, 12) : siteName;
 
-    // Si hay logo configurado, usarlo como icono de la PWA
-    // Si no hay logo, no incluir iconos (la PWA usará el favicon o el nombre)
+    // Detectar si el logo es JPEG o PNG (el compresor suele convertirlos a JPEG)
+    let iconType = 'image/png';
+    if (config.logo && config.logo.startsWith('data:image/jpeg')) {
+      iconType = 'image/jpeg';
+    }
+
+    // Usar el Logo como ícono de instalación de la App (PWA)
     const icons = config.logo ? [
-      {
-        src: config.logo,
-        sizes: '72x72',
-        type: 'image/png',
-        purpose: 'any'
-      },
-      {
-        src: config.logo,
-        sizes: '96x96',
-        type: 'image/png',
-        purpose: 'any'
-      },
-      {
-        src: config.logo,
-        sizes: '128x128',
-        type: 'image/png',
-        purpose: 'any'
-      },
-      {
-        src: config.logo,
-        sizes: '144x144',
-        type: 'image/png',
-        purpose: 'any'
-      },
-      {
-        src: config.logo,
-        sizes: '152x152',
-        type: 'image/png',
-        purpose: 'any'
-      },
-      {
-        src: config.logo,
-        sizes: '192x192',
-        type: 'image/png',
-        purpose: 'any maskable'
-      },
-      {
-        src: config.logo,
-        sizes: '384x384',
-        type: 'image/png',
-        purpose: 'any maskable'
-      },
-      {
-        src: config.logo,
-        sizes: '512x512',
-        type: 'image/png',
-        purpose: 'any maskable'
-      }
+      { src: config.logo, sizes: '192x192', type: iconType, purpose: 'any maskable' },
+      { src: config.logo, sizes: '512x512', type: iconType, purpose: 'any maskable' }
     ] : [];
 
     const manifest = {
       name: siteName,
       short_name: shortName,
-      description: `Menú interactivo de ${siteName} con pedidos por WhatsApp`,
+      description: `Menú interactivo de ${siteName}`,
       start_url: '/',
       display: 'standalone',
       background_color: config.background_color || '#320A0A',
       theme_color: config.primary_color || '#FF9F0A',
       orientation: 'portrait-primary',
-      icons: icons.length > 0 ? icons : undefined, // Si no hay iconos, no incluir la propiedad
+      icons: icons.length > 0 ? icons : undefined,
       categories: ['food', 'lifestyle', 'business'],
       shortcuts: [
         {
           name: 'Ver Menú',
           short_name: 'Menú',
-          description: 'Abrir el menú completo',
+          description: 'Abrir el menú',
           url: '/',
-          icons: [{ src: '/icon-192x192.svg', sizes: '192x192' }]
+          icons: config.logo ? [{ src: config.logo, sizes: '192x192', type: iconType }] : undefined
         }
       ]
     };
 
-    // Establecer headers para JSON con charset UTF-8 y NO cachear
     res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
     res.json(manifest);
 
   } catch (error) {
