@@ -58,7 +58,7 @@ const DEFAULT_CONFIG: SiteConfig = {
   logoHeight: 40,
   primaryColor: '#FF9F0A',
   secondaryColor: '#FF7A00',
-  backgroundColor: '#1A110C',
+  backgroundColor: '#320A0A',
   textColor: '#FFFFFF',
   accentColor: '#FFD700',
   branchName: 'Sucursal Principal',

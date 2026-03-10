@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Product } from '../types';
 import { ProductOptionsModal } from './ProductOptionsModal';
 import { ProductBadges } from './ProductBadges';
+import { useMenu } from '../contexts/MenuContext';
 
 interface ProductCardProps {
   product: Product;
@@ -25,6 +26,7 @@ interface ProductCardProps {
  * @param onOrderWithOptions - Callback for products with customization options
  */
 export const ProductCard = memo(({ product, onOrder, onOrderWithOptions }: ProductCardProps) => {
+  const { siteConfig } = useMenu();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const hasOptions = product.optionGroupIds && product.optionGroupIds.length > 0;
 
@@ -47,7 +49,16 @@ export const ProductCard = memo(({ product, onOrder, onOrderWithOptions }: Produ
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-white/10 hover:border-orange-500/30 transition-all group"
+        className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md rounded-xl sm:rounded-2xl p-4 sm:p-6 border transition-all group"
+        style={{
+          borderColor: 'rgba(255, 255, 255, 0.1)'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = `${siteConfig.primaryColor || '#FF9F0A'}4D`;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+        }}
       >
         {/* Imagen del producto */}
         <div className="relative w-full h-40 sm:h-48 mb-3 sm:mb-4 rounded-lg sm:rounded-xl overflow-hidden bg-black/20 flex items-center justify-center">
@@ -93,7 +104,10 @@ export const ProductCard = memo(({ product, onOrder, onOrderWithOptions }: Produ
           {/* Precio y botón */}
           <div className="flex items-center justify-between pt-1 sm:pt-2">
             <div>
-              <span className="text-xl sm:text-2xl font-bold text-orange-400">
+              <span 
+                className="text-xl sm:text-2xl font-bold"
+                style={{ color: siteConfig.accentColor || '#FFB84D' }}
+              >
                 ${product.price.toFixed(2)}
               </span>
               {hasOptions && (
@@ -105,14 +119,30 @@ export const ProductCard = memo(({ product, onOrder, onOrderWithOptions }: Produ
               disabled={product.inStock === false}
               whileTap={product.inStock !== false ? { scale: 0.95 } : {}}
               whileHover={product.inStock !== false ? { scale: 1.05 } : {}}
-              className={`
-                px-4 sm:px-6 py-1.5 sm:py-2 rounded-full font-medium text-xs sm:text-sm transition-all
-                ${
-                  product.inStock === false
-                    ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50'
+              className="px-4 sm:px-6 py-1.5 sm:py-2 rounded-full font-medium text-xs sm:text-sm transition-all"
+              style={
+                product.inStock === false
+                  ? {
+                      backgroundColor: '#4B5563',
+                      color: '#9CA3AF',
+                      cursor: 'not-allowed'
+                    }
+                  : {
+                      background: `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`,
+                      color: '#FFFFFF',
+                      boxShadow: `0 10px 15px -3px ${siteConfig.primaryColor || '#FF9F0A'}4D`
+                    }
+              }
+              onMouseEnter={(e) => {
+                if (product.inStock !== false) {
+                  e.currentTarget.style.boxShadow = `0 10px 15px -3px ${siteConfig.primaryColor || '#FF9F0A'}80`;
                 }
-              `}
+              }}
+              onMouseLeave={(e) => {
+                if (product.inStock !== false) {
+                  e.currentTarget.style.boxShadow = `0 10px 15px -3px ${siteConfig.primaryColor || '#FF9F0A'}4D`;
+                }
+              }}
             >
               {product.inStock === false ? 'No disponible' : 'Ordenar'}
             </motion.button>

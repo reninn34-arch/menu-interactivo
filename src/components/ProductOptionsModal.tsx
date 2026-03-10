@@ -13,7 +13,7 @@ interface ProductOptionsModalProps {
 }
 
 export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, excludedGroupIds = [], basePriceOverride }: ProductOptionsModalProps) => {
-  const { optionGroups } = useMenu();
+  const { optionGroups, siteConfig } = useMenu();
   const [selections, setSelections] = useState<Map<string, Set<string>>>(new Map());
   const [notes, setNotes] = useState<string>('');
 
@@ -146,7 +146,10 @@ export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, exclu
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="sticky top-0 bg-[#2A1810] border-b border-orange-500/20 p-6 z-10">
+          <div 
+            className="sticky top-0 bg-[#2A1810] border-b p-6 z-10"
+            style={{ borderColor: `${siteConfig.primaryColor || '#FF9F0A'}33` }}
+          >
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-2xl font-bold text-white mb-1">{product.name}</h2>
@@ -173,7 +176,11 @@ export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, exclu
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold text-white">
                       {group.name}
-                      {group.required && <span className="text-orange-500 ml-1">*</span>}
+                      {group.required && (
+                        <span className="ml-1" style={{ color: siteConfig.primaryColor || '#FF9F0A' }}>
+                          *
+                        </span>
+                      )}
                     </h3>
                     {group.multiSelect && group.maxSelections && (
                       <span className="text-sm text-gray-400">
@@ -194,16 +201,24 @@ export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, exclu
                         <button
                           key={value.id}
                           onClick={() => handleOptionToggle(group.id, value.id, group.multiSelect)}
-                          className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
-                            isSelected
-                              ? 'border-orange-500 bg-orange-500/10'
-                              : 'border-gray-700 hover:border-gray-600'
-                          }`}
+                          className="w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all"
+                          style={isSelected ? {
+                            borderColor: siteConfig.primaryColor || '#FF9F0A',
+                            backgroundColor: `${siteConfig.primaryColor || '#FF9F0A'}1A`
+                          } : {
+                            borderColor: '#374151'
+                          }}
                         >
                           <div className="flex items-center gap-3">
-                            <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                              isSelected ? 'border-orange-500 bg-orange-500' : 'border-gray-600'
-                            }`}>
+                            <div 
+                              className="w-5 h-5 rounded-full border-2 flex items-center justify-center"
+                              style={isSelected ? {
+                                borderColor: siteConfig.primaryColor || '#FF9F0A',
+                                backgroundColor: siteConfig.primaryColor || '#FF9F0A'
+                              } : {
+                                borderColor: '#4B5563'
+                              }}
+                            >
                               {isSelected && (
                                 <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -213,9 +228,14 @@ export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, exclu
                             <span className="text-white font-medium">{value.name}</span>
                           </div>
                           {value.priceModifier !== 0 && (
-                            <span className={`text-sm font-semibold ${
-                              value.priceModifier > 0 ? 'text-orange-400' : 'text-green-400'
-                            }`}>
+                            <span 
+                              className="text-sm font-semibold"
+                              style={{ 
+                                color: value.priceModifier > 0 
+                                  ? (siteConfig.accentColor || '#FFB84D')
+                                  : '#4ADE80'
+                              }}
+                            >
                               {value.priceModifier > 0 ? '+' : ''}${value.priceModifier.toFixed(2)}
                             </span>
                           )}
@@ -238,20 +258,53 @@ export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, exclu
               placeholder="Ej: Sin cebolla, extra queso, poco picante..."
               maxLength={200}
               rows={3}
-              className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 resize-none transition-all"
+              className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none resize-none transition-all"
+              style={{
+                borderColor: '#374151'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = siteConfig.primaryColor || '#FF9F0A';
+                e.target.style.boxShadow = `0 0 0 1px ${siteConfig.primaryColor || '#FF9F0A'}`;
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#374151';
+                e.target.style.boxShadow = 'none';
+              }}
             />
             <p className="text-xs text-gray-500 mt-1">{notes.length}/200 caracteres</p>
           </div>
           {/* Footer */}
-          <div className="sticky bottom-0 bg-[#2A1810] border-t border-orange-500/20 p-6">
+          <div 
+            className="sticky bottom-0 bg-[#2A1810] border-t p-6"
+            style={{ borderColor: `${siteConfig.primaryColor || '#FF9F0A'}33` }}
+          >
             <button
               onClick={handleConfirm}
               disabled={!isValid()}
-              className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
+              className="w-full py-4 rounded-xl font-bold text-lg transition-all"
+              style={
                 isValid()
-                  ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:shadow-lg hover:shadow-orange-500/50'
-                  : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-              }`}
+                  ? {
+                      background: `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`,
+                      color: '#FFFFFF',
+                      boxShadow: `0 10px 25px -5px ${siteConfig.primaryColor || '#FF9F0A'}80`
+                    }
+                  : {
+                      backgroundColor: '#374151',
+                      color: '#6B7280',
+                      cursor: 'not-allowed'
+                    }
+              }
+              onMouseEnter={(e) => {
+                if (isValid()) {
+                  e.currentTarget.style.boxShadow = `0 20px 35px -5px ${siteConfig.primaryColor || '#FF9F0A'}B3`;
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (isValid()) {
+                  e.currentTarget.style.boxShadow = `0 10px 25px -5px ${siteConfig.primaryColor || '#FF9F0A'}80`;
+                }
+              }}
             >
               Agregar al Carrito - ${calculateTotal().toFixed(2)}
             </button>

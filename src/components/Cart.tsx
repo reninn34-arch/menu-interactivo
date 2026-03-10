@@ -147,14 +147,20 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
               duration: 0.2,
               ease: [0.4, 0, 0.2, 1]
             }}
-            className="fixed right-0 top-0 h-full w-full sm:w-[450px] bg-gradient-to-b from-[#2D0D0A] to-[#0A0604] shadow-2xl z-50 flex flex-col"
-            style={{ willChange: 'transform' }}
+            className="fixed right-0 top-0 h-full w-full sm:w-[450px] shadow-2xl z-50 flex flex-col"
+            style={{ 
+              willChange: 'transform',
+              background: `linear-gradient(to bottom, ${siteConfig.backgroundColor || '#2D0D0A'}, ${siteConfig.backgroundColor ? `${siteConfig.backgroundColor}DD` : '#0A0604'})`
+            }}
           >
             {/* Header */}
             <div className="p-6 border-b border-white/10">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
-                  <ShoppingBag className="w-6 h-6 text-orange-500" />
+                  <ShoppingBag 
+                    className="w-6 h-6" 
+                    style={{ color: siteConfig.primaryColor || '#FF9F0A' }}
+                  />
                   <h2 className="text-2xl font-bold text-white">Tu Pedido</h2>
                 </div>
                 <button
@@ -209,7 +215,12 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
                       <div className="flex-1 min-w-0">
                         <h3 className="text-white font-semibold mb-1">{item.product.name}</h3>
                         {item.meat && (
-                          <p className="text-orange-400 text-sm mb-1">+ {item.meat.name}</p>
+                          <p 
+                            className="text-sm mb-1"
+                            style={{ color: siteConfig.accentColor || '#FFB84D' }}
+                          >
+                            + {item.meat.name}
+                          </p>
                         )}
                         {Array.isArray(item.selectedOptions) && item.selectedOptions.length > 0 && (
                           <div className="space-y-1 mb-2">
@@ -217,7 +228,12 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
                               <p key={`${item.id}-${option.groupId}-${optIndex}`} className="text-gray-400 text-xs">
                                 {option.groupName}: {option.valueNames.join(', ')}
                                 {option.totalPrice > 0 && (
-                                  <span className="text-orange-400 ml-1">+${option.totalPrice.toFixed(2)}</span>
+                                  <span 
+                                    className="ml-1"
+                                    style={{ color: siteConfig.accentColor || '#FFB84D' }}
+                                  >
+                                    +${option.totalPrice.toFixed(2)}
+                                  </span>
                                 )}
                               </p>
                             ))}
@@ -256,7 +272,10 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
 
                       {/* Price */}
                       <div className="text-right">
-                        <p className="text-orange-400 font-bold">
+                        <p 
+                          className="font-bold"
+                          style={{ color: siteConfig.accentColor || '#FFB84D' }}
+                        >
                           ${(
                             (item.product.price + 
                             (item.meat?.price || 0) + 
@@ -273,7 +292,10 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
 
             {/* Footer */}
             {items.length > 0 && (
-              <div className="p-6 border-t border-white/10 bg-black/20">
+              <div 
+                className="p-6 border-t border-white/10"
+                style={{ backgroundColor: `${siteConfig.backgroundColor || '#000000'}33` }}
+              >
                 <div className="space-y-3 mb-4">
                   <div className="flex justify-between text-gray-400">
                     <span>Subtotal</span>
@@ -281,13 +303,25 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
                   </div>
                   <div className="flex justify-between text-white text-xl font-bold">
                     <span>Total</span>
-                    <span className="text-orange-400">${total.toFixed(2)}</span>
+                    <span style={{ color: siteConfig.accentColor || '#FFB84D' }}>
+                      ${total.toFixed(2)}
+                    </span>
                   </div>
                 </div>
 
                 <button
                   onClick={handleCheckout}
-                  className="w-full py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-bold text-lg shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 transition-all hover:scale-105"
+                  className="w-full py-4 text-white rounded-xl font-bold text-lg shadow-lg transition-all hover:scale-105"
+                  style={{
+                    background: `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`,
+                    boxShadow: `0 10px 25px -5px ${siteConfig.primaryColor || '#FF9F0A'}4D`
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = `0 20px 35px -5px ${siteConfig.primaryColor || '#FF9F0A'}80`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = `0 10px 25px -5px ${siteConfig.primaryColor || '#FF9F0A'}4D`;
+                  }}
                 >
                   Confirmar Pedido
                 </button>

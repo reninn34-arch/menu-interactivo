@@ -52,7 +52,10 @@ export default function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#4A1410] via-[#2D0D0A] to-[#0A0604] flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
+          <Loader2 
+            className="w-12 h-12 animate-spin mx-auto mb-4" 
+            style={{ color: siteConfig?.primaryColor || '#FF9F0A' }}
+          />
           <p className="text-white text-lg">Cargando menú...</p>
         </div>
       </div>
@@ -69,7 +72,16 @@ export default function App() {
           <p className="text-gray-400 mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
+            className="px-6 py-3 text-white rounded-lg transition-colors"
+            style={{
+              background: `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.filter = 'brightness(1.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.filter = 'brightness(1)';
+            }}
           >
             Reintentar
           </button>
@@ -179,8 +191,11 @@ export default function App() {
                 duration: 0.2,
                 ease: [0.4, 0, 0.2, 1]
               }}
-              className="fixed left-0 top-0 bottom-0 w-72 bg-gradient-to-b from-gray-900 via-gray-900 to-black border-r border-white/10 z-50 overflow-y-auto"
-              style={{ willChange: 'transform' }}
+              className="fixed left-0 top-0 bottom-0 w-72 border-r border-white/10 z-50 overflow-y-auto"
+              style={{ 
+                willChange: 'transform',
+                background: `linear-gradient(to bottom, ${siteConfig.backgroundColor || '#111827'}, ${siteConfig.backgroundColor ? `${siteConfig.backgroundColor}DD` : '#000000'})`
+              }}
             >
               <div className="p-6">
                 <div className="flex items-center justify-between mb-8">
@@ -201,11 +216,24 @@ export default function App() {
                         setSelectedCategoryId(category.id);
                         setShowSidebar(false);
                       }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${
-                        selectedCategoryId === category.id
-                          ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg'
-                          : 'bg-white/5 text-gray-300 hover:bg-white/10'
-                      }`}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all"
+                      style={{
+                        background: selectedCategoryId === category.id
+                          ? `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`
+                          : 'rgba(255,255,255,0.05)',
+                        color: selectedCategoryId === category.id ? '#FFF' : '#D1D5DB',
+                        boxShadow: selectedCategoryId === category.id ? '0 10px 15px -3px rgba(0,0,0,0.3)' : 'none'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedCategoryId !== category.id) {
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedCategoryId !== category.id) {
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                        }
+                      }}
                     >
                       <span className="text-2xl">{category.icon}</span>
                       <div className="flex-1">
@@ -223,10 +251,16 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <div className="min-h-screen bg-gradient-to-br from-[#4A1410] via-[#2D0D0A] to-[#0A0604] text-white font-sans flex flex-col selection:bg-orange-500/30 overflow-hidden">
+      <div 
+        className="min-h-screen font-sans flex flex-col overflow-hidden relative"
+        style={{ 
+          background: `linear-gradient(to bottom right, ${siteConfig.backgroundColor || '#320A0A'}, #0A0604)`,
+          color: siteConfig.textColor || '#FFFFFF'
+        }}
+      >
         
-        {/* Decorative gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#6B1F1A]/20 via-transparent to-black/40 pointer-events-none" />
+        {/* Decorative gradient overlay - Opcional */}
+        {/* <div className="absolute inset-0 bg-gradient-to-b from-[#6B1F1A]/20 via-transparent to-black/40 pointer-events-none" /> */}
         
         {/* Header */}
         <header className="flex items-center justify-between p-4 sm:p-6 z-20 max-w-7xl mx-auto w-full relative">
@@ -270,7 +304,8 @@ export default function App() {
             <ShoppingCart className="w-5 h-5 text-white" aria-hidden="true" />
             {itemCount > 0 && (
               <span 
-                className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center justify-center"
+                className="absolute -top-1 -right-1 w-5 h-5 text-white text-xs font-bold rounded-full flex items-center justify-center"
+                style={{ backgroundColor: siteConfig.primaryColor || '#FF9F0A' }}
                 aria-live="polite"
               >
                 {itemCount}
@@ -340,7 +375,10 @@ export default function App() {
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-                      <Clock className="w-6 h-6 text-orange-500" />
+                      <Clock 
+                        className="w-6 h-6" 
+                        style={{ color: siteConfig.primaryColor || '#FF9F0A' }}
+                      />
                       Horarios de Atención
                     </h3>
                     <button
@@ -391,11 +429,25 @@ export default function App() {
                       <button
                         key={prod.id}
                         onClick={() => setSelectedProductIndex(index)}
-                        className={`flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-medium transition-all ${
-                          selectedProductIndex === index
-                            ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30'
-                            : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                        }`}
+                        className="flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-medium transition-all"
+                        style={selectedProductIndex === index ? {
+                          background: `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`,
+                          color: '#FFFFFF',
+                          boxShadow: `0 10px 15px -3px ${siteConfig.primaryColor || '#FF9F0A'}4D`
+                        } : {
+                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                          color: '#D1D5DB'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (selectedProductIndex !== index) {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (selectedProductIndex !== index) {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                          }
+                        }}
                       >
                         {prod.name}
                       </button>
@@ -426,7 +478,13 @@ export default function App() {
                           exit={{ opacity: 0, x: -20 }}
                           className="flex justify-center px-4"
                         >
-                          <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 px-6 py-3 rounded-xl text-center font-medium max-w-full">
+                          <div 
+                            className="text-white px-6 py-3 rounded-xl text-center font-medium max-w-full"
+                            style={{
+                              background: `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`,
+                              boxShadow: `0 10px 15px -3px ${siteConfig.primaryColor || '#FF9F0A'}4D`
+                            }}
+                          >
                             {categoryProducts[selectedProductIndex].name}
                           </div>
                         </motion.div>
@@ -438,11 +496,24 @@ export default function App() {
                         <button
                           key={index}
                           onClick={() => setSelectedProductIndex(index)}
-                          className={`h-1.5 rounded-full transition-all ${
-                            selectedProductIndex === index
-                              ? 'w-6 bg-orange-500'
-                              : 'w-1.5 bg-gray-600 hover:bg-gray-500'
-                          }`}
+                          className="h-1.5 rounded-full transition-all"
+                          style={selectedProductIndex === index ? {
+                            width: '1.5rem',
+                            backgroundColor: siteConfig.primaryColor || '#FF9F0A'
+                          } : {
+                            width: '0.375rem',
+                            backgroundColor: '#4B5563'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (selectedProductIndex !== index) {
+                              e.currentTarget.style.backgroundColor = '#6B7280';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (selectedProductIndex !== index) {
+                              e.currentTarget.style.backgroundColor = '#4B5563';
+                            }
+                          }}
                         />
                       ))}
                     </div>
@@ -528,7 +599,16 @@ export default function App() {
                         setMeatSelected(false);
                       }
                     }}
-                    className="w-full mt-1 lg:mt-6 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full py-2.5 lg:py-4 px-6 text-white font-bold hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-sm lg:text-lg"
+                    className="w-full mt-1 lg:mt-6 rounded-full py-2.5 lg:py-4 px-6 text-white font-bold transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-sm lg:text-lg"
+                    style={{
+                      background: `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = `linear-gradient(to right, ${siteConfig.secondaryColor || '#FF7A00'}, ${siteConfig.accentColor || '#FFB84D'})`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`;
+                    }}
                   >
                     <ShoppingCart className="w-4 h-4 lg:w-5 lg:h-5" />
                     Agregar al Carrito
@@ -565,7 +645,11 @@ export default function App() {
                       setShowMeatSelector(false);
                       setMeatSelected(true);
                     }}
-                    className="w-full bg-gradient-to-r from-[#FF9F0A] to-[#FF7A00] text-white rounded-full py-2 sm:py-2.5 lg:py-4 px-4 sm:px-6 lg:px-8 flex items-center justify-center font-bold text-sm sm:text-base lg:text-xl shadow-[0_10px_25px_rgba(255,159,10,0.4)] relative overflow-hidden"
+                    className="w-full text-white rounded-full py-2 sm:py-2.5 lg:py-4 px-4 sm:px-6 lg:px-8 flex items-center justify-center font-bold text-sm sm:text-base lg:text-xl relative overflow-hidden"
+                    style={{
+                      background: `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`,
+                      boxShadow: `0 10px 25px rgba(${parseInt(siteConfig.primaryColor?.slice(1, 3) || 'FF', 16)}, ${parseInt(siteConfig.primaryColor?.slice(3, 5) || '9F', 16)}, ${parseInt(siteConfig.primaryColor?.slice(5, 7) || '0A', 16)}, 0.4)`
+                    }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-[1.5s]" />
                     <span className="relative z-10">Elegir</span>
@@ -603,11 +687,25 @@ export default function App() {
                       <button
                         key={prod.id}
                         onClick={() => setSelectedProductIndex(index)}
-                        className={`flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-medium transition-all ${
-                          selectedProductIndex === index
-                            ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30'
-                            : 'bg-white/10 text-gray-300 hover:bg-white/20'
-                        }`}
+                        className="flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-medium transition-all"
+                        style={selectedProductIndex === index ? {
+                          background: `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`,
+                          color: '#FFFFFF',
+                          boxShadow: `0 10px 15px -3px ${siteConfig.primaryColor || '#FF9F0A'}4D`
+                        } : {
+                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                          color: '#D1D5DB'
+                        }}
+                        onMouseEnter={(e) => {
+                          if (selectedProductIndex !== index) {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (selectedProductIndex !== index) {
+                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                          }
+                        }}
                       >
                         {prod.name}
                       </button>
@@ -638,7 +736,13 @@ export default function App() {
                           exit={{ opacity: 0, x: -20 }}
                           className="flex justify-center px-4"
                         >
-                          <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 px-6 py-3 rounded-xl text-center font-medium max-w-full">
+                          <div 
+                            className="text-white px-6 py-3 rounded-xl text-center font-medium max-w-full"
+                            style={{
+                              background: `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`,
+                              boxShadow: `0 10px 15px -3px ${siteConfig.primaryColor || '#FF9F0A'}4D`
+                            }}
+                          >
                             {categoryProducts[selectedProductIndex].name}
                           </div>
                         </motion.div>
@@ -650,11 +754,24 @@ export default function App() {
                         <button
                           key={index}
                           onClick={() => setSelectedProductIndex(index)}
-                          className={`h-1.5 rounded-full transition-all ${
-                            selectedProductIndex === index
-                              ? 'w-6 bg-orange-500'
-                              : 'w-1.5 bg-gray-600 hover:bg-gray-500'
-                          }`}
+                          className="h-1.5 rounded-full transition-all"
+                          style={selectedProductIndex === index ? {
+                            width: '1.5rem',
+                            backgroundColor: siteConfig.primaryColor || '#FF9F0A'
+                          } : {
+                            width: '0.375rem',
+                            backgroundColor: '#4B5563'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (selectedProductIndex !== index) {
+                              e.currentTarget.style.backgroundColor = '#6B7280';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (selectedProductIndex !== index) {
+                              e.currentTarget.style.backgroundColor = '#4B5563';
+                            }
+                          }}
                         />
                       ))}
                     </div>
