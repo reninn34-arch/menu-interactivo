@@ -314,28 +314,20 @@ export default function App() {
           </button>
         </header>
 
-        {/* Restaurant Status Banner */}
-        {siteConfig.openingHours && (
+        {/* Restaurant Status Banner - Solo mostrar cuando está CERRADO */}
+        {siteConfig.openingHours && !restaurantStatus.isOpen && (
           <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 mb-2 sm:mb-4 z-20 relative">
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className={`rounded-xl p-3 sm:p-4 backdrop-blur-md border flex items-center justify-between gap-3 ${
-                restaurantStatus.isOpen
-                  ? 'bg-green-500/20 border-green-500/40'
-                  : 'bg-red-500/20 border-red-500/40'
-              }`}
+              className="rounded-xl p-3 sm:p-4 backdrop-blur-md border bg-red-500/20 border-red-500/40 flex items-center justify-between gap-3"
             >
               <div className="flex items-center gap-2 sm:gap-3">
-                <Clock className={`w-5 h-5 sm:w-6 sm:h-6 ${
-                  restaurantStatus.isOpen ? 'text-green-400' : 'text-red-400'
-                }`} />
+                <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-red-400" />
                 <div>
-                  <p className={`font-bold text-sm sm:text-base ${
-                    restaurantStatus.isOpen ? 'text-green-400' : 'text-red-400'
-                  }`}>
-                    {restaurantStatus.isOpen ? '✅ Abierto' : '❌ Cerrado'}
+                  <p className="font-bold text-sm sm:text-base text-red-400">
+                    ❌ Cerrado
                   </p>
                   <p className="text-xs sm:text-sm text-white/80">
                     {restaurantStatus.message}
@@ -390,15 +382,18 @@ export default function App() {
                   </div>
 
                   <div className="space-y-2">
-                    {getScheduleDisplay(siteConfig).map((day, index) => (
-                      <div
-                        key={index}
-                        className="flex justify-between items-center p-3 bg-white/5 rounded-lg"
-                      >
-                        <span className="text-white font-medium">{day.split(':')[0]}</span>
-                        <span className="text-gray-400">{day.split(':')[1]}</span>
-                      </div>
-                    ))}
+                    {getScheduleDisplay(siteConfig).map((daySchedule, index) => {
+                      const [dayName, hours] = daySchedule.split(': ');
+                      return (
+                        <div
+                          key={index}
+                          className="flex justify-between items-center p-3 bg-white/5 rounded-lg"
+                        >
+                          <span className="text-white font-medium">{dayName}</span>
+                          <span className="text-gray-400">{hours}</span>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {siteConfig.allowOrdersOutsideHours && (

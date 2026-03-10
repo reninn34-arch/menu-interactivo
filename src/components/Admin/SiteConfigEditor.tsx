@@ -14,6 +14,11 @@ export const SiteConfigEditor = () => {
   const [passwordSaved, setPasswordSaved] = useState(false);
   const [cacheInfo, setCacheInfo] = useState<{ lastUpdate: number; isValid: boolean } | null>(null);
 
+  // Sincronizar formData con siteConfig cuando cambie
+  useEffect(() => {
+    setFormData(siteConfig);
+  }, [siteConfig]);
+
   // Obtener información del caché
   useEffect(() => {
     const getCacheInfo = () => {

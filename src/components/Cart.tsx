@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
+import { X, Trash2, Plus, Minus, ShoppingBag, Clock } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useMenu } from '../contexts/MenuContext';
 import { CheckoutForm, CheckoutData } from './CheckoutForm';
+import { isRestaurantOpen } from '../utils/openingHours';
 
 interface CartProps {
   isOpen: boolean;
@@ -14,9 +15,18 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
   const { items, itemCount, total, removeItem, updateQuantity, clearCart } = useCart();
   const { siteConfig } = useMenu();
   const [showCheckoutForm, setShowCheckoutForm] = useState(false);
+  const [showClosedAlert, setShowClosedAlert] = useState(false);
 
   const handleCheckout = () => {
     if (items.length === 0) return;
+    
+    // Verificar si el restaurante está cerrado
+    const restaurantStatus = isRestaurantOpen(siteConfig);
+    if (!restaurantStatus.isOpen && !siteConfig.allowOrdersOutsideHours) {
+      setShowClosedAlert(true);
+      return;
+    }
+    
     setShowCheckoutForm(true);
   };
 
@@ -347,6 +357,53 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
         deliveryCost={siteConfig.deliveryCost || 0}
         currencySymbol={siteConfig.currencySymbol}
       />
+
+      {/* Modal de Restaurante Cerrado */}
+      {showClosedAlert && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowClosedAlert(false)}
+            className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-gradient-to-br from-red-900/95 to-red-950/95 backdrop-blur-xl rounded-2xl p-6 max-w-md w-full border-2 border-red-500/30 shadow-2xl"
+            >
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mb-4">
+                  <Clock className="w-8 h-8 text-red-400" />
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-2">
+                  ❌ Estamos Cerrados
+                </h3>
+                <p className="text-red-200 mb-4">
+                  {isRestaurantOpen(siteConfig).message}
+                </p>
+                {isRestaurantOpen(siteConfig).nextChange && (
+                  <p className="text-white/80 text-sm mb-6">
+                    Abriremos {isRestaurantOpen(siteConfig).nextChange!.day} a las {isRestaurantOpen(siteConfig).nextChange!.time}
+                  </p>
+                )}
+                <p className="text-white/60 text-sm mb-6">
+                  No podemos procesar pedidos fuera de nuestro horario de atención.
+                </p>
+                <button
+                  onClick={() => setShowClosedAlert(false)}
+                  className="w-full py-3 px-6 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-all"
+                >
+                  Entendido
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        </>
+      )}
     </AnimatePresence>
   );
 };

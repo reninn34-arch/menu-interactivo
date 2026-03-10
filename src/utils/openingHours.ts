@@ -61,13 +61,19 @@ export function isRestaurantOpen(siteConfig: SiteConfig): RestaurantStatus {
   const [openHour, openMin] = todayHours.open.split(':').map(Number);
   const [closeHour, closeMin] = todayHours.close.split(':').map(Number);
   const openTime = openHour * 60 + openMin;
-  const closeTime = closeHour * 60 + closeMin;
+  let closeTime = closeHour * 60 + closeMin;
+  
+  // Si cierra a las 00:00, significa medianoche (final del día = 24:00 = 1440 minutos)
+  if (closeTime === 0) {
+    closeTime = 1440;
+  }
 
   // Dentro del horario?
   if (currentTime >= openTime && currentTime < closeTime) {
+    const displayClose = closeTime === 1440 ? '00:00' : todayHours.close;
     return {
       isOpen: true,
-      message: `Abierto hasta las ${todayHours.close}`
+      message: `Abierto hasta las ${displayClose}`
     };
   }
 
