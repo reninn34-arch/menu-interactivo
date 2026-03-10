@@ -108,11 +108,13 @@ Cuando despliegues tu app (Railway, Vercel, etc.), asegúrate de:
 Cuando hagas cambios:
 
 1. Incrementa la versión en \`sw.js\`:
-   \`\`\`javascript
-   const CACHE_NAME = 'menu-interactivo-v2'; // Cambiar número
-   \`\`\`
+   ```javascript
+   const CACHE_NAME = 'menu-interactivo-v3'; // Cambiar número
+   ```
 
 2. Los usuarios recibirán la actualización automáticamente
+
+**Versión actual**: v2
 
 ## 🧪 Probar Localmente
 
