@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
 router.put('/', authenticateToken, async (req, res) => {
   try {
     const {
-      site_name, tagline, logo, logo_width, logo_height,
+      site_name, tagline, logo, logo_width, logo_height, favicon_url,
       primary_color, secondary_color, background_color, text_color, accent_color,
       branch_name, currency, currency_symbol,
       whatsapp_number, whatsapp_number_pickup, whatsapp_number_delivery,
@@ -31,15 +31,16 @@ router.put('/', authenticateToken, async (req, res) => {
     const result = await pool.query(
       `UPDATE site_config 
        SET site_name = $1, tagline = $2, logo = $3, logo_width = $4, logo_height = $5,
-           primary_color = $6, secondary_color = $7, background_color = $8, 
-           text_color = $9, accent_color = $10, branch_name = $11, currency = $12,
-           currency_symbol = $13, whatsapp_number = $14, whatsapp_number_pickup = $15,
-           whatsapp_number_delivery = $16, restaurant_address = $17, delivery_cost = $18,
-           allow_orders_outside_hours = $19, opening_hours = $20
+           favicon_url = $6,
+           primary_color = $7, secondary_color = $8, background_color = $9, 
+           text_color = $10, accent_color = $11, branch_name = $12, currency = $13,
+           currency_symbol = $14, whatsapp_number = $15, whatsapp_number_pickup = $16,
+           whatsapp_number_delivery = $17, restaurant_address = $18, delivery_cost = $19,
+           allow_orders_outside_hours = $20, opening_hours = $21
        WHERE id = 1 
        RETURNING *`,
       [
-        site_name, tagline, logo, logo_width, logo_height,
+        site_name, tagline, logo, logo_width, logo_height, favicon_url,
         primary_color, secondary_color, background_color, text_color, accent_color,
         branch_name, currency, currency_symbol,
         whatsapp_number, whatsapp_number_pickup, whatsapp_number_delivery,

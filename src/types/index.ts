@@ -91,6 +91,7 @@ export interface SiteConfig {
   logo?: string;
   logoWidth?: number;  // Ancho del logo en pixeles (default: 120)
   logoHeight?: number; // Alto del logo en pixeles (default: 40)
+  faviconUrl?: string; // URL del favicon personalizado
   primaryColor: string;
   secondaryColor: string;
   backgroundColor: string;

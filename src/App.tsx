@@ -47,6 +47,31 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, []);
 
+  // Actualizar favicon dinámicamente cuando cambie
+  useEffect(() => {
+    if (siteConfig.faviconUrl) {
+      // Buscar favicon existente
+      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+      
+      if (!link) {
+        // Crear nuevo elemento link si no existe
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      
+      // Actualizar el href del favicon
+      link.href = siteConfig.faviconUrl;
+    }
+  }, [siteConfig.faviconUrl]);
+
+  // Actualizar título del sitio dinámicamente
+  useEffect(() => {
+    if (siteConfig.siteName) {
+      document.title = siteConfig.siteName;
+    }
+  }, [siteConfig.siteName]);
+
   // Loading state
   if (isLoading) {
     return (

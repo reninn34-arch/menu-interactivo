@@ -382,12 +382,21 @@ export const SiteConfigEditor = () => {
           </div>
         </div>
 
-        <div className="pt-4">
+        <div className="pt-4 space-y-4">
           <ImageUploader
             currentImage={formData.logo}
             onImageChange={(url) => setFormData({ ...formData, logo: url })}
             label="Logo del Sitio"
           />
+          
+          <ImageUploader
+            currentImage={formData.faviconUrl}
+            onImageChange={(url) => setFormData({ ...formData, faviconUrl: url })}
+            label="Favicon (Icono del sitio)"
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            El favicon debe ser una imagen cuadrada (recomendado 32x32 o 64x64 px)
+          </p>
         </div>
 
         {/* Tamaño del logo */}
