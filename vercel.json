@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/manifest.json",
+      "destination": "https://TU-BACKEND-URL.com/manifest.json"
+    },
+    {
+      "source": "/api/site-config/icon",
+      "destination": "https://TU-BACKEND-URL.com/api/site-config/icon"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
