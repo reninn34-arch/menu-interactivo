@@ -7,9 +7,10 @@ interface AuthContextType {
   logout: () => void;
   adminPassword: string;
   setAdminPassword: (password: string) => void;
+  username: string | null;
+  setUsername: (username: string) => void;
   isLoading: boolean;
   error: string | null;
-  username: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -92,6 +93,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem(PASSWORD_KEY, password);
   };
 
+  const setUsernameState = (newUsername: string) => {
+    setUsername(newUsername);
+    localStorage.setItem(USERNAME_KEY, newUsername);
+  };
+
   return (
     <AuthContext.Provider value={{
       isAuthenticated,
@@ -99,9 +105,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       logout,
       adminPassword,
       setAdminPassword,
+      username,
+      setUsername: setUsernameState,
       isLoading,
       error,
-      username,
     }}>
       {children}
     </AuthContext.Provider>

@@ -84,6 +84,31 @@ export const authApi = {
     });
   },
 
+  updateCredentials: async (currentPassword: string, newUsername?: string, newPassword?: string) => {
+    const response = await fetchWithAuth('/auth/update-credentials', {
+      method: 'PUT',
+      body: JSON.stringify({
+        currentPassword,
+        newUsername,
+        newPassword,
+      }),
+    });
+
+    // Actualizar el token con las nuevas credenciales
+    if (response.token) {
+      setAuthToken(response.token);
+    }
+
+    return response;
+  },
+
+  verifyPassword: async (password: string): Promise<{ valid: boolean }> => {
+    return fetchWithAuth('/auth/verify-password', {
+      method: 'POST',
+      body: JSON.stringify({ password }),
+    });
+  },
+
   logout: () => {
     setAuthToken(null);
   },

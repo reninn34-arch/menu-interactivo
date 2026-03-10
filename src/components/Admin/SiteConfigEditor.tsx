@@ -1,18 +1,29 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Save, Palette, AlertTriangle, Lock, RefreshCw } from 'lucide-react';
+import { Save, Palette, AlertTriangle, Lock, RefreshCw, Check, X, Shield, Settings } from 'lucide-react';
 import { useMenu } from '../../contexts/MenuContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { ImageUploader } from './ImageUploader';
+import { authApi } from '../../services/api';
+
+const STORAGE_MODE = import.meta.env.VITE_STORAGE_MODE || 'localStorage';
 
 export const SiteConfigEditor = () => {
   const { siteConfig, updateSiteConfig, resetToDefaults, invalidateCache } = useMenu();
-  const { adminPassword, setAdminPassword } = useAuth();
+  const { adminPassword, setAdminPassword, username, setUsername } = useAuth();
   const [formData, setFormData] = useState(siteConfig);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [saved, setSaved] = useState(false);
-  const [passwordSaved, setPasswordSaved] = useState(false);
+  const [credentialsSaved, setCredentialsSaved] = useState(false);
+  const [credentialsError, setCredentialsError] = useState('');
+  const [isUpdatingCredentials, setIsUpdatingCredentials] = useState(false);
+  const [isVerifyingPassword, setIsVerifyingPassword] = useState(false);
+  const [passwordValid, setPasswordValid] = useState<boolean | null>(null);
   const [cacheInfo, setCacheInfo] = useState<{ lastUpdate: number; isValid: boolean } | null>(null);
+  const [activeTab, setActiveTab] = useState<'general' | 'security'>('general');
 
   // Sincronizar formData con siteConfig cuando cambie
   useEffect(() => {
@@ -39,6 +50,36 @@ export const SiteConfigEditor = () => {
     const interval = setInterval(getCacheInfo, 60000); // Actualizar cada minuto
     return () => clearInterval(interval);
   }, []);
+
+  // Verificar contraseña actual en tiempo real (con debounce)
+  useEffect(() => {
+    if (!currentPassword) {
+      setPasswordValid(null);
+      return;
+    }
+
+    // Solo verificar en modo API
+    if (STORAGE_MODE !== 'api') {
+      // En modo localStorage, verificar directamente
+      setPasswordValid(currentPassword === adminPassword);
+      return;
+    }
+
+    setIsVerifyingPassword(true);
+    const timeoutId = setTimeout(async () => {
+      try {
+        const result = await authApi.verifyPassword(currentPassword);
+        setPasswordValid(result.valid);
+      } catch (error) {
+        console.error('Error verifying password:', error);
+        setPasswordValid(false);
+      } finally {
+        setIsVerifyingPassword(false);
+      }
+    }, 500); // Esperar 500ms después del último cambio
+
+    return () => clearTimeout(timeoutId);
+  }, [currentPassword, adminPassword]);
 
   const formatTimeSince = (timestamp: number): string => {
     const diff = Date.now() - timestamp;
@@ -78,15 +119,93 @@ export const SiteConfigEditor = () => {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const handlePasswordChange = () => {
-    if (newPassword.length < 4) {
-      alert('La contraseña debe tener al menos 4 caracteres');
+  const handleCredentialsChange = async () => {
+    setCredentialsError('');
+
+    // Validar que al menos uno de los campos esté lleno
+    if (!newUsername && !newPassword) {
+      setCredentialsError('Debes ingresar un nuevo usuario y/o contraseña');
       return;
     }
-    setAdminPassword(newPassword);
-    setNewPassword('');
-    setPasswordSaved(true);
-    setTimeout(() => setPasswordSaved(false), 3000);
+
+    // Validar contraseña actual (siempre requerida)
+    if (!currentPassword) {
+      setCredentialsError('Debes ingresar tu contraseña actual para confirmar los cambios');
+      return;
+    }
+
+    // Validar nueva contraseña si se ingresó
+    if (newPassword) {
+      if (newPassword.length < 6) {
+        setCredentialsError('La contraseña debe tener al menos 6 caracteres');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        setCredentialsError('Las contraseñas no coinciden');
+        return;
+      }
+    }
+
+    // Validar nuevo usuario si se ingresó
+    if (newUsername && newUsername.length < 3) {
+      setCredentialsError('El usuario debe tener al menos 3 caracteres');
+      return;
+    }
+
+    setIsUpdatingCredentials(true);
+
+    try {
+      if (STORAGE_MODE === 'api') {
+        // Modo API: Usar backend
+        const result = await authApi.updateCredentials(
+          currentPassword,
+          newUsername || undefined,
+          newPassword || undefined
+        );
+
+        // Actualizar el username en el contexto si cambió
+        if (newUsername) {
+          setUsername(result.user.username);
+        }
+
+        // Mostrar éxito
+        setCredentialsSaved(true);
+        setCurrentPassword('');
+        setPasswordValid(null);
+        setNewUsername('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setTimeout(() => setCredentialsSaved(false), 3000);
+      } else {
+        // Modo localStorage: Verificar contraseña actual primero
+        if (currentPassword !== adminPassword) {
+          setCredentialsError('La contraseña actual es incorrecta');
+          setIsUpdatingCredentials(false);
+          return;
+        }
+
+        // Actualizar credenciales
+        if (newPassword) {
+          setAdminPassword(newPassword);
+        }
+        if (newUsername) {
+          setUsername(newUsername);
+        }
+
+        setCredentialsSaved(true);
+        setCurrentPassword('');
+        setPasswordValid(null);
+        setNewUsername('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setTimeout(() => setCredentialsSaved(false), 3000);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al actualizar las credenciales';
+      setCredentialsError(errorMessage);
+    } finally {
+      setIsUpdatingCredentials(false);
+    }
   };
 
   const colorPresets = [
@@ -109,7 +228,7 @@ export const SiteConfigEditor = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white">Configuración General</h2>
+        <h2 className="text-2xl font-bold text-white">Configuración del Sistema</h2>
         <button
           onClick={handleSave}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
@@ -123,6 +242,49 @@ export const SiteConfigEditor = () => {
         </button>
       </div>
 
+      {/* Tabs de navegación */}
+      <div className="flex gap-2 border-b-2 border-gray-700">
+        <button
+          onClick={() => setActiveTab('general')}
+          className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all relative ${
+            activeTab === 'general'
+              ? 'text-orange-400'
+              : 'text-gray-400 hover:text-gray-300'
+          }`}
+        >
+          <Settings className="w-5 h-5" />
+          Configuración General
+          {activeTab === 'general' && (
+            <motion.div
+              layoutId="activeTab"
+              className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-400"
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('security')}
+          className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all relative ${
+            activeTab === 'security'
+              ? 'text-orange-400'
+              : 'text-gray-400 hover:text-gray-300'
+          }`}
+        >
+          <Shield className="w-5 h-5" />
+          Seguridad
+          {activeTab === 'security' && (
+            <motion.div
+              layoutId="activeTab"
+              className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-400"
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            />
+          )}
+        </button>
+      </div>
+
+      {/* Contenido según pestaña activa */}
+      {activeTab === 'general' && (
+        <div className="space-y-6">
       {/* WHATSAPP Y DIRECCIÓN - SECCIÓN PRINCIPAL */}
       <div className="bg-gradient-to-br from-green-600 to-green-700 rounded-2xl p-6 border-2 border-green-400 shadow-xl space-y-4">
         <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
@@ -572,120 +734,249 @@ export const SiteConfigEditor = () => {
           </p>
         </div>
       </div>
+      </div>
+      )}
 
-      {/* Zona de Peligro */}
-      <div className="bg-red-900/20 border-2 border-red-500/50 rounded-2xl p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
-            <AlertTriangle className="w-6 h-6 text-red-500" />
+      {/* Pestaña de Seguridad */}
+      {activeTab === 'security' && (
+        <div className="space-y-6">
+        {/* Cambiar Credenciales de Administrador */}
+        <div className="bg-gradient-to-br from-orange-900/50 to-red-900/50 rounded-xl p-6 border-2 border-orange-500/40">
+          <div className="flex items-center gap-3 mb-4">
+            <Lock className="w-6 h-6 text-orange-400" />
+            <div className="flex-1">
+              <h4 className="text-white font-bold text-lg">Credenciales de Administrador</h4>
+              <p className="text-sm text-orange-200/70">
+                {STORAGE_MODE === 'api' ? 'Sistema seguro con backend API' : 'Almacenamiento local'}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-xl font-semibold text-white">Zona de Peligro</h3>
-            <p className="text-sm text-gray-400">Acciones irreversibles y seguridad</p>
+          
+          <div className="bg-black/30 rounded-lg p-4 mb-4">
+            <h5 className="text-sm font-semibold text-orange-300 mb-3">Credenciales Actuales:</h5>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Usuario:</span>
+                <code className="px-3 py-1 bg-gray-800 rounded text-orange-400 font-mono">
+                  {username || 'admin'}
+                </code>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Contraseña:</span>
+                <code className="px-3 py-1 bg-gray-800 rounded text-orange-400 font-mono">
+                  {'•'.repeat(STORAGE_MODE === 'api' ? 8 : adminPassword.length)}
+                </code>
+              </div>
+            </div>
           </div>
-        </div>
-        
-        {/* Cambiar Contraseña */}
-        <div className="bg-gray-900/50 rounded-xl p-4 border border-orange-500/30 mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Lock className="w-5 h-5 text-orange-500" />
-            <h4 className="text-white font-medium">Cambiar Contraseña del Administrador</h4>
-          </div>
-          <p className="text-sm text-gray-400 mb-4">
-            Contraseña actual: <code className="px-2 py-1 bg-gray-800 rounded text-orange-400">
-              {'•'.repeat(adminPassword.length)}
-            </code>
-          </p>
-          <div className="flex gap-3">
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Nueva contraseña (mín. 4 caracteres)"
-              className="flex-1 px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-orange-500"
-            />
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-orange-200 mb-2">
+                Contraseña Actual <span className="text-red-400">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => {
+                    setCurrentPassword(e.target.value);
+                    setCredentialsError('');
+                  }}
+                  placeholder="Ingresa tu contraseña actual"
+                  className={`w-full px-4 py-3 pr-12 bg-gray-800/80 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 transition-colors ${
+                    passwordValid === null 
+                      ? 'border-gray-600 focus:border-orange-500 focus:ring-orange-500/20' 
+                      : passwordValid 
+                      ? 'border-green-500 focus:border-green-500 focus:ring-green-500/20' 
+                      : 'border-red-500 focus:border-red-500 focus:ring-red-500/20'
+                  }`}
+                />
+                {/* Indicador visual de verificación */}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {isVerifyingPassword ? (
+                    <RefreshCw className="w-5 h-5 text-gray-400 animate-spin" />
+                  ) : passwordValid === true ? (
+                    <Check className="w-5 h-5 text-green-500" />
+                  ) : passwordValid === false ? (
+                    <X className="w-5 h-5 text-red-500" />
+                  ) : null}
+                </div>
+              </div>
+              <p className={`text-xs mt-1 ${
+                passwordValid === false 
+                  ? 'text-red-400' 
+                  : 'text-gray-400'
+              }`}>
+                {passwordValid === false 
+                  ? '✗ Contraseña incorrecta' 
+                  : 'Requerido para confirmar los cambios'}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-orange-200 mb-2">
+                Nuevo Usuario (opcional)
+              </label>
+              <input
+                type="text"
+                value={newUsername}
+                onChange={(e) => {
+                  setNewUsername(e.target.value);
+                  setCredentialsError('');
+                }}
+                placeholder="Dejar vacío para mantener actual"
+                className="w-full px-4 py-3 bg-gray-800/80 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
+              />
+              <p className="text-xs text-gray-400 mt-1">Mínimo 3 caracteres</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-orange-200 mb-2">
+                Nueva Contraseña (opcional)
+              </label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => {
+                  setNewPassword(e.target.value);
+                  setCredentialsError('');
+                }}
+                placeholder="Dejar vacío para mantener actual"
+                className="w-full px-4 py-3 bg-gray-800/80 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
+              />
+              <p className="text-xs text-gray-400 mt-1">Mínimo 6 caracteres</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-orange-200 mb-2">
+                Confirmar Nueva Contraseña
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  setCredentialsError('');
+                }}
+                placeholder="Confirma la contraseña"
+                disabled={!newPassword}
+                className="w-full px-4 py-3 bg-gray-800/80 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+            </div>
+
+            {/* Mensajes de error */}
+            {credentialsError && (
+              <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3">
+                <p className="text-sm text-red-300 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  {credentialsError}
+                </p>
+              </div>
+            )}
+
+            {/* Validación visual de contraseñas */}
+            {newPassword && newPassword !== confirmPassword && (
+              <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-3">
+                <p className="text-sm text-yellow-300 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  Las contraseñas no coinciden
+                </p>
+              </div>
+            )}
+
             <button
-              onClick={handlePasswordChange}
-              disabled={newPassword.length < 4}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                passwordSaved
+              onClick={handleCredentialsChange}
+              disabled={
+                isUpdatingCredentials ||
+                (!newUsername && !newPassword) ||
+                (newPassword && newPassword !== confirmPassword) ||
+                !currentPassword ||
+                passwordValid !== true
+              }
+              className={`w-full px-6 py-3 rounded-lg font-bold transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2 ${
+                credentialsSaved
                   ? 'bg-green-500 text-white'
-                  : 'bg-orange-500 hover:bg-orange-600 text-white disabled:bg-gray-600 disabled:cursor-not-allowed'
+                  : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none'
               }`}
             >
-              {passwordSaved ? '✓ Guardada' : 'Cambiar'}
+              {isUpdatingCredentials && (
+                <RefreshCw className="w-5 h-5 animate-spin" />
+              )}
+              {credentialsSaved ? '✓ Credenciales Actualizadas' : isUpdatingCredentials ? 'Actualizando...' : 'Actualizar Credenciales'}
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Gestión de Caché */}
-      <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
-        <div className="flex items-center gap-2 mb-4">
-          <RefreshCw className="w-6 h-6 text-blue-500" />
-          <h3 className="text-xl font-semibold text-white">Gestión de Caché</h3>
-        </div>
-        <div className="space-y-4">
-          <div className="bg-gray-700/50 rounded-xl p-4 border border-gray-600">
-            <h4 className="text-white font-medium mb-2">Estado del Caché</h4>
-            <p className="text-sm text-gray-400 mb-3">
-              El caché mejora el rendimiento guardando datos por 24 horas. Se actualiza automáticamente 
-              cuando guardas cambios desde el panel admin.
-            </p>
-            
-            {cacheInfo && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-400">Última actualización:</span>
-                  <span className="text-white font-medium">{formatTimeSince(cacheInfo.lastUpdate)}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-400">Estado:</span>
-                  <span className={`font-medium ${cacheInfo.isValid ? 'text-green-400' : 'text-yellow-400'}`}>
-                    {cacheInfo.isValid ? '✓ Válido (< 24h)' : '⚠ Expirado (> 24h)'}
-                  </span>
-                </div>
-              </div>
-            )}
+        {/* Gestión de Caché */}
+        <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700">
+          <div className="flex items-center gap-2 mb-4">
+            <RefreshCw className="w-6 h-6 text-blue-500" />
+            <h3 className="text-xl font-semibold text-white">Gestión de Caché</h3>
           </div>
+          <div className="space-y-4">
+            <div className="bg-gray-700/50 rounded-xl p-4 border border-gray-600">
+              <h4 className="text-white font-medium mb-2">Estado del Caché</h4>
+              <p className="text-sm text-gray-400 mb-3">
+                El caché mejora el rendimiento guardando datos por 24 horas. Se actualiza automáticamente 
+                cuando guardas cambios desde el panel admin.
+              </p>
+              
+              {cacheInfo && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-400">Última actualización:</span>
+                    <span className="text-white font-medium">{formatTimeSince(cacheInfo.lastUpdate)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-400">Estado:</span>
+                    <span className={`font-medium ${cacheInfo.isValid ? 'text-green-400' : 'text-yellow-400'}`}>
+                      {cacheInfo.isValid ? '✓ Válido (< 24h)' : '⚠ Expirado (> 24h)'}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
 
-          <button
-            onClick={handleInvalidateCache}
-            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-all hover:scale-105 flex items-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Forzar Actualización de Caché
-          </button>
-          <p className="text-xs text-gray-500">
-            Usa esto si necesitas que los clientes vean los cambios inmediatamente sin esperar 24 horas.
-          </p>
+            <button
+              onClick={handleInvalidateCache}
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-all hover:scale-105 flex items-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Forzar Actualización de Caché
+            </button>
+            <p className="text-xs text-gray-500">
+              Usa esto si necesitas que los clientes vean los cambios inmediatamente sin esperar 24 horas.
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Zona de Peligro */}
-      <div className="bg-red-900/20 rounded-2xl p-6 border-2 border-red-500/50">
-        <div className="flex items-center gap-2 mb-4">
-          <AlertTriangle className="w-6 h-6 text-red-500" />
-          <h3 className="text-xl font-semibold text-red-400">Zona de Peligro</h3>
+        {/* Zona de Peligro */}
+        <div className="bg-red-900/20 rounded-2xl p-6 border-2 border-red-500/50">
+          <div className="flex items-center gap-2 mb-4">
+            <AlertTriangle className="w-6 h-6 text-red-500" />
+            <h3 className="text-xl font-semibold text-red-400">Zona de Peligro</h3>
+          </div>
+          <div className="space-y-4">
+          {/* Resetear Datos */}
+          <div className="bg-gray-900/50 rounded-xl p-4 border border-red-500/30">
+            <h4 className="text-white font-medium mb-2">Resetear Todos los Datos</h4>
+            <p className="text-sm text-gray-400 mb-4">
+              Esto eliminará <strong className="text-red-400">todos los cambios que hayas hecho</strong> (productos, categorías, 
+              opciones, ingredientes, imágenes subidas, configuración) y restaurará los datos por defecto del sistema. 
+              Esta acción no se puede deshacer.
+            </p>
+            <button
+              onClick={resetToDefaults}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-all hover:scale-105"
+            >
+              Resetear a Valores por Defecto
+            </button>
+          </div>
+          </div>
         </div>
-        <div className="space-y-4">
-        {/* Resetear Datos */}
-        <div className="bg-gray-900/50 rounded-xl p-4 border border-red-500/30">
-          <h4 className="text-white font-medium mb-2">Resetear Todos los Datos</h4>
-          <p className="text-sm text-gray-400 mb-4">
-            Esto eliminará <strong className="text-red-400">todos los cambios que hayas hecho</strong> (productos, categorías, 
-            opciones, ingredientes, imágenes subidas, configuración) y restaurará los datos por defecto del sistema. 
-            Esta acción no se puede deshacer.
-          </p>
-          <button
-            onClick={resetToDefaults}
-            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-all hover:scale-105"
-          >
-            Resetear a Valores por Defecto
-          </button>
         </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

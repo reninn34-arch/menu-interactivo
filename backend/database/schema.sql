@@ -27,7 +27,7 @@ CREATE TABLE site_config (
     logo_height INTEGER DEFAULT 40,
     primary_color VARCHAR(7) DEFAULT '#FF9F0A',
     secondary_color VARCHAR(7) DEFAULT '#FF7A00',
-    background_color VARCHAR(7) DEFAULT '#1A110C',
+    background_color VARCHAR(7) DEFAULT '#320A0A',
     text_color VARCHAR(7) DEFAULT '#FFFFFF',
     accent_color VARCHAR(7) DEFAULT '#FFD700',
     branch_name VARCHAR(100),

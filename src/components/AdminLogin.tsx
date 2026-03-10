@@ -182,20 +182,6 @@ export const AdminLogin = () => {
             </button>
           </div>
         </motion.form>
-
-        {/* Info */}
-        <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500">
-            {STORAGE_MODE === 'api' ? (
-              <>Usuario/contraseña default: <code className="px-2 py-1 bg-gray-800 rounded">admin / admin1234</code></>
-            ) : (
-              <>Contraseña por defecto: <code className="px-2 py-1 bg-gray-800 rounded">admin1234</code></>
-            )}
-          </p>
-          <p className="text-xs text-gray-500 mt-2">
-            Puedes cambiarla desde Configuración → Zona de Peligro
-          </p>
-        </div>
       </motion.div>
 
       <style>{`

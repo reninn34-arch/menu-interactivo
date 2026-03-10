@@ -38,8 +38,10 @@ export default function App() {
   // Detectar combinación de teclas Ctrl+Shift+A para acceder al admin
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+      // Usar toLowerCase() para hacerlo compatible con cualquier teclado
+      if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
         e.preventDefault();
+        console.log('🔑 Admin shortcut detected: Ctrl+Shift+A');
         setShowAdmin(true);
       }
     };

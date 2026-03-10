@@ -23,9 +23,13 @@ app.use(cors({
     // Permitir requests sin origin (como mobile apps o curl)
     if (!origin) return callback(null, true);
     
-    // En desarrollo, permitir todos los orígenes de localhost
-    if (process.env.NODE_ENV === 'development' && origin && (origin.includes('localhost') || origin.includes('127.0.0.1'))) {
-      return callback(null, true);
+    // En desarrollo, permitir todos los orígenes de localhost, 127.0.0.1 y red local
+    if (process.env.NODE_ENV === 'development' && origin) {
+      if (origin.includes('localhost') || 
+          origin.includes('127.0.0.1') || 
+          origin.match(/http:\/\/192\.168\.\d+\.\d+:\d+/)) {
+        return callback(null, true);
+      }
     }
     
     if (allowedOrigins.includes(origin)) {
@@ -69,6 +73,7 @@ const ingredientsRoutes = require('./routes/ingredients');
 const optionGroupsRoutes = require('./routes/optionGroups');
 const siteConfigRoutes = require('./routes/siteConfig');
 const authRoutes = require('./routes/auth');
+const manifestRoutes = require('./routes/manifest');
 
 app.use('/api/categories', categoriesRoutes);
 app.use('/api/products', productsRoutes);
@@ -76,6 +81,7 @@ app.use('/api/ingredients', ingredientsRoutes);
 app.use('/api/option-groups', optionGroupsRoutes);
 app.use('/api/site-config', siteConfigRoutes);
 app.use('/api/auth', authRoutes);
+app.use(manifestRoutes); // Sirve manifest.json dinámicamente
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
