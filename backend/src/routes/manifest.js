@@ -18,7 +18,7 @@ router.get('/manifest.json', async (req, res) => {
     const shortName = siteName.length > 12 ? siteName.substring(0, 12) : siteName;
 
     // Si hay logo configurado, usarlo como icono de la PWA
-    // Si no hay logo, usar los iconos SVG genéricos
+    // Si no hay logo, no incluir iconos (la PWA usará el favicon o el nombre)
     const icons = config.logo ? [
       {
         src: config.logo,
@@ -68,56 +68,7 @@ router.get('/manifest.json', async (req, res) => {
         type: 'image/png',
         purpose: 'any maskable'
       }
-    ] : [
-      {
-        src: '/icon-72x72.svg',
-        sizes: '72x72',
-        type: 'image/svg+xml',
-        purpose: 'any maskable'
-      },
-      {
-        src: '/icon-96x96.svg',
-        sizes: '96x96',
-        type: 'image/svg+xml',
-        purpose: 'any maskable'
-      },
-      {
-        src: '/icon-128x128.svg',
-        sizes: '128x128',
-        type: 'image/svg+xml',
-        purpose: 'any maskable'
-      },
-      {
-        src: '/icon-144x144.svg',
-        sizes: '144x144',
-        type: 'image/svg+xml',
-        purpose: 'any maskable'
-      },
-      {
-        src: '/icon-152x152.svg',
-        sizes: '152x152',
-        type: 'image/svg+xml',
-        purpose: 'any maskable'
-      },
-      {
-        src: '/icon-192x192.svg',
-        sizes: '192x192',
-        type: 'image/svg+xml',
-        purpose: 'any maskable'
-      },
-      {
-        src: '/icon-384x384.svg',
-        sizes: '384x384',
-        type: 'image/svg+xml',
-        purpose: 'any maskable'
-      },
-      {
-        src: '/icon-512x512.svg',
-        sizes: '512x512',
-        type: 'image/svg+xml',
-        purpose: 'any maskable'
-      }
-    ];
+    ] : [];
 
     const manifest = {
       name: siteName,
@@ -128,7 +79,7 @@ router.get('/manifest.json', async (req, res) => {
       background_color: config.background_color || '#320A0A',
       theme_color: config.primary_color || '#FF9F0A',
       orientation: 'portrait-primary',
-      icons: icons,
+      icons: icons.length > 0 ? icons : undefined, // Si no hay iconos, no incluir la propiedad
       categories: ['food', 'lifestyle', 'business'],
       shortcuts: [
         {
@@ -141,8 +92,11 @@ router.get('/manifest.json', async (req, res) => {
       ]
     };
 
-    // Establecer headers para JSON con charset UTF-8
+    // Establecer headers para JSON con charset UTF-8 y NO cachear
     res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.json(manifest);
 
   } catch (error) {

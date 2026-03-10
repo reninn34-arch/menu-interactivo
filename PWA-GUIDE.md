@@ -54,41 +54,15 @@ Tu menú interactivo ahora es una **Progressive Web App** que puede instalarse c
 1. Ve a **Admin → Configuración General**
 2. Sube tu logo en **"Logo del Sitio"**
 3. Guarda los cambios
-4. El manifest PWA usará ese logo automáticamente como icono de la app
-5. Los usuarios verán tu logo cuando instalen la app
+4. El logo se guarda automáticamente como archivo `/pwa-icon.png` en el servidor
+5. El manifest PWA usa ese archivo como icono de la app
+6. Los usuarios verán tu logo cuando instalen la app
 
 **Importante**: 
-- El logo debe ser una imagen cuadrada (ej: 512x512px) para mejor resultado
-- Formato recomendado: PNG con fondo transparente
-- Si no subes logo, se usarán los iconos genéricos (plato con cubiertos)
-
-## 🎨 Personalizar Iconos/Logo (MANUAL)
-
-Los iconos se generan automáticamente con el script:
-
-\`\`\`bash
-node scripts/generate-pwa-icons.js
-\`\`\`
-
-**Para usar tu propio logo:**
-
-#### Opción 1: Online (Recomendado) 🌐
-1. Ve a https://realfavicongenerator.net o https://www.pwabuilder.com/imageGenerator
-2. Sube tu logo (PNG/SVG, mínimo 512x512px, fondo transparente)
-3. Descarga el paquete completo de iconos
-4. Reemplaza los archivos en `public/` manteniendo los nombres:
-   - `icon-72x72.svg`, `icon-96x96.svg`, `icon-128x128.svg`, etc.
-
-#### Opción 2: Manualmente 🛠️
-1. Usa ImageMagick: `convert logo.png -resize 192x192 icon-192x192.png`
-2. O Photoshop/GIMP/Inkscape para redimensionar
-3. Crea todos los tamaños: 72, 96, 128, 144, 152, 192, 384, 512
-4. Guarda en `public/` como PNG o SVG
-
-#### Opción 3: Editar SVG existentes ✏️
-1. Abre `public/icon-*.svg` en un editor SVG (Inkscape/Figma)
-2. Reemplaza el contenido con tu logo
-3. Mantén el viewBox del tamaño correcto
+- El logo se convierte automáticamente a PNG optimizado
+- No necesitas crear múltiples tamaños, el navegador los redimensiona
+- Si cambias el logo, los usuarios deben desinstalar y reinstalar la app para ver el cambio
+- Recomendado: Imagen cuadrada (512x512px o similar) con fondo transparente
 
 ## ⚙️ Configuración
 
@@ -124,12 +98,24 @@ Cuando hagas cambios:
 
 1. Incrementa la versión en \`sw.js\`:
    ```javascript
-   const CACHE_NAME = 'menu-interactivo-v3'; // Cambiar número
+   const CACHE_NAME = 'menu-interactivo-v4'; // Cambiar número
    ```
 
 2. Los usuarios recibirán la actualización automáticamente
 
-**Versión actual**: v2
+**Versión actual**: v3
+
+### 🔄 Forzar actualización del logo/nombre de la app
+
+Si cambias el logo o nombre en el admin y ya tienes la app instalada:
+
+1. **Desinstala la app** del dispositivo
+2. **Cierra todas las pestañas** del menú
+3. **Abre de nuevo** el menú en el navegador
+4. **Reinstala la app**
+5. Ahora verás el nuevo logo y nombre
+
+**Nota**: El manifest.json NO se cachea, siempre se obtiene actualizado del servidor.
 
 ## 🧪 Probar Localmente
 

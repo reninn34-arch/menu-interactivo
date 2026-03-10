@@ -1,8 +1,8 @@
-const CACHE_NAME = 'menu-interactivo-v2';
+const CACHE_NAME = 'menu-interactivo-v3';
 const urlsToCache = [
   '/',
-  '/index.html',
-  '/manifest.json'
+  '/index.html'
+  // NO incluir manifest.json para que siempre se obtenga actualizado del servidor
 ];
 
 // Instalación del Service Worker
@@ -40,6 +40,12 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
   const isValidScheme = url.protocol === 'http:' || url.protocol === 'https:';
   const isGetRequest = event.request.method === 'GET';
+  
+  // NUNCA cachear manifest.json para que siempre se obtenga actualizado
+  if (url.pathname === '/manifest.json') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
   
   if (!isValidScheme || !isGetRequest) {
     // No cachear extensiones, chrome://, POST, PUT, etc.
