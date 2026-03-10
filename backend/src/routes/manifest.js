@@ -6,7 +6,7 @@ const pool = require('../config/database');
 router.get('/manifest.json', async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT site_name, primary_color, background_color FROM site_config WHERE id = 1'
+      'SELECT site_name, primary_color, background_color, logo FROM site_config WHERE id = 1'
     );
 
     if (result.rows.length === 0) {
@@ -17,6 +17,108 @@ router.get('/manifest.json', async (req, res) => {
     const siteName = config.site_name || 'Menú Interactivo';
     const shortName = siteName.length > 12 ? siteName.substring(0, 12) : siteName;
 
+    // Si hay logo configurado, usarlo como icono de la PWA
+    // Si no hay logo, usar los iconos SVG genéricos
+    const icons = config.logo ? [
+      {
+        src: config.logo,
+        sizes: '72x72',
+        type: 'image/png',
+        purpose: 'any'
+      },
+      {
+        src: config.logo,
+        sizes: '96x96',
+        type: 'image/png',
+        purpose: 'any'
+      },
+      {
+        src: config.logo,
+        sizes: '128x128',
+        type: 'image/png',
+        purpose: 'any'
+      },
+      {
+        src: config.logo,
+        sizes: '144x144',
+        type: 'image/png',
+        purpose: 'any'
+      },
+      {
+        src: config.logo,
+        sizes: '152x152',
+        type: 'image/png',
+        purpose: 'any'
+      },
+      {
+        src: config.logo,
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'any maskable'
+      },
+      {
+        src: config.logo,
+        sizes: '384x384',
+        type: 'image/png',
+        purpose: 'any maskable'
+      },
+      {
+        src: config.logo,
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any maskable'
+      }
+    ] : [
+      {
+        src: '/icon-72x72.svg',
+        sizes: '72x72',
+        type: 'image/svg+xml',
+        purpose: 'any maskable'
+      },
+      {
+        src: '/icon-96x96.svg',
+        sizes: '96x96',
+        type: 'image/svg+xml',
+        purpose: 'any maskable'
+      },
+      {
+        src: '/icon-128x128.svg',
+        sizes: '128x128',
+        type: 'image/svg+xml',
+        purpose: 'any maskable'
+      },
+      {
+        src: '/icon-144x144.svg',
+        sizes: '144x144',
+        type: 'image/svg+xml',
+        purpose: 'any maskable'
+      },
+      {
+        src: '/icon-152x152.svg',
+        sizes: '152x152',
+        type: 'image/svg+xml',
+        purpose: 'any maskable'
+      },
+      {
+        src: '/icon-192x192.svg',
+        sizes: '192x192',
+        type: 'image/svg+xml',
+        purpose: 'any maskable'
+      },
+      {
+        src: '/icon-384x384.svg',
+        sizes: '384x384',
+        type: 'image/svg+xml',
+        purpose: 'any maskable'
+      },
+      {
+        src: '/icon-512x512.svg',
+        sizes: '512x512',
+        type: 'image/svg+xml',
+        purpose: 'any maskable'
+      }
+    ];
+
     const manifest = {
       name: siteName,
       short_name: shortName,
@@ -26,56 +128,7 @@ router.get('/manifest.json', async (req, res) => {
       background_color: config.background_color || '#320A0A',
       theme_color: config.primary_color || '#FF9F0A',
       orientation: 'portrait-primary',
-      icons: [
-        {
-          src: '/icon-72x72.svg',
-          sizes: '72x72',
-          type: 'image/svg+xml',
-          purpose: 'any maskable'
-        },
-        {
-          src: '/icon-96x96.svg',
-          sizes: '96x96',
-          type: 'image/svg+xml',
-          purpose: 'any maskable'
-        },
-        {
-          src: '/icon-128x128.svg',
-          sizes: '128x128',
-          type: 'image/svg+xml',
-          purpose: 'any maskable'
-        },
-        {
-          src: '/icon-144x144.svg',
-          sizes: '144x144',
-          type: 'image/svg+xml',
-          purpose: 'any maskable'
-        },
-        {
-          src: '/icon-152x152.svg',
-          sizes: '152x152',
-          type: 'image/svg+xml',
-          purpose: 'any maskable'
-        },
-        {
-          src: '/icon-192x192.svg',
-          sizes: '192x192',
-          type: 'image/svg+xml',
-          purpose: 'any maskable'
-        },
-        {
-          src: '/icon-384x384.svg',
-          sizes: '384x384',
-          type: 'image/svg+xml',
-          purpose: 'any maskable'
-        },
-        {
-          src: '/icon-512x512.svg',
-          sizes: '512x512',
-          type: 'image/svg+xml',
-          purpose: 'any maskable'
-        }
-      ],
+      icons: icons,
       categories: ['food', 'lifestyle', 'business'],
       shortcuts: [
         {

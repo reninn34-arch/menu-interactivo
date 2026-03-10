@@ -47,7 +47,22 @@ Tu menú interactivo ahora es una **Progressive Web App** que puede instalarse c
 
 **Nota**: Los usuarios que ya instalaron la app deben desinstalarla y reinstalarla para ver el nuevo nombre.
 
-## 🎨 Personalizar Iconos/Logo
+## 🎨 Personalizar el Logo de la App (AUTOMÁTICO)
+
+**El logo de la app se actualiza automáticamente** desde tu configuración:
+
+1. Ve a **Admin → Configuración General**
+2. Sube tu logo en **"Logo del Sitio"**
+3. Guarda los cambios
+4. El manifest PWA usará ese logo automáticamente como icono de la app
+5. Los usuarios verán tu logo cuando instalen la app
+
+**Importante**: 
+- El logo debe ser una imagen cuadrada (ej: 512x512px) para mejor resultado
+- Formato recomendado: PNG con fondo transparente
+- Si no subes logo, se usarán los iconos genéricos (plato con cubiertos)
+
+## 🎨 Personalizar Iconos/Logo (MANUAL)
 
 Los iconos se generan automáticamente con el script:
 

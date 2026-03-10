@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { compressAndConvertToBase64 } from '../../utils/imageCompression';
@@ -14,6 +14,11 @@ export const ImageUploader = ({ currentImage, onImageChange, label = 'Imagen' }:
   const [isDragging, setIsDragging] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sincronizar preview con currentImage cuando cambia desde el padre
+  useEffect(() => {
+    setPreview(currentImage || '');
+  }, [currentImage]);
 
   const handleFileChange = async (file: File) => {
     if (file && file.type.startsWith('image/')) {
