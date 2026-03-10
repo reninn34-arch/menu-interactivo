@@ -35,7 +35,7 @@ router.get('/manifest.json', async (req, res) => {
     };
 
     res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          // LA MAGIA: Le decimos al celular que el icono está en nuestra nueva URL dinámica
     res.json(manifest);
 
   } catch (error) {
