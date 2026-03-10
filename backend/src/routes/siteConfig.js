@@ -18,6 +18,37 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/site-config/icon - Transforma el Base64 de la BD en un archivo de imagen en vivo
+router.get('/icon', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT logo, favicon_url FROM site_config WHERE id = 1');
+    
+    if (result.rows.length > 0) {
+      const config = result.rows[0];
+      // Preferimos el favicon, pero si no hay, usamos el logo
+      const iconSource = config.favicon_url || config.logo;
+      
+      if (iconSource && iconSource.startsWith('data:image')) {
+        // Separamos el formato (png/jpeg) de los datos binarios
+        const matches = iconSource.match(/^data:(image\/\w+);base64,(.+)$/);
+        if (matches) {
+          const contentType = matches[1];
+          const buffer = Buffer.from(matches[2], 'base64');
+          
+          res.setHeader('Content-Type', contentType);
+          res.setHeader('Cache-Control', 'public, max-age=86400'); // Cachear por 24h
+          return res.send(buffer);
+        }
+      }
+    }
+    
+    // Si no hay imagen en la BD o falló, redirigimos al icono por defecto de React
+    res.redirect('/pwa-icon.png');
+  } catch (error) {
+    res.redirect('/pwa-icon.png');
+  }
+});
+
 router.put('/', authenticateToken, async (req, res) => {
   try {
     let {

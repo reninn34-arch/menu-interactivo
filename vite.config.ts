@@ -15,13 +15,18 @@ export default defineConfig(({mode}) => {
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
       // Do not modifyâfile watching is disabled to prevent flickering during agent edits.
-      hmr: process.env.DISABLE_HMR !== 'true',      proxy: {
-        // Proxy manifest.json al backend para que sea dinámico según configuración
+      hmr: process.env.DISABLE_HMR !== 'true',
+      proxy: {
         '/manifest.json': {
-          target: env.VITE_API_URL || 'http://localhost:3001',
+          target: 'http://localhost:3001',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/manifest\.json/, '/manifest.json')
+        },
+        // Pasa las peticiones del icono directamente al backend
+        '/api/site-config/icon': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
         }
-      }    },
+      }
+    },
   };
 });
