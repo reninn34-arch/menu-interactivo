@@ -25,8 +25,8 @@ router.get('/icon', async (req, res) => {
     
     if (result.rows.length > 0) {
       const config = result.rows[0];
-      // Preferimos el logo, pero si no hay, usamos el favicon
-      const iconSource = config.logo || config.favicon_url;
+      // Preferimos el favicon (cuadrado), pero si no hay, usamos el logo
+      const iconSource = config.favicon_url || config.logo;
       
       if (iconSource && iconSource.startsWith('data:image')) {
         // Separamos el formato (png/jpeg) de los datos binarios
@@ -36,7 +36,7 @@ router.get('/icon', async (req, res) => {
           const buffer = Buffer.from(matches[2], 'base64');
           
           res.setHeader('Content-Type', contentType);
-          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate'); // No cachear, siempre actualizar
+          res.setHeader('Cache-Control', 'public, max-age=86400'); // Cachear por 24h
           return res.send(buffer);
         }
       }
