@@ -6,7 +6,7 @@ const { authenticateToken } = require('../middleware/auth');
 router.get('/', async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT * FROM products ORDER BY order_index ASC'
+      'SELECT * FROM products_full ORDER BY order_index ASC'
     );
     res.json(result.rows);
   } catch (error) {
