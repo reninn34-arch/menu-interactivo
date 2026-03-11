@@ -1,13 +1,6 @@
 import imageCompression from 'browser-image-compression';
 
-// Configuración de compresión - balance entre calidad y tamaño
-const compressionOptions = {
-  maxSizeMB: 0.5,          // Max 500KB por imagen
-  maxWidthOrHeight: 1200,  // Redimensionar si es muy grande
-  useWebWorker: true,      // No bloquear la UI
-  fileType: 'image/jpeg',  // JPEG comprime mejor que PNG
-  initialQuality: 0.85,    // 85% da buen balance
-};
+
 
 // Comprime imágenes pesadas manteniendo calidad visual
 // Si la imagen ya es chica (<100KB) no la toca
@@ -21,6 +14,15 @@ export async function compressImage(file: File): Promise<File> {
 
     console.log(`Compressing image: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
     
+    // Configuración de compresión dinámica para mantener transparencias
+    const compressionOptions = {
+      maxSizeMB: 0.5,          // Max 500KB por imagen
+      maxWidthOrHeight: 1200,  // Redimensionar si es muy grande
+      useWebWorker: true,      // No bloquear la UI
+      // Si es PNG lo mantiene como PNG para conservar transparencia, sino usa JPEG
+      fileType: file.type === 'image/png' ? 'image/png' : 'image/jpeg',
+      initialQuality: 0.85,    // 85% da buen balance
+    };
     const compressedFile = await imageCompression(file, compressionOptions);
     
     const originalSizeKB = file.size / 1024;

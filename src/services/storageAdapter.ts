@@ -118,6 +118,7 @@ const transformCategoryFromAPI = (category: any): Category => ({
   icon: category.icon,
   enabled: category.enabled,
   order: category.order_index,
+  image: category.image,
 });
 
 const transformIngredientFromAPI = (ingredient: any): Ingredient => ({
@@ -127,6 +128,7 @@ const transformIngredientFromAPI = (ingredient: any): Ingredient => ({
   enabled: ingredient.enabled,
   order: ingredient.order_index,
   isVariable: ingredient.is_variable,
+  image: ingredient.image,
 });
 
 const transformOptionGroupFromAPI = (group: any): OptionGroup => ({

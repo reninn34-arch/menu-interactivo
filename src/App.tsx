@@ -22,7 +22,9 @@ export default function App() {
   const { itemCount, addItem } = useCart();
   const { isAuthenticated } = useAuth();
   
-  const [selectedCategoryId, setSelectedCategoryId] = useState('burgers');
+  // Find the burger category by name (case-insensitive)
+  const burgerCategory = categories.find(c => c.name && c.name.toLowerCase().includes('burger'));
+  const [selectedCategoryId, setSelectedCategoryId] = useState(burgerCategory ? burgerCategory.id : (categories[0]?.id || ''));
   const [selectedProductIndex, setSelectedProductIndex] = useState(0);
   const [meatIndex, setMeatIndex] = useState(0);
   const [prevMeatIndex, setPrevMeatIndex] = useState(0);
@@ -150,9 +152,12 @@ export default function App() {
   const selectedMeat = meats[meatIndex] || meats[0];
   const selectedCategory = categories.find(c => c.id === selectedCategoryId);
 
+  // Detect if current category is the burger category
+  const isBurgerCategory = burgerCategory && selectedCategoryId === burgerCategory.id;
+
   // Determinar si mostrar vista interactiva
   const hasInteractiveProducts = categoryProducts.some(p => p.optionGroupIds && p.optionGroupIds.length > 0);
-  const showInteractiveView = selectedCategoryId !== 'burgers' && hasInteractiveProducts;
+  const showInteractiveView = !isBurgerCategory && hasInteractiveProducts;
 
   const handleMeatChange = (newIndex: number) => {
     setPrevMeatIndex(meatIndex);
@@ -441,7 +446,7 @@ export default function App() {
         {/* Contenido principal */}
         <main className="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-6 pb-2 sm:pb-8 relative">
           {/* Vista de Hamburguesas */}
-          {selectedCategoryId === 'burgers' && selectedProduct ? (
+          {isBurgerCategory && selectedProduct ? (
             <div className="z-20 w-full">
               
               {/* ✨ Selector de productos - Carrusel en móvil, botones en desktop ✨ */}

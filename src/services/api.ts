@@ -244,6 +244,7 @@ export const ingredientsApi = {
         enabled: ingredient.enabled,
         order_index: ingredient.order,
         is_variable: ingredient.isVariable,
+        image: ingredient.image,
       }),
     });
   },
@@ -257,6 +258,7 @@ export const ingredientsApi = {
         enabled: ingredient.enabled,
         order_index: ingredient.order,
         is_variable: ingredient.isVariable,
+        image: ingredient.image,
       }),
     });
   },

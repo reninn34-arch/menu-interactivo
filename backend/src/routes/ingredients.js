@@ -36,13 +36,13 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', authenticateToken, async (req, res) => {
   try {
-    const { id, name, type, enabled, order_index, is_variable } = req.body;
+    const { id, name, type, enabled, order_index, is_variable, image } = req.body;
     
     const result = await pool.query(
-      `INSERT INTO ingredients (id, name, type, enabled, order_index, is_variable) 
-       VALUES ($1, $2, $3, $4, $5, $6) 
+      `INSERT INTO ingredients (id, name, type, enabled, order_index, is_variable, image) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) 
        RETURNING *`,
-      [id, name, type, enabled !== undefined ? enabled : true, order_index, is_variable || false]
+      [id, name, type, enabled !== undefined ? enabled : true, order_index, is_variable || false, image]
     );
     
     res.status(201).json(result.rows[0]);
@@ -55,14 +55,14 @@ router.post('/', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, type, enabled, order_index, is_variable } = req.body;
+    const { name, type, enabled, order_index, is_variable, image } = req.body;
     
     const result = await pool.query(
       `UPDATE ingredients 
-       SET name = $1, type = $2, enabled = $3, order_index = $4, is_variable = $5
-       WHERE id = $6 
+       SET name = $1, type = $2, enabled = $3, order_index = $4, is_variable = $5, image = $6
+       WHERE id = $7 
        RETURNING *`,
-      [name, type, enabled, order_index, is_variable, id]
+      [name, type, enabled, order_index, is_variable, image, id]
     );
     
     if (result.rows.length === 0) {
