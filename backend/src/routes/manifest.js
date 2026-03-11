@@ -8,15 +8,11 @@ router.get('/manifest.json', async (req, res) => {
       'SELECT site_name, primary_color, background_color, logo, favicon_url, extract(epoch from updated_at) as last_update FROM site_config WHERE id = 1'
     );
 
-    let config = {};
-    if (result.rows.length > 0) {
-      config = result.rows[0];
-    }
-
+    let config = result.rows[0] || {};
     const siteName = config.site_name || 'Menú Interactivo';
     const shortName = siteName.length > 12 ? siteName.substring(0, 12) : siteName;
 
-    // ✅ CORRECCIÓN: Prioridad al Favicon (cuadrado)
+    // Prioridad: Favicon (cuadrado) > Logo
     const iconSource = config.favicon_url || config.logo;
     let iconType = 'image/png';
     if (iconSource && iconSource.startsWith('data:image/jpeg')) {
@@ -24,7 +20,9 @@ router.get('/manifest.json', async (req, res) => {
     }
 
     const version = config.last_update || Date.now();
-    const iconUrl = `/api/site-config/icon?v=${version}`;
+    // TRUCO PARA CHROME: Hacer que las URLs parezcan archivos distintos
+    const icon192 = `/api/site-config/icon?v=${version}&size=192`;
+    const icon512 = `/api/site-config/icon?v=${version}&size=512`;
 
     const manifest = {
       name: siteName,
@@ -35,27 +33,28 @@ router.get('/manifest.json', async (req, res) => {
       background_color: config.background_color || '#320A0A',
       theme_color: config.primary_color || '#FF9F0A',
       orientation: 'portrait-primary',
-      // Quitamos el "purpose: any maskable" para evitar deformaciones
+      // ARREGLO ESTRICTO: Separar "any" y "maskable" en objetos distintos
       icons: [
-        { src: iconUrl, sizes: '192x192', type: iconType, purpose: 'any' },
-        { src: iconUrl, sizes: '512x512', type: iconType, purpose: 'any' }
+        { src: icon192, sizes: '192x192', type: iconType, purpose: 'any' },
+        { src: icon512, sizes: '512x512', type: iconType, purpose: 'any' },
+        { src: icon192, sizes: '192x192', type: iconType, purpose: 'maskable' },
+        { src: icon512, sizes: '512x512', type: iconType, purpose: 'maskable' }
       ],
       categories: ['food', 'lifestyle', 'business'],
       shortcuts: [
         {
           name: 'Ver Menú',
           short_name: 'Menú',
-          description: 'Abrir el menú',
           url: '/',
-          icons: [{ src: iconUrl, sizes: '192x192', type: iconType }]
+          icons: [{ src: icon192, sizes: '192x192', type: iconType }]
         }
       ]
     };
 
     res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+    res.setHeader('Access-Control-Allow-Origin', '*'); // REQUISITO DE SEGURIDAD
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.json(manifest);
-
   } catch (error) {
     console.error('Error generando manifest:', error);
     res.status(500).json({ error: 'Error al generar manifest' });

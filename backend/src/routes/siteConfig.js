@@ -36,7 +36,8 @@ router.get('/icon', async (req, res) => {
           const buffer = Buffer.from(matches[2], 'base64');
           
           res.setHeader('Content-Type', contentType);
-          res.setHeader('Cache-Control', 'public, max-age=86400'); // Cachear por 24h
+            res.setHeader('Cache-Control', 'public, max-age=31536000'); 
+            res.setHeader('Access-Control-Allow-Origin', '*'); // <--- NUEVO: REQUISITO PWA
           return res.send(buffer);
         }
       }
