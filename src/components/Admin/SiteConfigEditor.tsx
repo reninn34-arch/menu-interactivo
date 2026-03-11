@@ -556,8 +556,8 @@ export const SiteConfigEditor = () => {
             onImageChange={(url) => setFormData({ ...formData, faviconUrl: url })}
             label="Favicon (Icono del sitio)"
           />
-          <p className="text-xs text-gray-400 mt-1">
-            El favicon debe ser una imagen cuadrada (recomendado 32x32 o 64x64 px)
+          <p className="text-xs text-yellow-400 mt-1 font-semibold">
+            ⚠️ El favicon debe ser <b>cuadrado</b> (ideal: <b>192x192 px</b>, PNG o JPEG, sin bordes vacíos). Si no cumple, la app no será instalable ni mostrará el icono correctamente.
           </p>
         </div>
 
