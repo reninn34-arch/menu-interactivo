@@ -28,9 +28,11 @@ export const CheckoutForm = ({ isOpen, onClose, onSubmit, subtotal, deliveryCost
     notes: ''
   });
 
-  // Calcular total dinámicamente
-  const currentDeliveryCost = formData.deliveryMethod === 'delivery' ? deliveryCost : 0;
-  const total = subtotal + currentDeliveryCost;
+  // Calcular total dinámicamente y de forma segura
+  const safeSubtotal = Number(subtotal) || 0;
+  const safeDelivery = Number(deliveryCost) || 0;
+  const currentDeliveryCost = formData.deliveryMethod === 'delivery' ? safeDelivery : 0;
+  const total = safeSubtotal + currentDeliveryCost;
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -219,13 +221,13 @@ export const CheckoutForm = ({ isOpen, onClose, onSubmit, subtotal, deliveryCost
             <div className="space-y-2">
               <div className="flex justify-between text-gray-300">
                 <span>Subtotal:</span>
-                <span className="font-medium">{currencySymbol}{subtotal.toFixed(2)}</span>
+                <span className="font-medium">{currencySymbol}{safeSubtotal.toFixed(2)}</span>
               </div>
               
-              {formData.deliveryMethod === 'delivery' && deliveryCost > 0 && (
+              {formData.deliveryMethod === 'delivery' && safeDelivery > 0 && (
                 <div className="flex justify-between text-orange-400">
                   <span>🚚 Delivery:</span>
-                  <span className="font-medium">{currencySymbol}{deliveryCost.toFixed(2)}</span>
+                  <span className="font-medium">{currencySymbol}{safeDelivery.toFixed(2)}</span>
                 </div>
               )}
               

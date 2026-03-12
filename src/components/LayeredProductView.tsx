@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { useMenu } from '../contexts/MenuContext';
 import { Product, ProductOptionValue } from '../types';
+import { TopBun, Cheese, Meat, Tomato, Lettuce, BottomBun } from './Burger';
 
 interface LayeredProductViewProps {
   isCollapsed: boolean;
@@ -46,6 +47,16 @@ export const LayeredProductView = ({
     'bacon': 10,
     'egg': 20,
     'bun-bottom': 25,
+  };
+
+  // Componentes 3D fallback por tipo
+  const fallbackComponents: Record<string, any> = {
+    'bun-top': TopBun,
+    'cheese': Cheese,
+    'meat': Meat,
+    'tomato': Tomato,
+    'lettuce': Lettuce,
+    'bun-bottom': BottomBun,
   };
 
   // Calcular translateY acumulativo basado en los ingredientes reales presentes
@@ -137,35 +148,45 @@ export const LayeredProductView = ({
                       }}
                     />
                   ) : (
-                    // Fallback: div con gradiente si no hay imagen
-                    <motion.div
-                      key={variableOptionValue.id}
-                      className={`w-40 h-20 rounded-full ${style || 'bg-gray-500'}`}
-                      initial={{ 
-                        x: direction > 0 ? 100 : -100, 
-                        opacity: 0,
-                        rotateY: direction > 0 ? 45 : -45 
-                      }}
-                      animate={{ 
-                        x: 0, 
-                        opacity: 1,
-                        rotateY: 0
-                      }}
-                      exit={{ 
-                        x: direction > 0 ? -100 : 100, 
-                        opacity: 0,
-                        rotateY: direction > 0 ? -45 : 45 
-                      }}
-                      transition={{ 
-                        duration: 0.5, 
-                        ease: [0.34, 1.56, 0.64, 1] 
-                      }}
-                      style={{
-                        filter: isCollapsed
-                          ? 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))'
-                          : 'drop-shadow(0 20px 25px rgba(0,0,0,0.3))'
-                      }}
-                    />
+                    // Fallback: Si es type 'meat' usar el componente Meat, sino div normal
+                    ingredient.type === 'meat' ? (
+                      <Meat
+                        key={variableOptionValue.id}
+                        id={variableOptionValue.id}
+                        style={style || 'bg-gray-500'}
+                        direction={direction}
+                        isCollapsed={isCollapsed}
+                      />
+                    ) : (
+                      <motion.div
+                        key={variableOptionValue.id}
+                        className={`w-40 h-20 rounded-full ${style || 'bg-gray-500'}`}
+                        initial={{ 
+                          x: direction > 0 ? 100 : -100, 
+                          opacity: 0,
+                          rotateY: direction > 0 ? 45 : -45 
+                        }}
+                        animate={{ 
+                          x: 0, 
+                          opacity: 1,
+                          rotateY: 0
+                        }}
+                        exit={{ 
+                          x: direction > 0 ? -100 : 100, 
+                          opacity: 0,
+                          rotateY: direction > 0 ? -45 : 45 
+                        }}
+                        transition={{ 
+                          duration: 0.5, 
+                          ease: [0.34, 1.56, 0.64, 1] 
+                        }}
+                        style={{
+                          filter: isCollapsed
+                            ? 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))'
+                            : 'drop-shadow(0 20px 25px rgba(0,0,0,0.3))'
+                        }}
+                      />
+                    )
                   )}
                 </AnimatePresence>
               </motion.div>
@@ -192,7 +213,29 @@ export const LayeredProductView = ({
             );
           }
 
-          // Si el ingrediente no tiene imagen, no renderizarlo
+          // Fallback: componente 3D si existe para ese tipo y no hay imagen
+          const FallbackComponent = fallbackComponents[ingredient.type];
+          if (FallbackComponent) {
+            return (
+              <motion.div
+                key={`${product.id}-${ingredient.id}`}
+                className="absolute"
+                style={{ 
+                  zIndex,
+                  bottom: 0,
+                  willChange: 'transform'
+                }}
+                animate={{
+                  y: isCollapsed ? yCollapsed : yExpanded,
+                }}
+                transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
+              >
+                <FallbackComponent isCollapsed={isCollapsed} />
+              </motion.div>
+            );
+          }
+
+          // Si el ingrediente no tiene imagen ni fallback, no renderizarlo
           return null;
         })}
       </div>

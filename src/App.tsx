@@ -618,43 +618,7 @@ export default function App() {
                   </motion.button>
                 )}
                 
-                {/* Botón Agregar (después de elegir) */}
-                {!showMeatSelector && meatSelected && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      // Verificamos si la hamburguesa tiene otros grupos de opciones asignados aparte de la carne
-                      const extraOptions = selectedProduct.optionGroupIds?.filter(id => id !== linkedGroupId) || [];
-                      
-                      if (extraOptions.length > 0) {
-                        // Si tiene extras (ej: Tamaño de Combo, Sin Cebolla), mostramos el modal
-                        setShowBurgerOptions(true);
-                      } else {
-                        // Si no tiene más opciones, va directo al carrito
-                        addItem(selectedProduct, selectedMeat, undefined, 1);
-                        setShowCart(true);
-                        setMeatSelected(false);
-                      }
-                    }}
-                    className="w-full mt-1 lg:mt-6 rounded-full py-2.5 lg:py-4 px-6 text-white font-bold transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 text-sm lg:text-lg"
-                    style={{
-                      background: `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = `linear-gradient(to right, ${siteConfig.secondaryColor || '#FF7A00'}, ${siteConfig.accentColor || '#FFB84D'})`;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`;
-                    }}
-                  >
-                    <ShoppingCart className="w-4 h-4 lg:w-5 lg:h-5" />
-                    Agregar al Carrito
-                  </motion.button>
-                )}
+
 
                 <AnimatePresence>
                   {showMeatSelector && (
@@ -683,12 +647,23 @@ export default function App() {
                     whileTap={{ scale: 0.98 }}
                     transition={{ type: 'spring', stiffness: 400, damping: 17 }}
                     onClick={() => {
-                      setShowMeatSelector(false);
-                      setMeatSelected(true);
-                      // Mostrar modal de opciones extra si existen
-                      const extraOptions = selectedProduct.optionGroupIds?.filter(id => id !== 'meat-type') || [];
+                      // Mostrar modal de opciones extra si existen y están habilitadas
+                      const extraOptions = (selectedProduct.optionGroupIds?.filter(id => id !== linkedGroupId) || []).filter(id => {
+                        const group = optionGroups.find(g => g.id === id);
+                        return group && group.enabled;
+                      });
                       if (extraOptions.length > 0) {
+                        setShowMeatSelector(false);
+                        setMeatSelected(true);
                         setShowBurgerOptions(true);
+                      } else {
+                        // Si no hay extras, agregar directo al carrito
+                        addItem(selectedProduct, meats[meatIndex], undefined, 1);
+                        setShowCart(true);
+                        // Limpiar form
+                        setShowMeatSelector(false);
+                        setMeatSelected(false);
+                        setMeatIndex(0);
                       }
                     }}
                     className="w-full text-white rounded-full py-2 sm:py-2.5 lg:py-4 px-4 sm:px-6 lg:px-8 flex items-center justify-center font-bold text-sm sm:text-base lg:text-xl relative overflow-hidden"

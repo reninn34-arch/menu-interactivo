@@ -50,6 +50,11 @@ export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, exclu
         if (currentSet.has(valueId)) {
           currentSet.delete(valueId);
         } else {
+          // Verificar límite de selecciones máximas
+          const group = optionGroups.find(g => g.id === groupId);
+          if (group && group.maxSelections && currentSet.size >= group.maxSelections) {
+            return prev; // Ignorar si ya se alcanzó el máximo
+          }
           currentSet.add(valueId);
         }
         newSelections.set(groupId, currentSet);
@@ -247,32 +252,7 @@ export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, exclu
               );
             })}
           </div>
-          {/* Campo de notas especiales */}
-          <div className="px-6 pb-4">
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Notas especiales (opcional)
-            </label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Ej: Sin cebolla, extra queso, poco picante..."
-              maxLength={200}
-              rows={3}
-              className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none resize-none transition-all"
-              style={{
-                borderColor: '#374151'
-              }}
-              onFocus={(e) => {
-                e.target.style.borderColor = siteConfig.primaryColor || '#FF9F0A';
-                e.target.style.boxShadow = `0 0 0 1px ${siteConfig.primaryColor || '#FF9F0A'}`;
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = '#374151';
-                e.target.style.boxShadow = 'none';
-              }}
-            />
-            <p className="text-xs text-gray-500 mt-1">{notes.length}/200 caracteres</p>
-          </div>
+
           {/* Footer */}
           <div 
             className="sticky bottom-0 bg-[#2A1810] border-t p-6"

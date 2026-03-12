@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Trash2, Plus, Minus, ShoppingBag, Clock } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
@@ -13,7 +13,7 @@ interface CartProps {
 
 export const Cart = ({ isOpen, onClose }: CartProps) => {
   const { items, itemCount, total, removeItem, updateQuantity, clearCart } = useCart();
-  const { siteConfig } = useMenu();
+  const { siteConfig, optionGroups } = useMenu();
   const [showCheckoutForm, setShowCheckoutForm] = useState(false);
   const [showClosedAlert, setShowClosedAlert] = useState(false);
 
@@ -80,8 +80,14 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
       if (item.selectedOptions && item.selectedOptions.length > 0) {
         message += `   📝 Opciones:\n`;
         item.selectedOptions.forEach(opt => {
-          opt.valueNames.forEach(valueName => {
-            const priceText = opt.totalPrice > 0 ? ` (+${siteConfig.currencySymbol}${opt.totalPrice.toFixed(2)})` : '';
+          opt.valueNames.forEach((valueName, vIdx) => {
+            // Buscar el precio individual de esta opción específica
+            const valueId = opt.valueIds[vIdx];
+            const groupDef = optionGroups.find(g => g.id === opt.groupId);
+            const valueDef = groupDef?.values.find(v => v.id === valueId);
+            const unitPrice = valueDef?.priceModifier || 0;
+            
+            const priceText = unitPrice > 0 ? ` (+${siteConfig.currencySymbol}${unitPrice.toFixed(2)})` : '';
             message += `      • ${valueName}${priceText}\n`;
           });
         });
@@ -94,12 +100,13 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
     message += `\n� *Subtotal productos:* ${siteConfig.currencySymbol}${total.toFixed(2)}\n`;
     
     // Agregar costo de delivery si aplica
-    const deliveryCost = customerData.deliveryMethod === 'delivery' ? (siteConfig.deliveryCost || 0) : 0;
-    if (deliveryCost > 0) {
-      message += `🚚 *Costo de delivery:* ${siteConfig.currencySymbol}${deliveryCost.toFixed(2)}\n`;
+    const rawDeliveryCost = customerData.deliveryMethod === 'delivery' ? (siteConfig.deliveryCost || 0) : 0;
+    const safeDeliveryCost = Number(rawDeliveryCost) || 0;
+    if (safeDeliveryCost > 0) {
+      message += `🚚 *Costo de delivery:* ${siteConfig.currencySymbol}${safeDeliveryCost.toFixed(2)}\n`;
     }
     
-    const finalTotal = total + deliveryCost;
+    const finalTotal = total + safeDeliveryCost;
     message += `\n💵 *TOTAL A PAGAR: ${siteConfig.currencySymbol}${finalTotal.toFixed(2)}*\n`;
     message += `📦 *Cantidad de items:* ${itemCount}\n`;
     
@@ -136,7 +143,7 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
+        <React.Fragment key="cart-drawer-content">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -235,17 +242,30 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
                         {Array.isArray(item.selectedOptions) && item.selectedOptions.length > 0 && (
                           <div className="space-y-1 mb-2">
                             {item.selectedOptions.map((option, optIndex) => (
-                              <p key={`${item.id}-${option.groupId}-${optIndex}`} className="text-gray-400 text-xs">
-                                {option.groupName}: {option.valueNames.join(', ')}
-                                {option.totalPrice > 0 && (
-                                  <span 
-                                    className="ml-1"
-                                    style={{ color: siteConfig.accentColor || '#FFB84D' }}
-                                  >
-                                    +${option.totalPrice.toFixed(2)}
-                                  </span>
-                                )}
-                              </p>
+                              <div key={`${item.id}-${option.groupId}-${optIndex}`} className="text-gray-400 text-xs flex flex-wrap gap-x-1">
+                                <span className="font-medium text-gray-300">{option.groupName}:</span>
+                                {option.valueNames.map((valueName, vIdx) => {
+                                  const valueId = option.valueIds[vIdx];
+                                  const groupDef = optionGroups.find(g => g.id === option.groupId);
+                                  const valueDef = groupDef?.values.find(v => v.id === valueId);
+                                  const unitPrice = valueDef?.priceModifier || 0;
+                                  
+                                  return (
+                                    <span key={`${valueId}-${vIdx}`}>
+                                      {valueName}
+                                      {unitPrice > 0 && (
+                                        <span 
+                                          className="ml-0.5"
+                                          style={{ color: siteConfig.accentColor || '#FFB84D' }}
+                                        >
+                                          (+${unitPrice.toFixed(2)})
+                                        </span>
+                                      )}
+                                      {vIdx < option.valueNames.length - 1 ? ',' : ''}
+                                    </span>
+                                  );
+                                })}
+                              </div>
                             ))}
                           </div>
                         )}
@@ -345,7 +365,7 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
               </div>
             )}
           </motion.div>
-        </>
+        </React.Fragment>
       )}
       
       {/* Formulario de Checkout */}

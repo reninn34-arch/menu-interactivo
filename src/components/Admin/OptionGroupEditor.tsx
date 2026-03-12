@@ -188,8 +188,11 @@ export const OptionGroupEditor = () => {
               </label>
               <input
                 type="number"
-                value={groupFormData.order || 1}
-                onChange={(e) => setGroupFormData({ ...groupFormData, order: parseInt(e.target.value) })}
+                value={groupFormData.order ?? 1}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  setGroupFormData({ ...groupFormData, order: isNaN(val) ? 1 : val });
+                }}
                 className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-orange-500"
               />
             </div>
@@ -248,8 +251,11 @@ export const OptionGroupEditor = () => {
                   <input
                     type="number"
                     min="0"
-                    value={groupFormData.minSelections || 0}
-                    onChange={(e) => setGroupFormData({ ...groupFormData, minSelections: parseInt(e.target.value) })}
+                    value={groupFormData.minSelections ?? 0}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value);
+                      setGroupFormData({ ...groupFormData, minSelections: isNaN(val) ? 0 : val });
+                    }}
                     className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-orange-500"
                   />
                 </div>
@@ -261,8 +267,11 @@ export const OptionGroupEditor = () => {
                   <input
                     type="number"
                     min="1"
-                    value={groupFormData.maxSelections || 1}
-                    onChange={(e) => setGroupFormData({ ...groupFormData, maxSelections: parseInt(e.target.value) })}
+                    value={groupFormData.maxSelections ?? 1}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value);
+                      setGroupFormData({ ...groupFormData, maxSelections: isNaN(val) ? 1 : val });
+                    }}
                     className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-orange-500"
                   />
                 </div>
@@ -397,7 +406,7 @@ export const OptionGroupEditor = () => {
                                   type="number"
                                   step="0.01"
                                   value={valueFormData.priceModifier || 0}
-                                  onChange={(e) => setValueFormData({ ...valueFormData, priceModifier: parseFloat(e.target.value) })}
+                                  onChange={(e) => { const val = parseFloat(e.target.value); setValueFormData({ ...valueFormData, priceModifier: isNaN(val) ? 0 : val }); }}
                                   className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-orange-500"
                                   placeholder="0.00"
                                 />
@@ -445,7 +454,7 @@ export const OptionGroupEditor = () => {
                                     <input
                                       type="number"
                                       value={valueFormData.calories || ''}
-                                      onChange={(e) => setValueFormData({ ...valueFormData, calories: e.target.value ? parseInt(e.target.value) : undefined })}
+                                      onChange={(e) => { const val = parseInt(e.target.value); setValueFormData({ ...valueFormData, calories: e.target.value === '' ? undefined : (isNaN(val) ? undefined : val) }); }}
                                       className="w-full px-3 py-2 text-sm bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:border-orange-500"
                                       placeholder="kcal"
                                     />
@@ -457,7 +466,7 @@ export const OptionGroupEditor = () => {
                                     <input
                                       type="number"
                                       value={valueFormData.protein || ''}
-                                      onChange={(e) => setValueFormData({ ...valueFormData, protein: e.target.value ? parseInt(e.target.value) : undefined })}
+                                      onChange={(e) => { const val = parseInt(e.target.value); setValueFormData({ ...valueFormData, protein: e.target.value === '' ? undefined : (isNaN(val) ? undefined : val) }); }}
                                       className="w-full px-3 py-2 text-sm bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:border-orange-500"
                                       placeholder="g"
                                     />
@@ -469,7 +478,7 @@ export const OptionGroupEditor = () => {
                                     <input
                                       type="number"
                                       value={valueFormData.fat || ''}
-                                      onChange={(e) => setValueFormData({ ...valueFormData, fat: e.target.value ? parseInt(e.target.value) : undefined })}
+                                      onChange={(e) => { const val = parseInt(e.target.value); setValueFormData({ ...valueFormData, fat: e.target.value === '' ? undefined : (isNaN(val) ? undefined : val) }); }}
                                       className="w-full px-3 py-2 text-sm bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:border-orange-500"
                                       placeholder="g"
                                     />
@@ -481,7 +490,7 @@ export const OptionGroupEditor = () => {
                                     <input
                                       type="number"
                                       value={valueFormData.carbs || ''}
-                                      onChange={(e) => setValueFormData({ ...valueFormData, carbs: e.target.value ? parseInt(e.target.value) : undefined })}
+                                      onChange={(e) => { const val = parseInt(e.target.value); setValueFormData({ ...valueFormData, carbs: e.target.value === '' ? undefined : (isNaN(val) ? undefined : val) }); }}
                                       className="w-full px-3 py-2 text-sm bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:border-orange-500"
                                       placeholder="g"
                                     />

@@ -26,9 +26,14 @@ interface ProductCardProps {
  * @param onOrderWithOptions - Callback for products with customization options
  */
 export const ProductCard = memo(({ product, onOrder, onOrderWithOptions }: ProductCardProps) => {
-  const { siteConfig } = useMenu();
+  const { siteConfig, optionGroups } = useMenu();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const hasOptions = product.optionGroupIds && product.optionGroupIds.length > 0;
+  
+  // Only consider it "has options" if there is at least one enabled option group linked
+  const hasOptions = (product.optionGroupIds || []).some(id => {
+    const group = optionGroups.find(g => g.id === id);
+    return group && group.enabled;
+  });
 
   const handleOrderClick = useCallback(() => {
     if (hasOptions) {
