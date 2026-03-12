@@ -79,10 +79,16 @@ export const LayeredProductView = ({
       <div className="relative w-64 h-80 mx-auto flex items-end justify-center">
         {productIngredients.map((ingredient, index) => {
           const zIndex = calculateZIndex(index);
-          const overlapStep = 22; // Pixeles de solapamiento entre capas
-          // Invertir: el último ingrediente (index mayor) debe estar más abajo
+          const overlapStep = 22; // Colapsado
+          const expandedStep = 65; // Expandido (un poco más espaciado aquí)
           const totalIngredients = productIngredients.length;
-          const bottomValue = (totalIngredients - 1 - index) * overlapStep;
+          // Posiciones y centrado dinámico
+          const bottomValueCollapsed = (totalIngredients - 1 - index) * overlapStep;
+          const bottomValueExpanded = (totalIngredients - 1 - index) * expandedStep;
+          const totalGrowth = (totalIngredients - 1) * (expandedStep - overlapStep);
+          const centerOffset = totalGrowth / 2;
+          const yCollapsed = -bottomValueCollapsed;
+          const yExpanded = -bottomValueExpanded + centerOffset;
           const isVariableIngredient = ingredient.id === product.variableIngredientId;
 
           // Si es el ingrediente variable, usar la imagen y estilo de la opción seleccionada
@@ -94,9 +100,9 @@ export const LayeredProductView = ({
               <motion.div
                 key={`${product.id}-${ingredient.id}`}
                 className="absolute w-full flex justify-center"
-                style={{ zIndex }}
+                style={{ zIndex, bottom: 0 }}
                 animate={{
-                  bottom: isCollapsed ? `${bottomValue}px` : `${(totalIngredients - 1 - index) * 65}px`,
+                  y: isCollapsed ? yCollapsed : yExpanded,
                 }}
                 transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
               >
@@ -174,12 +180,12 @@ export const LayeredProductView = ({
                 src={ingredient.image}
                 alt={ingredient.name}
                 className="absolute w-40 h-auto drop-shadow-2xl"
-                style={{ zIndex }}
+                style={{ zIndex, bottom: 0 }}
                 animate={{
                   filter: isCollapsed
                     ? 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))'
                     : 'drop-shadow(0 20px 25px rgba(0,0,0,0.3))',
-                  bottom: isCollapsed ? `${bottomValue}px` : `${(totalIngredients - 1 - index) * 65}px`,
+                  y: isCollapsed ? yCollapsed : yExpanded,
                 }}
                 transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
               />

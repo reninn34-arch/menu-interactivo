@@ -35,44 +35,60 @@ router.get('/:id', async (req, res) => {
 });
 
 router.post('/', authenticateToken, async (req, res) => {
+  const client = await pool.connect();
   try {
-    const { id, name, description, icon, enabled, order_index, image } = req.body;
-    
-    const result = await pool.query(
-      `INSERT INTO categories (id, name, description, icon, enabled, order_index, image) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) 
+    await client.query('BEGIN');
+    const { id, name, description, icon, enabled, order_index, image, is_main } = req.body;
+    // Si esta es la principal, quitamos el estado principal a todas las demás
+    if (is_main) {
+      await client.query('UPDATE categories SET is_main = FALSE');
+    }
+    const result = await client.query(
+      `INSERT INTO categories (id, name, description, icon, enabled, order_index, image, is_main) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
        RETURNING *`,
-      [id, name, description, icon, enabled !== undefined ? enabled : true, order_index, image]
+      [id, name, description, icon, enabled !== undefined ? enabled : true, order_index, image, is_main || false]
     );
-    
+    await client.query('COMMIT');
     res.status(201).json(result.rows[0]);
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Error creating category:', error);
     res.status(500).json({ error: 'Failed to create category' });
+  } finally {
+    client.release();
   }
 });
 
 router.put('/:id', authenticateToken, async (req, res) => {
+  const client = await pool.connect();
   try {
+    await client.query('BEGIN');
     const { id } = req.params;
-    const { name, description, icon, enabled, order_index, image } = req.body;
-    
-    const result = await pool.query(
+    const { name, description, icon, enabled, order_index, image, is_main } = req.body;
+    // Si esta es la principal, quitamos el estado principal a todas las demás
+    if (is_main) {
+      await client.query('UPDATE categories SET is_main = FALSE WHERE id != $1', [id]);
+    }
+    const result = await client.query(
       `UPDATE categories 
-       SET name = $1, description = $2, icon = $3, enabled = $4, order_index = $5, image = $6
-       WHERE id = $7 
+       SET name = $1, description = $2, icon = $3, enabled = $4, order_index = $5, image = $6, is_main = $7
+       WHERE id = $8 
        RETURNING *`,
-      [name, description, icon, enabled, order_index, image, id]
+      [name, description, icon, enabled, order_index, image, is_main || false, id]
     );
-    
     if (result.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Category not found' });
     }
-    
+    await client.query('COMMIT');
     res.json(result.rows[0]);
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('Error updating category:', error);
     res.status(500).json({ error: 'Failed to update category' });
+  } finally {
+    client.release();
   }
 });
 

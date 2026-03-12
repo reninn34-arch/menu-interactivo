@@ -119,6 +119,7 @@ const transformCategoryFromAPI = (category: any): Category => ({
   enabled: category.enabled,
   order: category.order_index,
   image: category.image,
+  isMain: category.is_main,
 });
 
 const transformIngredientFromAPI = (ingredient: any): Ingredient => ({

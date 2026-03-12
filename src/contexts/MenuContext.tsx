@@ -172,7 +172,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     featured: true,
     order: 1,
     ingredientIds: ['top-bun', 'cheese', 'meat-default', 'tomato', 'lettuce', 'bottom-bun'],
-    optionGroupIds: ['meat-type'],
+    optionGroupIds: ['meat-type', 'dessert-extras'],
     useLayeredView: true,
     variableIngredientId: 'meat-default',
     linkedOptionGroupId: 'meat-type'

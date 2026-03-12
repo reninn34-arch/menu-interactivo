@@ -134,6 +134,8 @@ export const categoriesApi = {
         icon: category.icon,
         enabled: category.enabled,
         order_index: category.order,
+        image: category.image,
+        is_main: category.isMain,
       }),
     });
   },
@@ -147,6 +149,8 @@ export const categoriesApi = {
         icon: category.icon,
         enabled: category.enabled,
         order_index: category.order,
+        image: category.image,
+        is_main: category.isMain,
       }),
     });
   },

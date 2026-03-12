@@ -29,6 +29,7 @@ export interface Category {
   image?: string;
   enabled: boolean;
   order: number;
+  isMain?: boolean;
 }
 
 export interface Product {

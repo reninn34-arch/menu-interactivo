@@ -18,13 +18,11 @@ import { useAuth } from './contexts/AuthContext';
 import { isRestaurantOpen, getScheduleDisplay } from './utils/openingHours';
 
 export default function App() {
+  // TODOS LOS HOOKS VAN AL INICIO
   const { products, categories, optionGroups, siteConfig, isLoading, error } = useMenu();
   const { itemCount, addItem } = useCart();
   const { isAuthenticated } = useAuth();
-  
-  // Find the burger category by name (case-insensitive)
-  const burgerCategory = categories.find(c => c.name && c.name.toLowerCase().includes('burger'));
-  const [selectedCategoryId, setSelectedCategoryId] = useState(burgerCategory ? burgerCategory.id : (categories[0]?.id || ''));
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [selectedProductIndex, setSelectedProductIndex] = useState(0);
   const [meatIndex, setMeatIndex] = useState(0);
   const [prevMeatIndex, setPrevMeatIndex] = useState(0);
@@ -37,13 +35,10 @@ export default function App() {
   const [meatSelected, setMeatSelected] = useState(false);
   const [showBurgerOptions, setShowBurgerOptions] = useState(false);
 
-  // Detectar combinación de teclas Ctrl+Shift+A para acceder al admin
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      // Usar toLowerCase() para hacerlo compatible con cualquier teclado
       if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
         e.preventDefault();
-        console.log('🔑 Admin shortcut detected: Ctrl+Shift+A');
         setShowAdmin(true);
       }
     };
@@ -51,12 +46,9 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, []);
 
-  // Actualizar favicon dinámicamente cuando cambie
   useEffect(() => {
     let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
-    
     if (siteConfig.faviconUrl) {
-      // Si hay favicon URL, actualizar o crear elemento
       if (!link) {
         link = document.createElement('link');
         link.rel = 'icon';
@@ -64,21 +56,30 @@ export default function App() {
       }
       link.href = siteConfig.faviconUrl;
     } else {
-      // Si NO hay favicon URL, eliminar el elemento
       if (link) {
         link.remove();
       }
     }
   }, [siteConfig.faviconUrl]);
 
-  // Actualizar título del sitio dinámicamente
   useEffect(() => {
     if (siteConfig.siteName) {
       document.title = siteConfig.siteName;
     }
   }, [siteConfig.siteName]);
 
-  // Loading state
+  // Forzar la selección de la categoría principal al cargar si la actual no existe
+  useEffect(() => {
+    if (categories.length > 0 && !categories.find(c => c.id === selectedCategoryId)) {
+      const fallbackCat = categories.find(c => c.isMain) || categories[0];
+      setSelectedCategoryId(fallbackCat ? fallbackCat.id : '');
+      setSelectedProductIndex(0);
+    }
+  }, [categories, selectedCategoryId]);
+
+  // (El useEffect de selección de categoría principal se movió arriba)
+
+  // Loading state y error state DESPUÉS de los hooks
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#4A1410] via-[#2D0D0A] to-[#0A0604] flex items-center justify-center">
@@ -93,7 +94,6 @@ export default function App() {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#4A1410] via-[#2D0D0A] to-[#0A0604] flex items-center justify-center p-4">
@@ -131,8 +131,16 @@ export default function App() {
     }
   };
   
-  // Obtener carnes desde el grupo de opciones "meat-type"
-  const meatOptionGroup = optionGroups.find(g => g.id === 'meat-type');
+
+  // Filtrar productos por categoría seleccionada
+  const categoryProducts = products.filter(p => p.enabled && p.categoryId === selectedCategoryId);
+  const selectedProduct = categoryProducts[selectedProductIndex] || categoryProducts[0];
+  const selectedCategory = categories.find(c => c.id === selectedCategoryId);
+
+  // Obtener carnes desde el grupo de opciones vinculado dinámicamente al producto
+  const linkedGroupId = selectedProduct?.linkedOptionGroupId || 'meat-type';
+  const meatOptionGroup = optionGroups.find(g => g.id === linkedGroupId);
+  
   const meats = meatOptionGroup?.values.filter(v => v.enabled).map(v => ({
     id: v.id,
     name: v.name,
@@ -145,15 +153,15 @@ export default function App() {
     carbs: v.carbs || 0,
     image: v.image,
   })) || [];
-  
-  // Filtrar productos por categoría seleccionada
-  const categoryProducts = products.filter(p => p.enabled && p.categoryId === selectedCategoryId);
-  const selectedProduct = categoryProducts[selectedProductIndex] || categoryProducts[0];
-  const selectedMeat = meats[meatIndex] || meats[0];
-  const selectedCategory = categories.find(c => c.id === selectedCategoryId);
 
-  // Detect if current category is the burger category
-  const isBurgerCategory = burgerCategory && selectedCategoryId === burgerCategory.id;
+  // Evitar errores si no hay carnes configuradas
+  const fallbackMeat = { id: 'none', name: 'Original', shortName: '', style: '', price: 0, calories: 0, protein: 0, fat: 0, carbs: 0 };
+  const selectedMeat = meats[meatIndex] || meats[0] || fallbackMeat;
+
+  // (El useEffect de selección de categoría principal está arriba, junto a los demás hooks)
+
+  // Detectar si la categoría actual es la Principal (marcada en Admin)
+  const isBurgerCategory = selectedCategory?.isMain === true;
 
   // Determinar si mostrar vista interactiva
   const hasInteractiveProducts = categoryProducts.some(p => p.optionGroupIds && p.optionGroupIds.length > 0);
@@ -450,7 +458,7 @@ export default function App() {
             <div className="z-20 w-full">
               
               {/* ✨ Selector de productos - Carrusel en móvil, botones en desktop ✨ */}
-              {categoryProducts.length > 1 && (
+              {categoryProducts.length > 0 && (
                 <>
                   {/* Desktop: Botones horizontales */}
                   <div className="hidden md:flex gap-2 lg:gap-3 pb-2 lg:pb-4 mb-4 lg:mb-6 justify-center flex-wrap">
@@ -566,30 +574,34 @@ export default function App() {
               {/* Info Panel */}
               <div className="w-full lg:w-1/2 flex flex-col z-20 bg-[#0A0A0A]/40 lg:bg-transparent p-3 sm:p-4 lg:p-0 rounded-2xl lg:rounded-[2rem] backdrop-blur-md border border-white/5 lg:border-none shadow-2xl lg:shadow-none">
                 <motion.div
-                  key={selectedMeat.id + '-title'}
+                  key={selectedProduct.id + '-title'}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4 }}
                   className="mb-0 lg:mb-4 text-center lg:text-left"
                 >
-                  <h1 className="text-lg sm:text-xl lg:text-4xl xl:text-5xl font-bold mb-0 lg:mb-3 tracking-tight">{selectedMeat.name}</h1>
+                  <h1 className="text-lg sm:text-xl lg:text-4xl xl:text-5xl font-bold mb-0 lg:mb-3 tracking-tight">{selectedProduct.name}</h1>
                   <div className="flex items-center justify-center lg:justify-start gap-1 text-gray-400 text-[10px] lg:text-base">
                     <MapPin className="w-2.5 h-2.5 lg:w-4 lg:h-4" />
                     <span>Sucursal Principal</span>
                   </div>
                 </motion.div>
 
-                <NutritionalInfo meat={{
-                  id: selectedMeat.id,
-                  name: selectedMeat.name,
-                  style: '',
-                  price: selectedProduct.price + selectedMeat.price,
-                  calories: (selectedProduct.calories || 0) + selectedMeat.calories,
-                  protein: (selectedProduct.protein || 0) + selectedMeat.protein,
-                  fat: (selectedProduct.fat || 0) + selectedMeat.fat,
-                  carbs: (selectedProduct.carbs || 0) + selectedMeat.carbs,
-                  shortName: selectedMeat.name,
-                }} />
+                {selectedMeat ? (
+                  <NutritionalInfo meat={{
+                    id: selectedMeat.id,
+                    name: selectedMeat.name,
+                    style: '',
+                    price: selectedProduct.price + selectedMeat.price,
+                    calories: (selectedProduct.calories || 0) + selectedMeat.calories,
+                    protein: (selectedProduct.protein || 0) + selectedMeat.protein,
+                    fat: (selectedProduct.fat || 0) + selectedMeat.fat,
+                    carbs: (selectedProduct.carbs || 0) + selectedMeat.carbs,
+                    shortName: selectedMeat.name,
+                  }} />
+                ) : (
+                  <div className="text-center text-gray-400 py-4">No hay información nutricional.</div>
+                )}
 
                 {/* Botón Seleccionar con estilo glass */}
                 {!showMeatSelector && !meatSelected && (
@@ -616,7 +628,7 @@ export default function App() {
                     whileTap={{ scale: 0.98 }}
                     onClick={() => {
                       // Verificamos si la hamburguesa tiene otros grupos de opciones asignados aparte de la carne
-                      const extraOptions = selectedProduct.optionGroupIds?.filter(id => id !== 'meat-type') || [];
+                      const extraOptions = selectedProduct.optionGroupIds?.filter(id => id !== linkedGroupId) || [];
                       
                       if (extraOptions.length > 0) {
                         // Si tiene extras (ej: Tamaño de Combo, Sin Cebolla), mostramos el modal
@@ -673,6 +685,11 @@ export default function App() {
                     onClick={() => {
                       setShowMeatSelector(false);
                       setMeatSelected(true);
+                      // Mostrar modal de opciones extra si existen
+                      const extraOptions = selectedProduct.optionGroupIds?.filter(id => id !== 'meat-type') || [];
+                      if (extraOptions.length > 0) {
+                        setShowBurgerOptions(true);
+                      }
                     }}
                     className="w-full text-white rounded-full py-2 sm:py-2.5 lg:py-4 px-4 sm:px-6 lg:px-8 flex items-center justify-center font-bold text-sm sm:text-base lg:text-xl relative overflow-hidden"
                     style={{
@@ -693,7 +710,7 @@ export default function App() {
                 product={selectedProduct}
                 isOpen={showBurgerOptions}
                 onClose={() => setShowBurgerOptions(false)}
-                excludedGroupIds={['meat-type']} // Ocultamos la carne para que no la pida doble
+                excludedGroupIds={[linkedGroupId]} // Ocultamos la carne para que no la pida doble
                 basePriceOverride={selectedProduct.price + selectedMeat.price} // Le pasamos el precio con la carne incluida
                 onConfirm={(selectedOptions, notes) => {
                   addItem(selectedProduct, selectedMeat, selectedOptions, 1, notes);

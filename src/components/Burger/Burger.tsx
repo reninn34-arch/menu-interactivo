@@ -87,14 +87,18 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction, shouldAn
       <div className="relative w-64 h-80 sm:h-80 mx-auto flex items-end justify-center">
         {productIngredients.map((ingredient, index) => {
           const zIndex = calculateZIndex(index);
-          const overlapStep = 22; // Pixeles de solapamiento entre capas
+          const overlapStep = 22; // Pixeles de solapamiento entre capas (colapsado)
+          const expandedStep = 55; // Pixeles de separación (expandido)
           const totalIngredients = productIngredients.length;
-          
-          // Posición colapsada (desde abajo)
+          // 1. Calculamos posiciones base desde abajo
           const bottomValueCollapsed = (totalIngredients - 1 - index) * overlapStep;
-          
-          // Posición expandida (más espaciado pero manteniendo orden)
-          const bottomValueExpanded = (totalIngredients - 1 - index) * 55;
+          const bottomValueExpanded = (totalIngredients - 1 - index) * expandedStep;
+          // 2. Calculamos cuánto crece en total para distribuir la expansión (mitad arriba, mitad abajo)
+          const totalGrowth = (totalIngredients - 1) * (expandedStep - overlapStep);
+          const centerOffset = totalGrowth / 2; 
+          // 3. Aplicamos el desplazamiento matemático (animando el eje Y)
+          const yCollapsed = -bottomValueCollapsed;
+          const yExpanded = -bottomValueExpanded + centerOffset;
 
           // Renderizar imagen si existe
           if (ingredient.image) {
@@ -111,7 +115,7 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction, shouldAn
                   filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.4))'
                 }}
                 animate={{
-                  y: isCollapsed ? -bottomValueCollapsed : -bottomValueExpanded,
+                  y: isCollapsed ? yCollapsed : yExpanded,
                 }}
                 transition={{ duration: 0.25, ease: "easeOut" }}
               />
@@ -123,6 +127,13 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction, shouldAn
           if (FallbackComponent) {
             // Caso especial para carne con animación de slide
             if (ingredient.type === 'meat') {
+              if (!selectedMeat) {
+                return (
+                  <div key={`${product.id}-${ingredient.id}`} className="absolute w-full flex justify-center text-gray-400" style={{zIndex, bottom: 0}}>
+                    Sin carne seleccionada
+                  </div>
+                );
+              }
               return (
                 <motion.div
                   key={`${product.id}-${ingredient.id}`}
@@ -133,7 +144,7 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction, shouldAn
                     willChange: 'transform'
                   }}
                   animate={{
-                    y: isCollapsed ? -bottomValueCollapsed : -bottomValueExpanded,
+                    y: isCollapsed ? yCollapsed : yExpanded,
                   }}
                   transition={{ duration: 0.25, ease: "easeOut" }}
                 >
@@ -162,7 +173,7 @@ export const Burger = ({ isCollapsed, product, selectedMeat, direction, shouldAn
                   willChange: 'transform'
                 }}
                 animate={{
-                  y: isCollapsed ? -bottomValueCollapsed : -bottomValueExpanded,
+                  y: isCollapsed ? yCollapsed : yExpanded,
                 }}
                 transition={{ duration: 0.25, ease: "easeOut" }}
               >

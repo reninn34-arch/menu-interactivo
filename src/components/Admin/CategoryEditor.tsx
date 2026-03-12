@@ -26,6 +26,7 @@ export const CategoryEditor = () => {
       description: '',
       enabled: true,
       order: categories.length + 1,
+      isMain: false,
     });
   };
 
@@ -155,6 +156,17 @@ export const CategoryEditor = () => {
                   className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-orange-500 focus:ring-orange-500"
                 />
                 <span className="text-sm text-gray-300">Habilitada</span>
+              </label>
+
+              {/* NUEVO CHECKBOX */}
+              <label className="flex items-center gap-2 cursor-pointer ml-4">
+                <input
+                  type="checkbox"
+                  checked={formData.isMain || false}
+                  onChange={(e) => setFormData({ ...formData, isMain: e.target.checked })}
+                  className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-orange-500 focus:ring-orange-500"
+                />
+                <span className="text-sm text-gray-300 font-bold text-orange-400">🌟 Categoría Principal (Vista 3D)</span>
               </label>
             </div>
           </div>
