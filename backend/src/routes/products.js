@@ -91,7 +91,21 @@ router.post('/', authenticateToken, async (req, res) => {
     }
     
     await client.query('COMMIT');
-    res.status(201).json(result.rows[0]);
+
+    // Return with option_group_ids and ingredient_ids so frontend keeps them
+    const createdProduct = result.rows[0];
+    const ogResult = await pool.query(
+      'SELECT option_group_id FROM product_options WHERE product_id = $1',
+      [id]
+    );
+    const ingResult = await pool.query(
+      'SELECT ingredient_id FROM product_ingredients WHERE product_id = $1',
+      [id]
+    );
+    createdProduct.option_group_ids = ogResult.rows.map(r => r.option_group_id);
+    createdProduct.ingredient_ids = ingResult.rows.map(r => r.ingredient_id);
+
+    res.status(201).json(createdProduct);
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Error creating product:', error);
@@ -152,7 +166,21 @@ router.put('/:id', authenticateToken, async (req, res) => {
     }
     
     await client.query('COMMIT');
-    res.json(result.rows[0]);
+
+    // Return with option_group_ids and ingredient_ids so frontend keeps them
+    const updatedProduct = result.rows[0];
+    const ogResult = await pool.query(
+      'SELECT option_group_id FROM product_options WHERE product_id = $1',
+      [id]
+    );
+    const ingResult = await pool.query(
+      'SELECT ingredient_id FROM product_ingredients WHERE product_id = $1',
+      [id]
+    );
+    updatedProduct.option_group_ids = ogResult.rows.map(r => r.option_group_id);
+    updatedProduct.ingredient_ids = ingResult.rows.map(r => r.ingredient_id);
+
+    res.json(updatedProduct);
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Error updating product:', error);

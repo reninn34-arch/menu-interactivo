@@ -329,7 +329,11 @@ export const OptionGroupEditor = () => {
 
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setExpandedGroupId(expandedGroupId === group.id ? null : group.id)}
+                      onClick={() => {
+                        setExpandedGroupId(expandedGroupId === group.id ? null : group.id);
+                        setEditingValueId(null);
+                        setValueFormData({});
+                      }}
                       className="p-2 text-gray-400 hover:text-white transition-colors"
                       title="Ver valores"
                     >

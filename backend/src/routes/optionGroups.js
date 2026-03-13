@@ -120,11 +120,18 @@ router.put('/:id', authenticateToken, async (req, res) => {
     
     const result = await client.query(
       `UPDATE option_groups 
-       SET name = $1, description = $2, required = $3, multi_select = $4, 
-           min_selections = $5, max_selections = $6, enabled = $7, order_index = $8
+       SET name = COALESCE($1, name), 
+           description = COALESCE($2, description), 
+           required = COALESCE($3, required), 
+           multi_select = COALESCE($4, multi_select), 
+           min_selections = COALESCE($5, min_selections), 
+           max_selections = COALESCE($6, max_selections), 
+           enabled = COALESCE($7, enabled), 
+           order_index = COALESCE($8, order_index)
        WHERE id = $9 
        RETURNING *`,
-      [name, description, required, multi_select, min_selections, max_selections, enabled, order_index, id]
+      [name ?? null, description ?? null, required ?? null, multi_select ?? null, 
+       min_selections ?? null, max_selections ?? null, enabled ?? null, order_index ?? null, id]
     );
     
     if (result.rows.length === 0) {
