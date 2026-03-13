@@ -91,8 +91,10 @@ export const ProductOptionsModal = ({ product, isOpen, onClose, onConfirm, exclu
       const selected = selections.get(group.id) || new Set();
       const count = selected.size;
 
+      // A required group must have at least 1 selection
       if (group.required && count === 0) return false;
-      if (group.minSelections && count < group.minSelections) return false;
+      // minSelections only enforced if group is required or user already started selecting
+      if (group.minSelections && count > 0 && count < group.minSelections) return false;
       if (group.maxSelections && count > group.maxSelections) return false;
 
       return true;

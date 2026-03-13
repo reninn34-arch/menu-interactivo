@@ -107,8 +107,13 @@ const transformProductFromAPI = (product: any): Product => ({
   protein: product.nutritional_info?.protein,
   fat: product.nutritional_info?.fat,
   carbs: product.nutritional_info?.carbs,
-  ingredientIds: product.ingredients?.map((i: any) => i.id) || [],
-  optionGroupIds: product.option_groups?.map((g: any) => g.id) || [],
+  // Handle both shapes: products_full view (arrays of objects) and PUT/POST response (flat ID arrays)
+  ingredientIds: product.ingredient_ids
+    || product.ingredients?.map((i: any) => i.id)
+    || [],
+  optionGroupIds: product.option_group_ids
+    || product.option_groups?.map((g: any) => g.id)
+    || [],
 });
 
 const transformCategoryFromAPI = (category: any): Category => ({

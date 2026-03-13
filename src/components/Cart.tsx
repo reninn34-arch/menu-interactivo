@@ -97,7 +97,7 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
     });
     
     message += `\n${'─'.repeat(30)}\n`;
-    message += `\n� *Subtotal productos:* ${siteConfig.currencySymbol}${total.toFixed(2)}\n`;
+    message += `\n🛒 *Subtotal productos:* ${siteConfig.currencySymbol}${total.toFixed(2)}\n`;
     
     // Agregar costo de delivery si aplica
     const rawDeliveryCost = customerData.deliveryMethod === 'delivery' ? (siteConfig.deliveryCost || 0) : 0;

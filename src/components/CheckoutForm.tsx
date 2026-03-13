@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { motion } from 'motion/react';
 import { X, User, Phone, MapPin, Home, Store, ShoppingCart } from 'lucide-react';
 
@@ -27,6 +27,19 @@ export const CheckoutForm = ({ isOpen, onClose, onSubmit, subtotal, deliveryCost
     address: '',
     notes: ''
   });
+
+  // Reset form every time the modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        customerName: '',
+        customerPhone: '',
+        deliveryMethod: 'pickup',
+        address: '',
+        notes: ''
+      });
+    }
+  }, [isOpen]);
 
   // Calcular total dinámicamente y de forma segura
   const safeSubtotal = Number(subtotal) || 0;
