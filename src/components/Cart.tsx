@@ -36,14 +36,14 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
     
     // Formatear mensaje de WhatsApp
     let message = `🍔 *NUEVO PEDIDO* 🍔\n\n`;
-    message += `📋 *Orden:* ${orderNumber}\n`;
-    message += `🏪 *Sucursal:* ${siteConfig.branchName || siteConfig.siteName}\n\n`;
+    message += `🧾 *Orden:* ${orderNumber}\n`;
+    message += `🏬 *Sucursal:* ${siteConfig.branchName || siteConfig.siteName}\n\n`;
     
     // Datos del cliente
     message += `*DATOS DEL CLIENTE:*\n`;
     message += `👤 *Nombre:* ${customerData.customerName}\n`;
-    message += `📱 *Teléfono:* ${customerData.customerPhone}\n`;
-    message += `🚚 *Método:* ${customerData.deliveryMethod === 'delivery' ? '🏠 Delivery' : '🏪 Recoger en tienda'}\n`;
+    message += `📞 *Teléfono:* ${customerData.customerPhone}\n`;
+    message += `🚚 *Método:* ${customerData.deliveryMethod === 'delivery' ? '🚚 Delivery' : '🏬 Recoger en tienda'}\n`;
     
     if (customerData.deliveryMethod === 'delivery' && customerData.address) {
       message += `📍 *Dirección de entrega:*\n${customerData.address}\n`;
@@ -69,7 +69,7 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
       const itemTotalPrice = itemBasePrice + optionsPrice;
       
       message += `\n${index + 1}. *${item.product.name}* (x${item.quantity})\n`;
-      message += `   💰 ${siteConfig.currencySymbol}${itemBasePrice.toFixed(2)} c/u\n`;
+      message += `   💲 ${siteConfig.currencySymbol}${itemBasePrice.toFixed(2)} c/u\n`;
       
       // Mostrar tipo de carne si aplica
       if (item.meat) {
@@ -78,7 +78,7 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
       
       // Mostrar opciones seleccionadas
       if (item.selectedOptions && item.selectedOptions.length > 0) {
-        message += `   📝 Opciones:\n`;
+        message += `   ⚙️ Opciones:\n`;
         item.selectedOptions.forEach(opt => {
           opt.valueNames.forEach((valueName, vIdx) => {
             // Buscar el precio individual de esta opción específica
@@ -97,7 +97,7 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
     });
     
     message += `\n${'─'.repeat(30)}\n`;
-    message += `\n🛒 *Subtotal productos:* ${siteConfig.currencySymbol}${total.toFixed(2)}\n`;
+    message += `\n🧾 *Subtotal productos:* ${siteConfig.currencySymbol}${total.toFixed(2)}\n`;
     
     // Agregar costo de delivery si aplica
     const rawDeliveryCost = customerData.deliveryMethod === 'delivery' ? (siteConfig.deliveryCost || 0) : 0;
@@ -107,8 +107,8 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
     }
     
     const finalTotal = total + safeDeliveryCost;
-    message += `\n💵 *TOTAL A PAGAR: ${siteConfig.currencySymbol}${finalTotal.toFixed(2)}*\n`;
-    message += `📦 *Cantidad de items:* ${itemCount}\n`;
+    message += `\n💰 *TOTAL A PAGAR: ${siteConfig.currencySymbol}${finalTotal.toFixed(2)}*\n`;
+    message += `🔢 *Cantidad de items:* ${itemCount}\n`;
     
     // Agregar dirección si está configurada
     if (siteConfig.restaurantAddress) {
