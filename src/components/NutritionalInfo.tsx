@@ -6,6 +6,10 @@ interface NutritionalInfoProps {
 }
 
 export const NutritionalInfo = ({ meat }: NutritionalInfoProps) => {
+  const hasInfo = (meat.calories || 0) > 0 || (meat.protein || 0) > 0 || (meat.fat || 0) > 0 || (meat.carbs || 0) > 0;
+
+  if (!hasInfo) return null;
+
   return (
     <motion.div 
       key={meat.id + '-stats'}
