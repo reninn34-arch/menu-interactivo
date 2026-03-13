@@ -235,34 +235,15 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
           </div>
 
           {/* Product Name & Info - Bottom Section with Overlap */}
-          <div className="relative z-10 p-4 lg:p-6 text-center mt-4">
-            <h2 className="text-xl lg:text-3xl font-bold text-white mb-1">{product.name}</h2>
+          {/* Product Name & Info */}
+          <div className="relative z-10 text-center">
             {product.description && (
-              <p className="text-gray-400 text-xs lg:text-sm mb-2">{product.description}</p>
-            )}
-            
-            {/* Current Selection */}
-            {getSelectionDescription() && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-2 px-3 py-1.5 rounded-lg inline-flex"
-                style={{
-                  backgroundColor: `${siteConfig.primaryColor || '#FF9F0A'}33`,
-                  borderWidth: '1px',
-                  borderStyle: 'solid',
-                  borderColor: `${siteConfig.primaryColor || '#FF9F0A'}4D`
-                }}
-              >
-                <p className="text-xs font-medium" style={{ color: siteConfig.accentColor || '#FFB84D' }}>
-                  {getSelectionDescription()}
-                </p>
-              </motion.div>
+              <p className="text-gray-400 text-xs lg:text-sm px-4 mb-2">{product.description}</p>
             )}
 
             {/* Nutritional Info */}
             {product.calories && (
-              <div className="flex gap-2 lg:gap-3 justify-center mt-2 text-xs text-gray-400 flex-wrap">
+              <div className="flex gap-2 lg:gap-3 justify-center mt-2 mb-4 text-xs text-gray-400 flex-wrap">
                 <span className="font-semibold">{product.calories} Cal</span>
                 {product.protein && <span>{product.protein}g Prot</span>}
                 {product.fat && <span>{product.fat}g Grasa</span>}
@@ -274,12 +255,7 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
       </div>
 
       {/* Options Panel */}
-      <div className="w-full lg:w-1/2 max-w-md mx-auto space-y-3 lg:space-y-6 px-4 lg:px-0">
-        <div className="text-center lg:text-left">
-          <h3 className="text-lg lg:text-2xl font-bold text-white mb-1">Personaliza tu Orden</h3>
-          <p className="text-gray-400 text-xs lg:text-sm">Selecciona las opciones que desees</p>
-        </div>
-
+      <div className="w-full lg:w-1/2 max-w-md mx-auto space-y-3 lg:space-y-6 px-4 lg:px-0 mt-4 lg:mt-0">
         {/* Option Groups */}
         <div className="space-y-3 lg:space-y-6">
           {productOptionGroups.map(group => {
