@@ -181,7 +181,7 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
       {/* Product Visualization */}
       <div className="w-full lg:w-1/2 max-w-md mx-auto">
         <motion.div
-          className="relative bg-gradient-to-br from-white/5 to-white/5 backdrop-blur-md rounded-2xl lg:rounded-3xl border border-white/10 overflow-hidden"
+          className="relative"
           animate={isAnimating ? { scale: [1, 0.95, 1.05, 1] } : {}}
           transition={{ duration: 0.6 }}
         >
@@ -235,7 +235,7 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
           </div>
 
           {/* Product Name & Info - Bottom Section with Overlap */}
-          <div className="-mt-32 lg:-mt-28 relative z-10 bg-black/50 backdrop-blur-lg border-t border-white/10 rounded-b-2xl lg:rounded-b-3xl p-4 lg:p-6 pt-8 lg:pt-10 text-center shadow-2xl">
+          <div className="relative z-10 p-4 lg:p-6 text-center mt-4">
             <h2 className="text-xl lg:text-3xl font-bold text-white mb-1">{product.name}</h2>
             {product.description && (
               <p className="text-gray-400 text-xs lg:text-sm mb-2">{product.description}</p>
