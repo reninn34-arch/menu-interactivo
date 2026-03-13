@@ -279,7 +279,7 @@ export default function App() {
                     >
                       <span className="text-2xl">{category.icon}</span>
                       <div className="flex-1">
-                        <div className="font-semibold">{category.name}</div>
+                        <div className="font-semibold">{category?.name}</div>
                         {category.description && (
                           <div className="text-xs opacity-75 line-clamp-1">{category.description}</div>
                         )}
@@ -486,7 +486,7 @@ export default function App() {
                           }
                         }}
                       >
-                        {prod.name}
+                        {prod?.name}
                       </button>
                     ))}
                   </div>
@@ -522,7 +522,7 @@ export default function App() {
                               boxShadow: `0 10px 15px -3px ${siteConfig.primaryColor || '#FF9F0A'}4D`
                             }}
                           >
-                            {categoryProducts[selectedProductIndex].name}
+                            {categoryProducts[selectedProductIndex]?.name}
                           </div>
                         </motion.div>
                       </motion.div>
@@ -580,7 +580,7 @@ export default function App() {
                   transition={{ duration: 0.4 }}
                   className="mb-0 lg:mb-4 text-center lg:text-left"
                 >
-                  <h1 className="text-lg sm:text-xl lg:text-4xl xl:text-5xl font-bold mb-0 lg:mb-3 tracking-tight">{selectedProduct.name}</h1>
+                  <h1 className="text-lg sm:text-xl lg:text-4xl xl:text-5xl font-bold mb-0 lg:mb-3 tracking-tight">{selectedProduct?.name}</h1>
                   <div className="flex items-center justify-center lg:justify-start gap-1 text-gray-400 text-[10px] lg:text-base">
                     <MapPin className="w-2.5 h-2.5 lg:w-4 lg:h-4" />
                     <span>Sucursal Principal</span>
@@ -590,14 +590,14 @@ export default function App() {
                 {selectedMeat ? (
                   <NutritionalInfo meat={{
                     id: selectedMeat.id,
-                    name: selectedMeat.name,
+                    name: selectedMeat?.name,
                     style: '',
                     price: selectedProduct.price + selectedMeat.price,
                     calories: (selectedProduct.calories || 0) + selectedMeat.calories,
                     protein: (selectedProduct.protein || 0) + selectedMeat.protein,
                     fat: (selectedProduct.fat || 0) + selectedMeat.fat,
                     carbs: (selectedProduct.carbs || 0) + selectedMeat.carbs,
-                    shortName: selectedMeat.name,
+                    shortName: selectedMeat?.name,
                   }} />
                 ) : (
                   <div className="text-center text-gray-400 py-4">No hay información nutricional.</div>
@@ -728,7 +728,7 @@ export default function App() {
                           }
                         }}
                       >
-                        {prod.name}
+                        {prod?.name}
                       </button>
                     ))}
                   </div>
@@ -764,7 +764,7 @@ export default function App() {
                               boxShadow: `0 10px 15px -3px ${siteConfig.primaryColor || '#FF9F0A'}4D`
                             }}
                           >
-                            {categoryProducts[selectedProductIndex].name}
+                            {categoryProducts[selectedProductIndex]?.name}
                           </div>
                         </motion.div>
                       </motion.div>
