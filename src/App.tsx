@@ -657,13 +657,11 @@ export default function App() {
                         setMeatSelected(true);
                         setShowBurgerOptions(true);
                       } else {
-                        // Si no hay extras, agregar directo al carrito
+                        // Agregamos el producto al carrito de inmediato (el contador 🛒 subirá)
                         addItem(selectedProduct, meats[meatIndex], undefined, 1);
-                        setShowCart(true);
-                        // Limpiar form
+                        // Ocultamos el selector para que inicie la animación de colapso
                         setShowMeatSelector(false);
-                        setMeatSelected(false);
-                        setMeatIndex(0);
+                        // NO reseteamos la carne ni el estado visual
                       }
                     }}
                     className="w-full text-white rounded-full py-2 sm:py-2.5 lg:py-4 px-4 sm:px-6 lg:px-8 flex items-center justify-center font-bold text-sm sm:text-base lg:text-xl relative overflow-hidden"
@@ -688,10 +686,11 @@ export default function App() {
                 excludedGroupIds={[linkedGroupId]} // Ocultamos la carne para que no la pida doble
                 basePriceOverride={selectedProduct.price + selectedMeat.price} // Le pasamos el precio con la carne incluida
                 onConfirm={(selectedOptions, notes) => {
+                  // Agregar al carrito
                   addItem(selectedProduct, selectedMeat, selectedOptions, 1, notes);
-                  setShowCart(true);
+                  // Cerrar modales (inicia la animación de colapso en el fondo)
                   setShowBurgerOptions(false);
-                  setMeatSelected(false);
+                  // NO reseteamos la carne ni el estado visual
                 }}
               />
             )}
