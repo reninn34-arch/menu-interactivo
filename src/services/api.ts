@@ -32,8 +32,8 @@ async function fetchWithAuth(url: string, options: RequestInit = {}) {
     headers,
   });
 
-  if (response.status === 401) {
-    // Token expired or invalid
+  if (response.status === 401 || response.status === 403) {
+    // Token expired or invalid — clear it so the admin redirects to login
     setAuthToken(null);
     throw new Error('Authentication required');
   }
