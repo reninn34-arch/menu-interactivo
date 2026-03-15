@@ -8,13 +8,15 @@ interface LayeredProductViewProps {
   product: Product;
   selectedOptions: Record<string, string>; // groupId -> optionValueId
   direction: number;
+  shouldAnimate?: boolean;
 }
 
 export const LayeredProductView = ({ 
   isCollapsed, 
   product, 
   selectedOptions,
-  direction 
+  direction,
+  shouldAnimate = true
 }: LayeredProductViewProps) => {
   const { ingredients, optionGroups } = useMenu();
 
@@ -81,18 +83,24 @@ export const LayeredProductView = ({
 
   return (
     <motion.div 
-      animate={{ 
+      animate={shouldAnimate ? { 
         y: isCollapsed ? [0, -5, 0] : [0, -8, 0],
+      } : { y: 0 }}
+      transition={{ 
+        duration: isCollapsed ? 2 : 4, 
+        repeat: shouldAnimate ? Infinity : 0, 
+        ease: "easeInOut" 
       }}
-      transition={{ duration: isCollapsed ? 2 : 4, repeat: Infinity, ease: "easeInOut" }}
       className="scale-90 sm:scale-100 lg:scale-110" 
     >
       <div className="relative w-64 h-80 mx-auto flex items-end justify-center">
         {productIngredients.map((ingredient, index) => {
           const zIndex = calculateZIndex(index);
           const overlapStep = 22; // Colapsado
-          const expandedStep = 65; // Expandido (un poco más espaciado aquí)
+          // Reducir la separación expandida dinámica para que no se salga de la pantalla
           const totalIngredients = productIngredients.length;
+          const expandedStep = totalIngredients > 6 ? 50 : 55; // Expandido (55px normal, 50px reducida para muchas capas)
+          
           // Posiciones y centrado dinámico
           const bottomValueCollapsed = (totalIngredients - 1 - index) * overlapStep;
           const bottomValueExpanded = (totalIngredients - 1 - index) * expandedStep;

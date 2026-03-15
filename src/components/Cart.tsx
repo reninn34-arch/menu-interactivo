@@ -5,6 +5,7 @@ import { useCart } from '../contexts/CartContext';
 import { useMenu } from '../contexts/MenuContext';
 import { CheckoutForm, CheckoutData } from './CheckoutForm';
 import { isRestaurantOpen } from '../utils/openingHours';
+import { LayeredProductView } from './LayeredProductView';
 
 interface CartProps {
   isOpen: boolean;
@@ -211,8 +212,21 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
                   >
                     <div className="flex gap-4">
                       {/* Product Image */}
-                      <div className="w-20 h-20 rounded-lg overflow-hidden bg-black/20 flex-shrink-0">
-                        {item.product.image ? (
+                      <div className="w-20 h-20 rounded-lg overflow-hidden bg-black/20 flex-shrink-0 relative flex items-center justify-center">
+                        {item.product.useLayeredView ? (
+                          <div className="absolute inset-0 flex items-center justify-center" style={{ transform: 'scale(0.35)', transformOrigin: 'center' }}>
+                            <LayeredProductView
+                              product={item.product}
+                              selectedOptions={item.selectedOptions?.reduce((acc, opt) => ({
+                                ...acc,
+                                [opt.groupId]: opt.valueIds[0] // Tomar el primer ID para la vista miniatura
+                              }), {}) || (item.product.linkedOptionGroupId && item.meat ? { [item.product.linkedOptionGroupId]: item.meat.id } : {})}
+                              isCollapsed={true}
+                              shouldAnimate={false}
+                              direction={1}
+                            />
+                          </div>
+                        ) : item.product.image ? (
                           <img
                             src={item.product.image}
                             alt={item.product.name}

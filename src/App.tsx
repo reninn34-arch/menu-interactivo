@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, ShoppingCart, Menu, X, Clock, Loader2, AlertCircle } from 'lucide-react';
-import { Burger } from './components/Burger';
+import { LayeredProductView } from './components/LayeredProductView';
 import { MeatSelector } from './components/MeatSelector';
 import { CategorySelector } from './components/CategorySelector';
 import { ProductCard } from './components/ProductCard';
@@ -562,10 +562,12 @@ export default function App() {
               <div className="flex flex-col lg:flex-row items-center justify-center gap-0 lg:gap-8 xl:gap-16">
                 {/* Burger Visualization */}
                 <div className="w-full lg:w-1/2 relative flex flex-col items-center justify-end py-0 lg:py-8 z-10 min-h-[160px] lg:min-h-[400px]">
-                  <Burger 
+                  <LayeredProductView 
                     isCollapsed={!showMeatSelector}
                     product={selectedProduct}
-                    selectedMeat={selectedMeat}
+                    selectedOptions={{
+                      [selectedProduct.linkedOptionGroupId || 'meat-type']: selectedMeat.id
+                    }}
                     direction={direction}
                     shouldAnimate={!showSidebar && !showCart}
                   />
@@ -629,7 +631,9 @@ export default function App() {
                       transition={{ duration: 0.3 }}
                       className="mb-2 lg:mb-6"
                     >
-                      <h3 className="text-xs font-semibold text-gray-400 mb-1 lg:mb-3 text-center lg:text-left">Selecciona tu Carne</h3>
+                      <h3 className="text-xs font-semibold text-gray-400 mb-1 lg:mb-3 text-center lg:text-left">
+                        {meatOptionGroup ? meatOptionGroup.name : 'Selecciona tu opción'}
+                      </h3>
                       <MeatSelector 
                         meats={meats}
                         selectedIndex={meatIndex}
