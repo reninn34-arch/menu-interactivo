@@ -417,91 +417,88 @@ export const OptionGroupEditor = () => {
                               </div>
                             </div>
 
-                            {/* Campos adicionales para visualización por capas (opcional) */}
-                            <details className="bg-gray-700 p-3 rounded-lg">
-                              <summary className="text-xs font-medium text-gray-300 cursor-pointer mb-2">
-                                Datos para Visualización por Capas (Opcional)
-                              </summary>
-                              <div className="space-y-3 mt-3">
+                            {/* ✨ NUEVO: Configuración 3D visual para las opciones ✨ */}
+                            <div className="mt-4 p-4 bg-gradient-to-br from-orange-900/20 to-transparent border border-orange-500/30 rounded-xl">
+                              <div className="flex items-start gap-3 mb-3">
+                                <div className="p-2 bg-orange-500/20 rounded-lg">
+                                  <span className="text-xl">🍔</span>
+                                </div>
                                 <div>
+                                  <h5 className="text-sm font-bold text-orange-400">Apariencia en Modo 3D</h5>
+                                  <p className="text-xs text-gray-400 mt-1 leading-relaxed">
+                                    Si este grupo se usa en una vista 3D, ¿cómo se verá esta opción cuando el cliente la seleccione? Sube un PNG sin fondo o usa un color.
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="space-y-4 pl-12">
+                                <div className="bg-gray-800/50 p-3 rounded-lg border border-gray-700">
                                   <ImageUploader
                                     currentImage={valueFormData.image}
                                     onImageChange={(url) => setValueFormData({ ...valueFormData, image: url || undefined })}
-                                    label="Imagen para Capa Animada"
+                                    label="Imagen de la Capa (Recomendado)"
                                   />
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    Imagen que se mostrará cuando el cliente seleccione esta opción
-                                  </p>
                                 </div>
 
                                 <div>
                                   <label className="block text-xs font-medium text-gray-400 mb-1">
-                                    Estilo (CSS Gradient)
+                                    O usar un Estilo (CSS Gradient)
                                   </label>
                                   <input
                                     type="text"
                                     value={valueFormData.style || ''}
                                     onChange={(e) => setValueFormData({ ...valueFormData, style: e.target.value || undefined })}
-                                    className="w-full px-3 py-2 text-sm bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:border-orange-500 font-mono"
-                                    placeholder="from-red-800 via-red-600 to-red-400"
+                                    className="w-full px-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-orange-500 font-mono"
+                                    placeholder="Ej: from-[#8B4513] to-[#D2691E]"
                                   />
-                                  <p className="text-xs text-gray-500 mt-1">
-                                    Clases de Tailwind para gradiente (ej: from-red-800 via-red-600 to-red-400)
-                                  </p>
                                 </div>
 
-                                <div className="grid grid-cols-4 gap-2">
-                                  <div>
-                                    <label className="block text-xs font-medium text-gray-400 mb-1">
-                                      Calorías
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={valueFormData.calories || ''}
-                                      onChange={(e) => { const val = parseInt(e.target.value); setValueFormData({ ...valueFormData, calories: e.target.value === '' ? undefined : (isNaN(val) ? undefined : val) }); }}
-                                      className="w-full px-3 py-2 text-sm bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:border-orange-500"
-                                      placeholder="kcal"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-xs font-medium text-gray-400 mb-1">
-                                      Proteína (g)
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={valueFormData.protein || ''}
-                                      onChange={(e) => { const val = parseInt(e.target.value); setValueFormData({ ...valueFormData, protein: e.target.value === '' ? undefined : (isNaN(val) ? undefined : val) }); }}
-                                      className="w-full px-3 py-2 text-sm bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:border-orange-500"
-                                      placeholder="g"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-xs font-medium text-gray-400 mb-1">
-                                      Grasa (g)
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={valueFormData.fat || ''}
-                                      onChange={(e) => { const val = parseInt(e.target.value); setValueFormData({ ...valueFormData, fat: e.target.value === '' ? undefined : (isNaN(val) ? undefined : val) }); }}
-                                      className="w-full px-3 py-2 text-sm bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:border-orange-500"
-                                      placeholder="g"
-                                    />
-                                  </div>
-                                  <div>
-                                    <label className="block text-xs font-medium text-gray-400 mb-1">
-                                      Carbos (g)
-                                    </label>
-                                    <input
-                                      type="number"
-                                      value={valueFormData.carbs || ''}
-                                      onChange={(e) => { const val = parseInt(e.target.value); setValueFormData({ ...valueFormData, carbs: e.target.value === '' ? undefined : (isNaN(val) ? undefined : val) }); }}
-                                      className="w-full px-3 py-2 text-sm bg-gray-600 border border-gray-500 rounded text-white focus:outline-none focus:border-orange-500"
-                                      placeholder="g"
-                                    />
+                                {/* Información Nutricional (Compacta) */}
+                                <div className="pt-2 border-t border-gray-700/50">
+                                  <label className="block text-xs font-medium text-gray-400 mb-2">
+                                    Valores Nutricionales Adicionales
+                                  </label>
+                                  <div className="grid grid-cols-4 gap-2">
+                                    <div>
+                                      <input
+                                        type="number"
+                                        value={valueFormData.calories || ''}
+                                        onChange={(e) => { const val = parseInt(e.target.value); setValueFormData({ ...valueFormData, calories: e.target.value === '' ? undefined : (isNaN(val) ? undefined : val) }); }}
+                                        className="w-full px-2 py-1.5 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:border-orange-500 text-center"
+                                        placeholder="Kcal"
+                                      />
+                                    </div>
+                                    <div>
+                                      <input
+                                        type="number"
+                                        value={valueFormData.protein || ''}
+                                        onChange={(e) => { const val = parseInt(e.target.value); setValueFormData({ ...valueFormData, protein: e.target.value === '' ? undefined : (isNaN(val) ? undefined : val) }); }}
+                                        className="w-full px-2 py-1.5 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:border-orange-500 text-center"
+                                        placeholder="Prot(g)"
+                                      />
+                                    </div>
+                                    <div>
+                                      <input
+                                        type="number"
+                                        value={valueFormData.fat || ''}
+                                        onChange={(e) => { const val = parseInt(e.target.value); setValueFormData({ ...valueFormData, fat: e.target.value === '' ? undefined : (isNaN(val) ? undefined : val) }); }}
+                                        className="w-full px-2 py-1.5 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:border-orange-500 text-center"
+                                        placeholder="Grasa"
+                                      />
+                                    </div>
+                                    <div>
+                                      <input
+                                        type="number"
+                                        value={valueFormData.carbs || ''}
+                                        onChange={(e) => { const val = parseInt(e.target.value); setValueFormData({ ...valueFormData, carbs: e.target.value === '' ? undefined : (isNaN(val) ? undefined : val) }); }}
+                                        className="w-full px-2 py-1.5 text-xs bg-gray-700 border border-gray-600 rounded text-white focus:border-orange-500 text-center"
+                                        placeholder="Carbs"
+                                      />
+                                    </div>
                                   </div>
                                 </div>
                               </div>
-                            </details>
+                            </div>
 
                             <div className="col-span-2 flex items-center gap-4">
                                 <label className="flex items-center gap-2 cursor-pointer">

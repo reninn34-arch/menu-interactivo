@@ -462,85 +462,160 @@ export const ProductEditor = () => {
             )}
           </div>
 
-          {/* Visualización con Capas Animadas */}
-          <div className="bg-gray-700 p-4 rounded-lg border-2 border-orange-500/30">
-            <div className="mb-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.useLayeredView || false}
-                  onChange={(e) => setFormData({ 
-                    ...formData, 
-                    useLayeredView: e.target.checked,
-                    variableIngredientId: e.target.checked ? formData.variableIngredientId : undefined,
-                    linkedOptionGroupId: e.target.checked ? formData.linkedOptionGroupId : undefined
-                  })}
-                  className="w-5 h-5 rounded bg-gray-600 border-gray-500 text-orange-500 focus:ring-orange-500"
-                />
-                <span className="text-sm font-medium text-white">☑ Usar visualización con capas animadas</span>
-              </label>
-              <p className="text-xs text-gray-400 mt-2 ml-7">
-                Activa esta opción para mostrar el producto con capas animadas (como las hamburguesas) donde un ingrediente cambia según la opción seleccionada por el cliente.
-              </p>
+          {/* ✨ NUEVO: Interfaz Intuitiva para Modo 3D ✨ */}
+          <div className={`p-5 rounded-xl border-2 transition-all ${formData.useLayeredView ? 'bg-orange-900/20 border-orange-500' : 'bg-gray-800 border-gray-600'}`}>
+            <div className="flex flex-col sm:flex-row items-start gap-4 mb-2">
+              <div className={`p-3 rounded-xl shadow-lg ${formData.useLayeredView ? 'bg-gradient-to-br from-orange-400 to-orange-600' : 'bg-gray-700'}`}>
+                <span className="text-3xl">🍔</span>
+              </div>
+              <div className="flex-1">
+                <label className="flex items-center gap-3 cursor-pointer mb-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.useLayeredView || false}
+                    onChange={(e) => setFormData({ 
+                      ...formData, 
+                      useLayeredView: e.target.checked,
+                      variableIngredientId: e.target.checked ? formData.variableIngredientId : undefined,
+                      linkedOptionGroupId: e.target.checked ? formData.linkedOptionGroupId : undefined
+                    })}
+                    className="w-6 h-6 rounded border-2 border-gray-500 bg-gray-700 checked:bg-orange-500 checked:border-orange-500 focus:ring-orange-500 transition-all cursor-pointer"
+                  />
+                  <span className="text-xl font-bold text-white">Activar Modo 3D Interactivo</span>
+                </label>
+                <p className="text-sm text-gray-400 leading-relaxed">
+                  Permite a tus clientes ver cómo se arma el producto capa por capa en tiempo real al cambiar sus opciones (Ej: Ver cómo cambia la carne por un pollo crujiente).
+                </p>
+                {/* ✨ NUEVO: Checklist de Requisitos para 3D ✨ */}
+                {formData.useLayeredView && (
+                  <div className="mb-4 p-4 bg-gray-900/80 rounded-xl border border-gray-700">
+                    <h5 className="font-bold text-white mb-3">Para que el producto 3D funcione, necesitas cumplir esto:</h5>
+                    <ul className="space-y-3 text-sm">
+                      <li className="flex items-start gap-3">
+                        <div className={`mt-0.5 ${formData.ingredientIds && formData.ingredientIds.length > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {formData.ingredientIds && formData.ingredientIds.length > 0 ? '✅' : '❌'}
+                        </div>
+                        <div>
+                          <span className={formData.ingredientIds && formData.ingredientIds.length > 0 ? 'text-gray-300' : 'text-red-400 font-bold'}>
+                            Tener ingredientes seleccionados en este producto.
+                          </span>
+                          <p className="text-xs text-gray-500 mt-0.5">Ve a la sección superior y marca los ingredientes que componen esta hamburguesa.</p>
+                        </div>
+                      </li>
+                      <li className="flex items-start gap-3">
+                        <div className={`mt-0.5 ${optionGroups.length > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                          {optionGroups.length > 0 ? '✅' : '❌'}
+                        </div>
+                        <div>
+                          <span className={optionGroups.length > 0 ? 'text-gray-300' : 'text-red-400 font-bold'}>
+                            Haber creado al menos un Grupo de Opciones (Ej: "Tipos de Carne").
+                          </span>
+                          <p className="text-xs text-gray-500 mt-0.5">Si no tienes ninguno, ve a la pestaña "Opciones" en el menú principal para crearlo.</p>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                )}
+              </div>
             </div>
 
             {formData.useLayeredView && (
-              <div className="space-y-4 pl-7">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Ingrediente Variable
-                  </label>
-                  <p className="text-xs text-gray-400 mb-2">
-                    Selecciona qué ingrediente cambiará según la opción que elija el cliente (ej: la carne de la hamburguesa)
-                  </p>
-                  <select
-                    value={formData.variableIngredientId || ''}
-                    onChange={(e) => setFormData({ ...formData, variableIngredientId: e.target.value || undefined })}
-                    className="w-full px-4 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white focus:outline-none focus:border-orange-500"
-                  >
-                    <option value="">Selecciona un ingrediente</option>
-                    {ingredients
-                      .filter(ing => ing.enabled && formData.ingredientIds?.includes(ing.id))
-                      .map(ingredient => (
+              <div className="mt-6 space-y-6 bg-gray-900/50 p-4 sm:p-6 rounded-xl border border-gray-700">
+                {/* PASO 1 */}
+                <div className="relative">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="bg-blue-500 text-white w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm shadow-lg shadow-blue-500/30">1</div>
+                    <h4 className="text-white font-semibold text-lg">¿Qué ingrediente va a ser reemplazado?</h4>
+                  </div>
+                  <div className="pl-10">
+                    <p className="text-sm text-gray-400 mb-3">
+                      Selecciona la <strong>Capa Base</strong> que desaparecerá cuando el cliente elija algo diferente.
+                    </p>
+                    <select
+                      value={formData.variableIngredientId || ''}
+                      onChange={(e) => {
+                        const newVarId = e.target.value || undefined;
+                        let newIngredientIds = [...(formData.ingredientIds || [])];
+                        // Autoselección inteligente: agregamos el ingrediente si no estaba marcado arriba
+                        if (newVarId && !newIngredientIds.includes(newVarId)) {
+                          newIngredientIds.push(newVarId);
+                        }
+                        setFormData({ 
+                          ...formData, 
+                          variableIngredientId: newVarId,
+                          ingredientIds: newIngredientIds
+                        });
+                      }}
+                      className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-xl text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all outline-none"
+                    >
+                      <option value="">-- Selecciona la capa que cambiará (Ej: Carne) --</option>
+                      {ingredients.filter(ing => ing.enabled).map(ingredient => (
                         <option key={ingredient.id} value={ingredient.id}>
-                          {ingredient.name}
+                          {ingredient.name} {formData.ingredientIds?.includes(ingredient.id) ? '✓' : '(Se añadirá a la receta)'}
                         </option>
                       ))}
-                  </select>
-                  {formData.ingredientIds?.length === 0 && (
-                    <p className="text-xs text-yellow-400 mt-2">
-                      Primero selecciona ingredientes para este producto
-                    </p>
-                  )}
+                    </select>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Grupo de Opciones Vinculado
-                  </label>
-                  <p className="text-xs text-gray-400 mb-2">
-                    Selecciona qué grupo de opciones controlará la capa variable (ej: "Tipo de Carne")
-                  </p>
-                  <select
-                    value={formData.linkedOptionGroupId || ''}
-                    onChange={(e) => setFormData({ ...formData, linkedOptionGroupId: e.target.value || undefined })}
-                    className="w-full px-4 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white focus:outline-none focus:border-orange-500"
-                  >
-                    <option value="">Selecciona un grupo de opciones</option>
-                    {optionGroups
-                      .filter(group => group.enabled && formData.optionGroupIds?.includes(group.id))
-                      .map(group => (
+                {/* CONECTOR VISUAL */}
+                <div className="w-1 h-8 bg-gray-700 ml-6 rounded-full"></div>
+
+                {/* PASO 2 */}
+                <div className="relative">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="bg-green-500 text-white w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm shadow-lg shadow-green-500/30">2</div>
+                    <h4 className="text-white font-semibold text-lg">¿Qué opciones elegirán los clientes?</h4>
+                  </div>
+                  <div className="pl-10">
+                    <p className="text-sm text-gray-400 mb-3">
+                      Selecciona el <strong>Grupo de Opciones</strong> que contiene las alternativas (estas deben tener imágenes o colores configurados).
+                    </p>
+                    <select
+                      value={formData.linkedOptionGroupId || ''}
+                      onChange={(e) => {
+                        const newGroupId = e.target.value || undefined;
+                        let newGroupIds = [...(formData.optionGroupIds || [])];
+                        // Autoselección inteligente
+                        if (newGroupId && !newGroupIds.includes(newGroupId)) {
+                          newGroupIds.push(newGroupId);
+                        }
+                        setFormData({ 
+                          ...formData, 
+                          linkedOptionGroupId: newGroupId,
+                          optionGroupIds: newGroupIds
+                        });
+                      }}
+                      className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-xl text-white focus:border-green-500 focus:ring-4 focus:ring-green-500/20 transition-all outline-none"
+                    >
+                      <option value="">-- Selecciona el grupo (Ej: Tipos de Carne) --</option>
+                      {optionGroups.filter(group => group.enabled).map(group => (
                         <option key={group.id} value={group.id}>
-                          {group.name}
+                          {group.name} {formData.optionGroupIds?.includes(group.id) ? '✓' : '(Se habilitará para el producto)'}
                         </option>
                       ))}
-                  </select>
-                  {formData.optionGroupIds?.length === 0 && (
-                    <p className="text-xs text-yellow-400 mt-2">
-                      Primero selecciona grupos de opciones para este producto
-                    </p>
-                  )}
+                    </select>
+                  </div>
                 </div>
+                {/* MENSAJE DE ÉXITO EXPLICATIVO */}
+                {formData.variableIngredientId && formData.linkedOptionGroupId && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl flex items-start gap-4"
+                  >
+                    <div className="p-2 bg-green-500/20 rounded-lg mt-1">
+                      <span className="text-xl">✨</span>
+                    </div>
+                    <div>
+                      <h5 className="text-green-400 font-bold mb-1">¡Configuración 3D Lista!</h5>
+                      <p className="text-sm text-green-200/80 leading-relaxed">
+                        Cuando el cliente seleccione una opción de <strong>"{optionGroups.find(g => g.id === formData.linkedOptionGroupId)?.name}"</strong>, 
+                        la vista 3D apartará las capas y reemplazará <strong>"{ingredients.find(i => i.id === formData.variableIngredientId)?.name}"</strong> por el nuevo ingrediente elegido.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
               </div>
             )}
           </div>

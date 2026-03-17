@@ -69,6 +69,21 @@ export const IngredientEditor = () => {
         </button>
       </div>
 
+      {/* ✨ NUEVO: Banner Guía para Ingredientes 3D ✨ */}
+      {!isAdding && !editingId && (
+        <div className="bg-gradient-to-r from-blue-900/40 to-blue-800/10 border border-blue-500/30 p-4 rounded-xl flex items-start gap-4">
+          <div className="text-2xl bg-blue-500/20 p-2 rounded-lg">💡</div>
+          <div>
+            <h4 className="text-blue-400 font-bold mb-1">¿Cómo crear capas perfectas para el Modo 3D?</h4>
+            <ul className="text-sm text-blue-100/80 space-y-1 list-disc list-inside">
+              <li><strong>Formato de imagen:</strong> Usa siempre <strong>PNG con fondo transparente</strong> para que las capas se superpongan correctamente.</li>
+              <li><strong>El Orden importa:</strong> El número define cómo se apilan. El <strong>1 es la capa más alta</strong> (ej: Pan Superior). Números mayores van abajo (ej: 6 = Pan Inferior).</li>
+              <li><strong>Recorte:</strong> Recorta la imagen al ras del ingrediente para evitar espacios vacíos que arruinen la animación.</li>
+            </ul>
+          </div>
+        </div>
+      )}
+
       {/* Form for Adding/Editing */}
       {(isAdding || editingId) && (
         <motion.div
