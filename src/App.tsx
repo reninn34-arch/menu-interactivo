@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, ShoppingCart, Menu, X, Clock, Loader2, AlertCircle } from 'lucide-react';
 import { LayeredProductView } from './components/LayeredProductView';
@@ -34,6 +34,7 @@ export default function App() {
   const [showMeatSelector, setShowMeatSelector] = useState(false);
   const [meatSelected, setMeatSelected] = useState(false);
   const [showBurgerOptions, setShowBurgerOptions] = useState(false);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -165,7 +166,24 @@ export default function App() {
 
   // Determinar si mostrar vista interactiva
   const hasInteractiveProducts = categoryProducts.some(p => p.optionGroupIds && p.optionGroupIds.length > 0);
-  const showInteractiveView = !isBurgerCategory && hasInteractiveProducts;
+  const showInteractiveView = !isBurgerCategory; // Aplicarlo a todas las demás categorías para tener un diseño premium
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartX.current) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const distance = touchStartX.current - touchEndX; // Positivo = swipe hacia la izquierda (next)
+    
+    if (distance > 50 && selectedProductIndex < categoryProducts.length - 1) {
+      setSelectedProductIndex(selectedProductIndex + 1);
+    } else if (distance < -50 && selectedProductIndex > 0) {
+      setSelectedProductIndex(selectedProductIndex - 1);
+    }
+    touchStartX.current = null;
+  };
 
   const handleMeatChange = (newIndex: number) => {
     setPrevMeatIndex(meatIndex);
@@ -499,10 +517,12 @@ export default function App() {
                         dragConstraints={{ left: 0, right: 0 }}
                         dragElastic={0.2}
                         onDragEnd={(e, { offset, velocity }) => {
-                          const swipe = Math.abs(offset.x) * velocity.x;
-                          if (swipe < -500 && selectedProductIndex < categoryProducts.length - 1) {
+                          const swipeThreshold = 50;
+                          const velocityThreshold = 200;
+                          
+                          if ((offset.x < -swipeThreshold || velocity.x < -velocityThreshold) && selectedProductIndex < categoryProducts.length - 1) {
                             setSelectedProductIndex(selectedProductIndex + 1);
-                          } else if (swipe > 500 && selectedProductIndex > 0) {
+                          } else if ((offset.x > swipeThreshold || velocity.x > velocityThreshold) && selectedProductIndex > 0) {
                             setSelectedProductIndex(selectedProductIndex - 1);
                           }
                         }}
@@ -701,7 +721,11 @@ export default function App() {
             </div>
           ) : showInteractiveView && selectedProduct ? (
             /* Vista Interactiva para Productos con Opciones */
-            <div className="z-20">
+            <div 
+              className="z-20 w-full"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
               {/* Product Selector si hay múltiples productos - Responsive */}
               {categoryProducts.length > 1 && (
                 <>
@@ -744,10 +768,12 @@ export default function App() {
                         dragConstraints={{ left: 0, right: 0 }}
                         dragElastic={0.2}
                         onDragEnd={(e, { offset, velocity }) => {
-                          const swipe = Math.abs(offset.x) * velocity.x;
-                          if (swipe < -500 && selectedProductIndex < categoryProducts.length - 1) {
+                          const swipeThreshold = 50;
+                          const velocityThreshold = 200;
+                          
+                          if ((offset.x < -swipeThreshold || velocity.x < -velocityThreshold) && selectedProductIndex < categoryProducts.length - 1) {
                             setSelectedProductIndex(selectedProductIndex + 1);
-                          } else if (swipe > 500 && selectedProductIndex > 0) {
+                          } else if ((offset.x > swipeThreshold || velocity.x > velocityThreshold) && selectedProductIndex > 0) {
                             setSelectedProductIndex(selectedProductIndex - 1);
                           }
                         }}
