@@ -51,13 +51,7 @@ export const ProductEditor = () => {
       return;
     }
 
-    // Validar vista por capas si está activada
-    if (formData.useLayeredView) {
-      if (!formData.variableIngredientId || !formData.linkedOptionGroupId) {
-        alert('⚠️ Para usar la vista por capas debes seleccionar un Ingrediente Variable y un Grupo de Opciones Vinculado.');
-        return;
-      }
-    }
+    // Validar vista por capas si está activada (Eliminado, ya no requiere anclas legacy)
 
     // Guardar
     if (isAdding && formData.id) {
