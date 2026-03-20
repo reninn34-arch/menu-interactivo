@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'motion/react';
 import { useMenu } from '../contexts/MenuContext';
-import { Product, ProductOptionValue } from '../types';
+import { Product } from '../types';
 import { TopBun, Cheese, Meat, Tomato, Lettuce, BottomBun } from './Burger';
 
 interface LayeredProductViewProps {
@@ -9,6 +9,19 @@ interface LayeredProductViewProps {
   selectedOptions: Record<string, string>; // groupId -> optionValueId
   direction: number;
   shouldAnimate?: boolean;
+}
+
+// Tipo unificado para todas las capas (estáticas o dinámicas)
+interface UnifiedLayer {
+  id: string;
+  key: string;       // Clave única para React + AnimatePresence
+  isDynamic: boolean;
+  order: number;
+  name: string;
+  type: string;
+  image?: string;
+  style?: string;
+  groupId?: string;  // Solo para capas dinámicas
 }
 
 export const LayeredProductView = ({ 
@@ -20,22 +33,15 @@ export const LayeredProductView = ({
 }: LayeredProductViewProps) => {
   const { ingredients, optionGroups } = useMenu();
 
-  // Obtener solo los ingredientes asignados a este producto
-  const productIngredients = product.ingredientIds
-    ? ingredients
-        .filter(ing => product.ingredientIds!.includes(ing.id) && ing.enabled)
-        .sort((a, b) => a.order - b.order)
-    : [];
-
-  // Obtener el valor de opción seleccionado para el ingrediente variable
-  let variableOptionValue: ProductOptionValue | undefined;
-  if (product.linkedOptionGroupId && product.variableIngredientId) {
-    const selectedValueId = selectedOptions[product.linkedOptionGroupId];
-    const linkedGroup = optionGroups.find(g => g.id === product.linkedOptionGroupId);
-    if (linkedGroup && selectedValueId) {
-      variableOptionValue = linkedGroup.values.find(v => v.id === selectedValueId);
-    }
-  }
+  // Componentes 3D fallback por tipo de ingrediente
+  const fallbackComponents: Record<string, any> = {
+    'bun-top': TopBun,
+    'cheese': Cheese,
+    'meat': Meat,
+    'tomato': Tomato,
+    'lettuce': Lettuce,
+    'bun-bottom': BottomBun,
+  };
 
   // Grosores específicos por tipo de ingrediente (en px)
   const ingredientHeights: Record<string, number> = {
@@ -49,37 +55,86 @@ export const LayeredProductView = ({
     'bacon': 10,
     'egg': 20,
     'bun-bottom': 25,
+    'custom': 15,
   };
 
-  // Componentes 3D fallback por tipo
-  const fallbackComponents: Record<string, any> = {
-    'bun-top': TopBun,
-    'cheese': Cheese,
-    'meat': Meat,
-    'tomato': Tomato,
-    'lettuce': Lettuce,
-    'bun-bottom': BottomBun,
-  };
+  // ─── 1. Capas Estáticas (Ingredientes) ───────────────────────────────────
+  const staticLayers: UnifiedLayer[] = product.ingredientIds
+    ? ingredients
+        .filter(ing => product.ingredientIds!.includes(ing.id) && ing.enabled)
+        .map(ing => ({
+          id: ing.id,
+          key: `static-${ing.id}`,
+          isDynamic: false,
+          order: ing.order,
+          name: ing.name,
+          type: ing.type,
+          image: ing.image,
+          style: undefined,
+        }))
+    : [];
 
-  // Calcular translateY acumulativo basado en los ingredientes reales presentes
-  const calculateTranslateY = (index: number) => {
-    if (!isCollapsed) return 0;
-    
-    // Sumar las alturas de todos los ingredientes anteriores
-    let accumulatedHeight = 0;
-    for (let i = 0; i < index; i++) {
-      const ing = productIngredients[i];
-      const height = ingredientHeights[ing.type] || 20;
-      accumulatedHeight += height;
+  // ─── 2. Capas Dinámicas (Grupos de Opciones marcados como 3D) ────────────
+  const dynamicLayers: UnifiedLayer[] = product.optionGroupIds
+    ? optionGroups
+        .filter(g => product.optionGroupIds!.includes(g.id) && g.enabled && g.is3DLayer)
+        .map(group => {
+          const selectedValueId = selectedOptions[group.id];
+          const selectedValue =
+            group.values.find(v => v.id === selectedValueId && v.enabled) ||
+            group.values.find(v => v.enabled);
+
+          return {
+            id: group.id,
+            key: `dynamic-${group.id}-${selectedValueId || 'default'}`,
+            isDynamic: true,
+            order: group.layerOrder ?? 5,
+            name: selectedValue?.name || group.name,
+            type: 'meat', // Tipo fallback para componentes 3D
+            image: selectedValue?.image,
+            style: selectedValue?.style,
+            groupId: group.id,
+          };
+        })
+    : [];
+
+  // ─── 3. RETROCOMPATIBILIDAD: Soporte para el sistema antiguo ─────────────
+  // Si el producto usa el mecanismo antiguo (variableIngredientId + linkedOptionGroupId)
+  // y no hay capas dinámicas nuevas, convertimos el viejo sistema al nuevo.
+  let legacyDynamicLayer: UnifiedLayer | null = null;
+  if (dynamicLayers.length === 0 && product.variableIngredientId && product.linkedOptionGroupId) {
+    const linkedGroup = optionGroups.find(g => g.id === product.linkedOptionGroupId);
+    const variableIngredient = ingredients.find(i => i.id === product.variableIngredientId);
+    if (linkedGroup && variableIngredient) {
+      const selectedValueId = selectedOptions[linkedGroup.id];
+      const selectedValue =
+        linkedGroup.values.find(v => v.id === selectedValueId && v.enabled) ||
+        linkedGroup.values.find(v => v.enabled);
+
+      legacyDynamicLayer = {
+        id: `legacy-${variableIngredient.id}`,
+        key: `legacy-${variableIngredient.id}-${selectedValueId || 'default'}`,
+        isDynamic: true,
+        order: variableIngredient.order,
+        name: selectedValue?.name || variableIngredient.name,
+        type: variableIngredient.type,
+        image: selectedValue?.image || variableIngredient.image,
+        style: selectedValue?.style,
+        groupId: linkedGroup.id,
+      };
     }
-    
-    return -accumulatedHeight;
-  };
+  }
 
-  // Calcular z-index dinámicamente
-  const calculateZIndex = (index: number) => {
-    return 50 - index;
-  };
+  // ─── 4. Mezclar y ordenar todas las capas ────────────────────────────────
+  const allLayers: UnifiedLayer[] = [
+    // Filtrar el ingrediente variable base SIEMPRE (para que no aparezca el ancla vieja como un bloque gris detrás)
+    ...staticLayers.filter(l => !product.variableIngredientId || l.id !== product.variableIngredientId),
+    ...(dynamicLayers.length > 0 ? dynamicLayers : legacyDynamicLayer ? [legacyDynamicLayer] : []),
+  ].sort((a, b) => a.order - b.order);
+
+  const totalLayers = allLayers.length;
+  const overlapStep = 22;
+  const expandedStep = totalLayers > 6 ? 50 : 55;
 
   return (
     <motion.div 
@@ -91,128 +146,80 @@ export const LayeredProductView = ({
         repeat: shouldAnimate ? Infinity : 0, 
         ease: "easeInOut" 
       }}
-      className="scale-90 sm:scale-100 lg:scale-110" 
+      className="scale-100 sm:scale-110 lg:scale-125" 
     >
-      <div className="relative w-64 h-80 mx-auto flex items-end justify-center">
-        {productIngredients.map((ingredient, index) => {
-          const zIndex = calculateZIndex(index);
-          const overlapStep = 22; // Colapsado
-          // Reducir la separación expandida dinámica para que no se salga de la pantalla
-          const totalIngredients = productIngredients.length;
-          const expandedStep = totalIngredients > 6 ? 50 : 55; // Expandido (55px normal, 50px reducida para muchas capas)
-          
-          // Posiciones y centrado dinámico
-          const bottomValueCollapsed = (totalIngredients - 1 - index) * overlapStep;
-          const bottomValueExpanded = (totalIngredients - 1 - index) * expandedStep;
-          const totalGrowth = (totalIngredients - 1) * (expandedStep - overlapStep);
+      <div className="relative w-72 h-96 mx-auto flex items-end justify-center">
+        {allLayers.map((layer, index) => {
+          const zIndex = 50 - index;
+          const bottomValueCollapsed = (totalLayers - 1 - index) * overlapStep;
+          const bottomValueExpanded = (totalLayers - 1 - index) * expandedStep;
+          const totalGrowth = (totalLayers - 1) * (expandedStep - overlapStep);
           const centerOffset = totalGrowth / 2;
           const yCollapsed = -bottomValueCollapsed;
           const yExpanded = -bottomValueExpanded + centerOffset;
-          const isVariableIngredient = ingredient.id === product.variableIngredientId;
 
-          // Si es el ingrediente variable, usar la imagen y estilo de la opción seleccionada
-          if (isVariableIngredient && variableOptionValue) {
-            const imageUrl = variableOptionValue.image || ingredient.image;
-            const style = variableOptionValue.style;
-
+          // ── Capa DINÁMICA ──────────────────────────────────────────────────
+          if (layer.isDynamic) {
             return (
               <motion.div
-                key={`${product.id}-${ingredient.id}`}
+                key={`${product.id}-${layer.id}`}
                 className="absolute w-full flex justify-center"
                 style={{ zIndex, bottom: 0 }}
-                animate={{
-                  y: isCollapsed ? yCollapsed : yExpanded,
-                }}
+                animate={{ y: isCollapsed ? yCollapsed : yExpanded }}
                 transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
               >
                 <AnimatePresence mode="wait">
-                  {imageUrl ? (
+                  {layer.image ? (
                     <motion.img
-                      key={variableOptionValue.id}
-                      src={imageUrl}
-                      alt={variableOptionValue.name}
-                      className="w-40 h-auto drop-shadow-2xl"
-                      initial={{ 
-                        x: direction > 0 ? 100 : -100, 
-                        opacity: 0,
-                        rotateY: direction > 0 ? 45 : -45 
-                      }}
-                      animate={{ 
-                        x: 0, 
-                        opacity: 1,
-                        rotateY: 0,
+                      key={layer.key}
+                      src={layer.image}
+                      alt={layer.name}
+                      className="w-56 h-auto"
+                      initial={{ x: direction > 0 ? 100 : -100, opacity: 0, rotateY: direction > 0 ? 45 : -45 }}
+                      animate={{
+                        x: 0, opacity: 1, rotateY: 0,
                         filter: isCollapsed
-                          ? 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))'
+                          ? 'drop-shadow(0 0px 0px rgba(0,0,0,0))'
                           : 'drop-shadow(0 20px 25px rgba(0,0,0,0.3))'
                       }}
-                      exit={{ 
-                        x: direction > 0 ? -100 : 100, 
-                        opacity: 0,
-                        rotateY: direction > 0 ? -45 : 45 
-                      }}
-                      transition={{ 
-                        duration: 0.5, 
-                        ease: [0.34, 1.56, 0.64, 1] 
-                      }}
+                      exit={{ x: direction > 0 ? -100 : 100, opacity: 0, rotateY: direction > 0 ? -45 : 45 }}
+                      transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
+                    />
+                  ) : layer.type === 'meat' ? (
+                    <Meat
+                      key={layer.key}
+                      id={layer.key}
+                      style={layer.style || 'bg-gray-500'}
+                      direction={direction}
+                      isCollapsed={isCollapsed}
                     />
                   ) : (
-                    // Fallback: Si es type 'meat' usar el componente Meat, sino div normal
-                    ingredient.type === 'meat' ? (
-                      <Meat
-                        key={variableOptionValue.id}
-                        id={variableOptionValue.id}
-                        style={style || 'bg-gray-500'}
-                        direction={direction}
-                        isCollapsed={isCollapsed}
-                      />
-                    ) : (
-                      <motion.div
-                        key={variableOptionValue.id}
-                        className={`w-40 h-20 rounded-full ${style || 'bg-gray-500'}`}
-                        initial={{ 
-                          x: direction > 0 ? 100 : -100, 
-                          opacity: 0,
-                          rotateY: direction > 0 ? 45 : -45 
-                        }}
-                        animate={{ 
-                          x: 0, 
-                          opacity: 1,
-                          rotateY: 0
-                        }}
-                        exit={{ 
-                          x: direction > 0 ? -100 : 100, 
-                          opacity: 0,
-                          rotateY: direction > 0 ? -45 : 45 
-                        }}
-                        transition={{ 
-                          duration: 0.5, 
-                          ease: [0.34, 1.56, 0.64, 1] 
-                        }}
-                        style={{
-                          filter: isCollapsed
-                            ? 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))'
-                            : 'drop-shadow(0 20px 25px rgba(0,0,0,0.3))'
-                        }}
-                      />
-                    )
+                    <motion.div
+                      key={layer.key}
+                      className={`w-56 h-28 rounded-full ${layer.style || 'bg-gray-500'}`}
+                      initial={{ x: direction > 0 ? 100 : -100, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      exit={{ x: direction > 0 ? -100 : 100, opacity: 0 }}
+                      transition={{ duration: 0.5 }}
+                    />
                   )}
                 </AnimatePresence>
               </motion.div>
             );
           }
 
-          // Ingredientes no variables: renderizado normal
-          if (ingredient.image) {
+          // ── Capa ESTÁTICA ─────────────────────────────────────────────────
+          if (layer.image) {
             return (
               <motion.img
-                key={`${product.id}-${ingredient.id}`}
-                src={ingredient.image}
-                alt={ingredient.name}
-                className="absolute w-40 h-auto drop-shadow-2xl"
+                key={`${product.id}-${layer.id}`}
+                src={layer.image}
+                alt={layer.name}
+                className="absolute w-56 h-auto"
                 style={{ zIndex, bottom: 0 }}
                 animate={{
                   filter: isCollapsed
-                    ? 'drop-shadow(0 10px 15px rgba(0,0,0,0.5))'
+                    ? 'drop-shadow(0 0px 0px rgba(0,0,0,0))'
                     : 'drop-shadow(0 20px 25px rgba(0,0,0,0.3))',
                   y: isCollapsed ? yCollapsed : yExpanded,
                 }}
@@ -221,21 +228,15 @@ export const LayeredProductView = ({
             );
           }
 
-          // Fallback: componente 3D si existe para ese tipo y no hay imagen
-          const FallbackComponent = fallbackComponents[ingredient.type];
+          // Fallback: componente 3D si existe para ese tipo
+          const FallbackComponent = fallbackComponents[layer.type];
           if (FallbackComponent) {
             return (
               <motion.div
-                key={`${product.id}-${ingredient.id}`}
+                key={`${product.id}-${layer.id}`}
                 className="absolute"
-                style={{ 
-                  zIndex,
-                  bottom: 0,
-                  willChange: 'transform'
-                }}
-                animate={{
-                  y: isCollapsed ? yCollapsed : yExpanded,
-                }}
+                style={{ zIndex, bottom: 0, willChange: 'transform' }}
+                animate={{ y: isCollapsed ? yCollapsed : yExpanded }}
                 transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
               >
                 <FallbackComponent isCollapsed={isCollapsed} />
@@ -243,7 +244,6 @@ export const LayeredProductView = ({
             );
           }
 
-          // Si el ingrediente no tiene imagen ni fallback, no renderizarlo
           return null;
         })}
       </div>

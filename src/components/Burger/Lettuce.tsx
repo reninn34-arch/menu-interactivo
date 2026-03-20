@@ -12,7 +12,11 @@ export const Lettuce = ({ isCollapsed }: BurgerComponentProps) => (
     className="relative z-10"
     style={{ willChange: 'transform, opacity' }}
   >
-    <div className="w-56 h-8 bg-gradient-to-b from-[#7CFC00] to-[#228B22] rounded-[20px] shadow-[inset_0_-5px_15px_rgba(0,0,0,0.6),inset_0_4px_10px_rgba(255,255,255,0.4),0_15px_25px_rgba(0,0,0,0.5)] relative">
+    <div className={`w-56 h-8 bg-gradient-to-b from-[#7CFC00] to-[#228B22] rounded-[20px] relative ${
+      isCollapsed
+        ? 'shadow-[inset_0_-5px_15px_rgba(0,0,0,0.6),inset_0_4px_10px_rgba(255,255,255,0.4)]'
+        : 'shadow-[inset_0_-5px_15px_rgba(0,0,0,0.6),inset_0_4px_10px_rgba(255,255,255,0.4),0_15px_25px_rgba(0,0,0,0.5)]'
+    }`}>
       <div className="absolute -bottom-3 left-2 w-12 h-8 bg-gradient-to-b from-[#32CD32] to-[#006400] rounded-full shadow-lg" />
       <div className="absolute -bottom-4 left-14 w-16 h-10 bg-gradient-to-b from-[#32CD32] to-[#006400] rounded-full shadow-lg" />
       <div className="absolute -bottom-3 right-12 w-14 h-9 bg-gradient-to-b from-[#32CD32] to-[#006400] rounded-full shadow-lg" />

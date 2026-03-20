@@ -297,6 +297,8 @@ export const optionGroupsApi = {
         max_selections: group.maxSelections,
         enabled: group.enabled,
         order_index: group.order,
+        is_3d_layer: group.is3DLayer || false,
+        layer_order: group.layerOrder || 5,
         values: group.values.map(v => ({
           id: v.id,
           name: v.name,
@@ -326,6 +328,8 @@ export const optionGroupsApi = {
         max_selections: group.maxSelections,
         enabled: group.enabled,
         order_index: group.order,
+        is_3d_layer: group.is3DLayer || false,
+        layer_order: group.layerOrder || 5,
         values: group.values.map(v => ({
           id: v.id,
           name: v.name,

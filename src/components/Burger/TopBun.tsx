@@ -12,7 +12,11 @@ export const TopBun = ({ isCollapsed }: BurgerComponentProps) => (
     className="relative z-50"
     style={{ willChange: 'transform, opacity' }}
   >
-    <div className="w-56 h-24 bg-gradient-to-b from-[#E5A952] via-[#D48A30] to-[#A66018] rounded-t-[100px] rounded-b-[12px] shadow-[inset_0_-10px_20px_rgba(0,0,0,0.5),inset_0_5px_15px_rgba(255,255,255,0.5),0_20px_25px_rgba(0,0,0,0.6)] relative overflow-hidden">
+    <div className={`w-56 h-24 bg-gradient-to-b from-[#E5A952] via-[#D48A30] to-[#A66018] rounded-t-[100px] rounded-b-[12px] relative overflow-hidden ${
+      isCollapsed
+        ? 'shadow-[inset_0_-10px_20px_rgba(0,0,0,0.5),inset_0_5px_15px_rgba(255,255,255,0.5)]'
+        : 'shadow-[inset_0_-10px_20px_rgba(0,0,0,0.5),inset_0_5px_15px_rgba(255,255,255,0.5),0_20px_25px_rgba(0,0,0,0.6)]'
+    }`}>
       {/* Seeds */}
       <div className="absolute top-6 left-12 w-2 h-3 bg-[#FFF3E0] rounded-full rotate-45 shadow-sm opacity-90" />
       <div className="absolute top-8 left-24 w-2 h-3 bg-[#FFF3E0] rounded-full -rotate-12 shadow-sm opacity-90" />

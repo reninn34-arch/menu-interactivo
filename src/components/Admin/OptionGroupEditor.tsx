@@ -242,6 +242,45 @@ export const OptionGroupEditor = () => {
               </label>
             </div>
 
+            {/* ✨ NUEVO: Control de Capa 3D */}
+            <div className="md:col-span-2 p-4 bg-gradient-to-r from-blue-900/20 to-transparent border border-blue-500/30 rounded-xl">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={groupFormData.is3DLayer || false}
+                  onChange={(e) => setGroupFormData({ ...groupFormData, is3DLayer: e.target.checked })}
+                  className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-blue-400 focus:ring-blue-400"
+                />
+                <div>
+                  <span className="text-white font-semibold block">🎨 Renderizar como Capa 3D</span>
+                  <span className="text-xs text-gray-400">
+                    Las imágenes de estas opciones se apilarán físicamente sobre el producto (ej: Tipos de Carne en una hamburguesa).
+                  </span>
+                </div>
+              </label>
+
+              {groupFormData.is3DLayer && (
+                <div className="mt-3 ml-8 flex items-center gap-3">
+                  <label className="text-sm text-gray-300">Posición en la pila (orden):</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="99"
+                    value={groupFormData.layerOrder ?? 5}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value);
+                      setGroupFormData({ ...groupFormData, layerOrder: isNaN(val) ? 5 : val });
+                    }}
+                    className="w-20 px-3 py-1.5 bg-gray-700 border border-gray-600 rounded-lg text-white text-center focus:outline-none focus:border-blue-400"
+                  />
+                  <span className="text-xs text-gray-400">
+                    Nº más bajo = abajo de la pila. Los ingredientes también tienen su propio orden.
+                  </span>
+                </div>
+              )}
+            </div>
+
+
             {groupFormData.multiSelect && (
               <>
                 <div>

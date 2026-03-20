@@ -62,16 +62,17 @@ router.post('/', authenticateToken, async (req, res) => {
     
     const { 
       id, name, description, required, multi_select, min_selections, 
-      max_selections, enabled, order_index, values 
+      max_selections, enabled, order_index, values, is_3d_layer, layer_order
     } = req.body;
     
     const result = await client.query(
       `INSERT INTO option_groups 
-       (id, name, description, required, multi_select, min_selections, max_selections, enabled, order_index) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+       (id, name, description, required, multi_select, min_selections, max_selections, enabled, order_index, is_3d_layer, layer_order) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
        RETURNING *`,
       [id, name, description, required || false, multi_select || false, 
-       min_selections, max_selections, enabled !== undefined ? enabled : true, order_index]
+       min_selections, max_selections, enabled !== undefined ? enabled : true, order_index,
+       is_3d_layer || false, layer_order || 5]
     );
     
     const group = result.rows[0];
@@ -115,7 +116,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const { 
       name, description, required, multi_select, min_selections, 
-      max_selections, enabled, order_index, values 
+      max_selections, enabled, order_index, values, is_3d_layer, layer_order
     } = req.body;
     
     const result = await client.query(
@@ -127,11 +128,14 @@ router.put('/:id', authenticateToken, async (req, res) => {
            min_selections = COALESCE($5, min_selections), 
            max_selections = COALESCE($6, max_selections), 
            enabled = COALESCE($7, enabled), 
-           order_index = COALESCE($8, order_index)
-       WHERE id = $9 
+           order_index = COALESCE($8, order_index),
+           is_3d_layer = COALESCE($9, is_3d_layer),
+           layer_order = COALESCE($10, layer_order)
+       WHERE id = $11 
        RETURNING *`,
       [name ?? null, description ?? null, required ?? null, multi_select ?? null, 
-       min_selections ?? null, max_selections ?? null, enabled ?? null, order_index ?? null, id]
+       min_selections ?? null, max_selections ?? null, enabled ?? null, order_index ?? null,
+       is_3d_layer ?? null, layer_order ?? null, id]
     );
     
     if (result.rows.length === 0) {

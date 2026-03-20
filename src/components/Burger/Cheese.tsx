@@ -12,7 +12,9 @@ export const Cheese = ({ isCollapsed }: BurgerComponentProps) => (
     className="relative z-40"
     style={{ willChange: 'transform, opacity' }}
   >
-    <div className="w-52 h-3 bg-gradient-to-b from-[#FFD700] to-[#FF8C00] rounded-sm shadow-[0_15px_20px_rgba(0,0,0,0.5)] transform rotate-2 relative">
+    <div className={`w-52 h-3 bg-gradient-to-b from-[#FFD700] to-[#FF8C00] rounded-sm transform rotate-2 relative ${
+      isCollapsed ? '' : 'shadow-[0_15px_20px_rgba(0,0,0,0.5)]'
+    }`}>
       <div className="absolute -bottom-6 right-6 w-8 h-10 bg-gradient-to-b from-[#FF8C00] to-[#E67E22] rounded-b-full transform -rotate-12 shadow-lg" />
       <div className="absolute -bottom-4 left-8 w-6 h-8 bg-gradient-to-b from-[#FF8C00] to-[#E67E22] rounded-b-full transform rotate-12 shadow-lg" />
     </div>

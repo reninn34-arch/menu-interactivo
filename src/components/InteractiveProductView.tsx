@@ -190,7 +190,7 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
 
           {/* Product Visualization: Layered View or Image */}
           <div className="flex items-center justify-center py-4 lg:py-8 px-4">
-            {product.useLayeredView && product.linkedOptionGroupId ? (
+            {product.useLayeredView ? (
               // Render LayeredProductView for products with layered animation
               <div className="w-full h-48 lg:h-64 flex items-center justify-center">
                 <LayeredProductView

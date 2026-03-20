@@ -147,6 +147,8 @@ const transformOptionGroupFromAPI = (group: any): OptionGroup => ({
   maxSelections: group.max_selections,
   enabled: group.enabled,
   order: group.order_index,
+  is3DLayer: group.is_3d_layer || false,
+  layerOrder: group.layer_order || 5,
   values: group.values?.map((v: any) => ({
     id: v.id,
     name: v.name,

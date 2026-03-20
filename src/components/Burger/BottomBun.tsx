@@ -12,6 +12,10 @@ export const BottomBun = ({ isCollapsed }: BurgerComponentProps) => (
     className="relative z-0"
     style={{ willChange: 'transform, opacity' }}
   >
-    <div className="w-52 h-16 bg-gradient-to-b from-[#D48A30] to-[#8B4513] rounded-b-[40px] rounded-t-[10px] shadow-[inset_0_5px_15px_rgba(255,255,255,0.3),inset_0_-10px_20px_rgba(0,0,0,0.6),0_25px_35px_rgba(0,0,0,0.7)]" />
+    <div className={`w-52 h-16 bg-gradient-to-b from-[#D48A30] to-[#8B4513] rounded-b-[40px] rounded-t-[10px] ${
+      isCollapsed 
+        ? 'shadow-[inset_0_5px_15px_rgba(255,255,255,0.3),inset_0_-10px_20px_rgba(0,0,0,0.6)]' 
+        : 'shadow-[inset_0_5px_15px_rgba(255,255,255,0.3),inset_0_-10px_20px_rgba(0,0,0,0.6),0_25px_35px_rgba(0,0,0,0.7)]'
+    }`} />
   </motion.div>
 );

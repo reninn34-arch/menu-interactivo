@@ -50,7 +50,9 @@ export interface Product {
   optionGroupIds?: string[]; // IDs de grupos de opciones asociados
   // Campos para visualización con capas animadas
   useLayeredView?: boolean; // Activa la visualización con capas tipo burger
+  // @deprecated - Usar el sistema is3DLayer en ProductOptionGroup en su lugar
   variableIngredientId?: string; // ID del ingrediente que cambia con opciones
+  // @deprecated - Usar el sistema is3DLayer en ProductOptionGroup en su lugar  
   linkedOptionGroupId?: string; // ID del grupo de opciones vinculado a la capa variable
   // Disponibilidad y tiempo de preparación
   inStock?: boolean; // Si hay inventario disponible (default: true)
@@ -84,6 +86,9 @@ export interface ProductOptionGroup {
   values: ProductOptionValue[];
   enabled: boolean;
   order: number;
+  // ✨ NUEVO: Propiedades para el sistema de capas 3D nativo
+  is3DLayer?: boolean;  // ¿Este grupo se renderiza como capa 3D?
+  layerOrder?: number;  // Posición en la pila de capas (eg: 3 = entre queso y pan)
 }
 
 export interface SiteConfig {

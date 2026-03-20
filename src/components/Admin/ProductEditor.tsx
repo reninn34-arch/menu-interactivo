@@ -462,160 +462,60 @@ export const ProductEditor = () => {
             )}
           </div>
 
-          {/* ✨ NUEVO: Interfaz Intuitiva para Modo 3D ✨ */}
-          <div className={`p-5 rounded-xl border-2 transition-all ${formData.useLayeredView ? 'bg-orange-900/20 border-orange-500' : 'bg-gray-800 border-gray-600'}`}>
-            <div className="flex flex-col sm:flex-row items-start gap-4 mb-2">
-              <div className={`p-3 rounded-xl shadow-lg ${formData.useLayeredView ? 'bg-gradient-to-br from-orange-400 to-orange-600' : 'bg-gray-700'}`}>
-                <span className="text-3xl">🍔</span>
+          {/* ✨ NUEVO: Modo 3D Simplificado ✨ */}
+          <div className={`p-5 rounded-xl border-2 transition-all ${formData.useLayeredView ? 'bg-blue-900/20 border-blue-500' : 'bg-gray-800 border-gray-600'}`}>
+            <label className="flex items-center gap-3 cursor-pointer mb-2">
+              <input
+                type="checkbox"
+                checked={formData.useLayeredView || false}
+                onChange={(e) => setFormData({ ...formData, useLayeredView: e.target.checked })}
+                className="w-6 h-6 rounded border-2 border-gray-500 bg-gray-700 text-blue-500 focus:ring-blue-500 cursor-pointer"
+              />
+              <div>
+                <span className="text-xl font-bold text-white block">🎨 Activar Vista 3D por Capas</span>
+                <span className="text-sm text-gray-400">
+                  El producto se mostrará apilado en capas animadas. Perfecto para hamburguesas, helados, pizzas y cualquier producto que se "construya".
+                </span>
               </div>
-              <div className="flex-1">
-                <label className="flex items-center gap-3 cursor-pointer mb-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.useLayeredView || false}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      useLayeredView: e.target.checked,
-                      variableIngredientId: e.target.checked ? formData.variableIngredientId : undefined,
-                      linkedOptionGroupId: e.target.checked ? formData.linkedOptionGroupId : undefined
-                    })}
-                    className="w-6 h-6 rounded border-2 border-gray-500 bg-gray-700 checked:bg-orange-500 checked:border-orange-500 focus:ring-orange-500 transition-all cursor-pointer"
-                  />
-                  <span className="text-xl font-bold text-white">Activar Modo 3D Interactivo</span>
-                </label>
-                <p className="text-sm text-gray-400 leading-relaxed">
-                  Permite a tus clientes ver cómo se arma el producto capa por capa en tiempo real al cambiar sus opciones (Ej: Ver cómo cambia la carne por un pollo crujiente).
-                </p>
-                {/* ✨ NUEVO: Checklist de Requisitos para 3D ✨ */}
-                {formData.useLayeredView && (
-                  <div className="mb-4 p-4 bg-gray-900/80 rounded-xl border border-gray-700">
-                    <h5 className="font-bold text-white mb-3">Para que el producto 3D funcione, necesitas cumplir esto:</h5>
-                    <ul className="space-y-3 text-sm">
-                      <li className="flex items-start gap-3">
-                        <div className={`mt-0.5 ${formData.ingredientIds && formData.ingredientIds.length > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                          {formData.ingredientIds && formData.ingredientIds.length > 0 ? '✅' : '❌'}
-                        </div>
-                        <div>
-                          <span className={formData.ingredientIds && formData.ingredientIds.length > 0 ? 'text-gray-300' : 'text-red-400 font-bold'}>
-                            Tener ingredientes seleccionados en este producto.
-                          </span>
-                          <p className="text-xs text-gray-500 mt-0.5">Ve a la sección superior y marca los ingredientes que componen esta hamburguesa.</p>
-                        </div>
-                      </li>
-                      <li className="flex items-start gap-3">
-                        <div className={`mt-0.5 ${optionGroups.length > 0 ? 'text-green-500' : 'text-red-500'}`}>
-                          {optionGroups.length > 0 ? '✅' : '❌'}
-                        </div>
-                        <div>
-                          <span className={optionGroups.length > 0 ? 'text-gray-300' : 'text-red-400 font-bold'}>
-                            Haber creado al menos un Grupo de Opciones (Ej: "Tipos de Carne").
-                          </span>
-                          <p className="text-xs text-gray-500 mt-0.5">Si no tienes ninguno, ve a la pestaña "Opciones" en el menú principal para crearlo.</p>
-                        </div>
-                      </li>
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </div>
+            </label>
 
             {formData.useLayeredView && (
-              <div className="mt-6 space-y-6 bg-gray-900/50 p-4 sm:p-6 rounded-xl border border-gray-700">
-                {/* PASO 1 */}
-                <div className="relative">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="bg-blue-500 text-white w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm shadow-lg shadow-blue-500/30">1</div>
-                    <h4 className="text-white font-semibold text-lg">¿Qué ingrediente va a ser reemplazado?</h4>
+              <div className="mt-4 ml-9 space-y-3">
+                {/* Estado inteligente: qué ya está listo */}
+                <div className="p-4 bg-gray-900/60 rounded-xl border border-gray-700 space-y-2">
+                  <h5 className="text-white font-semibold text-sm mb-3">Estado de las capas:</h5>
+
+                  <div className="flex items-center gap-2 text-sm">
+                    {(formData.ingredientIds?.length || 0) > 0
+                      ? <span className="text-green-400">✅</span>
+                      : <span className="text-yellow-400">⚠️</span>}
+                    <span className={`${(formData.ingredientIds?.length || 0) > 0 ? 'text-gray-300' : 'text-yellow-300'}`}>
+                      Capas estáticas: {(formData.ingredientIds?.length || 0)} ingrediente(s) seleccionado(s) abajo
+                    </span>
                   </div>
-                  <div className="pl-10">
-                    <p className="text-sm text-gray-400 mb-3">
-                      Selecciona la <strong>Capa Base</strong> que desaparecerá cuando el cliente elija algo diferente.
-                    </p>
-                    <select
-                      value={formData.variableIngredientId || ''}
-                      onChange={(e) => {
-                        const newVarId = e.target.value || undefined;
-                        let newIngredientIds = [...(formData.ingredientIds || [])];
-                        // Autoselección inteligente: agregamos el ingrediente si no estaba marcado arriba
-                        if (newVarId && !newIngredientIds.includes(newVarId)) {
-                          newIngredientIds.push(newVarId);
-                        }
-                        setFormData({ 
-                          ...formData, 
-                          variableIngredientId: newVarId,
-                          ingredientIds: newIngredientIds
-                        });
-                      }}
-                      className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-xl text-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all outline-none"
-                    >
-                      <option value="">-- Selecciona la capa que cambiará (Ej: Carne) --</option>
-                      {ingredients.filter(ing => ing.enabled).map(ingredient => (
-                        <option key={ingredient.id} value={ingredient.id}>
-                          {ingredient.name} {formData.ingredientIds?.includes(ingredient.id) ? '✓' : '(Se añadirá a la receta)'}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+
+                  {(() => {
+                    const dynamic3DGroups = optionGroups.filter(
+                      g => g.enabled && g.is3DLayer && formData.optionGroupIds?.includes(g.id)
+                    );
+                    return (
+                      <div className="flex items-center gap-2 text-sm">
+                        {dynamic3DGroups.length > 0
+                          ? <span className="text-green-400">✅</span>
+                          : <span className="text-yellow-400">⚠️</span>}
+                        <span className={`${dynamic3DGroups.length > 0 ? 'text-gray-300' : 'text-yellow-300'}`}>
+                          Capas dinámicas: {dynamic3DGroups.length > 0
+                            ? dynamic3DGroups.map(g => g.name).join(', ')
+                            : 'Ningún grupo de opciones con "Capa 3D" activado está asignado a este producto.'}
+                        </span>
+                      </div>
+                    );
+                  })()}
                 </div>
 
-                {/* CONECTOR VISUAL */}
-                <div className="w-1 h-8 bg-gray-700 ml-6 rounded-full"></div>
-
-                {/* PASO 2 */}
-                <div className="relative">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="bg-green-500 text-white w-7 h-7 rounded-full flex items-center justify-center font-bold text-sm shadow-lg shadow-green-500/30">2</div>
-                    <h4 className="text-white font-semibold text-lg">¿Qué opciones elegirán los clientes?</h4>
-                  </div>
-                  <div className="pl-10">
-                    <p className="text-sm text-gray-400 mb-3">
-                      Selecciona el <strong>Grupo de Opciones</strong> que contiene las alternativas (estas deben tener imágenes o colores configurados).
-                    </p>
-                    <select
-                      value={formData.linkedOptionGroupId || ''}
-                      onChange={(e) => {
-                        const newGroupId = e.target.value || undefined;
-                        let newGroupIds = [...(formData.optionGroupIds || [])];
-                        // Autoselección inteligente
-                        if (newGroupId && !newGroupIds.includes(newGroupId)) {
-                          newGroupIds.push(newGroupId);
-                        }
-                        setFormData({ 
-                          ...formData, 
-                          linkedOptionGroupId: newGroupId,
-                          optionGroupIds: newGroupIds
-                        });
-                      }}
-                      className="w-full px-4 py-3 bg-gray-800 border-2 border-gray-700 rounded-xl text-white focus:border-green-500 focus:ring-4 focus:ring-green-500/20 transition-all outline-none"
-                    >
-                      <option value="">-- Selecciona el grupo (Ej: Tipos de Carne) --</option>
-                      {optionGroups.filter(group => group.enabled).map(group => (
-                        <option key={group.id} value={group.id}>
-                          {group.name} {formData.optionGroupIds?.includes(group.id) ? '✓' : '(Se habilitará para el producto)'}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                {/* MENSAJE DE ÉXITO EXPLICATIVO */}
-                {formData.variableIngredientId && formData.linkedOptionGroupId && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl flex items-start gap-4"
-                  >
-                    <div className="p-2 bg-green-500/20 rounded-lg mt-1">
-                      <span className="text-xl">✨</span>
-                    </div>
-                    <div>
-                      <h5 className="text-green-400 font-bold mb-1">¡Configuración 3D Lista!</h5>
-                      <p className="text-sm text-green-200/80 leading-relaxed">
-                        Cuando el cliente seleccione una opción de <strong>"{optionGroups.find(g => g.id === formData.linkedOptionGroupId)?.name}"</strong>, 
-                        la vista 3D apartará las capas y reemplazará <strong>"{ingredients.find(i => i.id === formData.variableIngredientId)?.name}"</strong> por el nuevo ingrediente elegido.
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
+                <p className="text-xs text-gray-500 italic">
+                  Para agregar una capa dinámica (como "Tipos de Carne"), ve a <strong>Opciones</strong>, edita el grupo, y activa "Renderizar como Capa 3D". Luego asígnalo a este producto en la sección de abajo.
+                </p>
               </div>
             )}
           </div>
