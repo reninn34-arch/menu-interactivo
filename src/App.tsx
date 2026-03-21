@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShoppingCart, Menu, X, Clock, Loader2, AlertCircle, Instagram, Facebook, Music2 } from 'lucide-react';
-import { AdminPanel } from './components/Admin';
-import { AdminLogin } from './components/AdminLogin';
+
+const AdminPanel = lazy(() => import('./components/Admin').then(module => ({ default: module.AdminPanel })));
+const AdminLogin = lazy(() => import('./components/AdminLogin').then(module => ({ default: module.AdminLogin })));
+
 import { Cart } from './components/Cart';
 import { CategorySelector } from './components/CategorySelector';
 import { BurgerView } from './components/Views/BurgerView';
@@ -130,23 +132,25 @@ export default function App() {
 
   return (
     <>
-      {/* Admin Login (unauthenticated) */}
-      {showAdmin && !isAuthenticated && (
-        <div className="fixed inset-0 z-50">
-          <AdminLogin />
-          <button
-            onClick={() => setShowAdmin(false)}
-            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors z-10"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+      <Suspense fallback={<div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div></div>}>
+        {/* Admin Login (unauthenticated) */}
+        {showAdmin && !isAuthenticated && (
+          <div className="fixed inset-0 z-50">
+            <AdminLogin />
+            <button
+              onClick={() => setShowAdmin(false)}
+              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors z-10"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
-      {/* Admin Panel (authenticated) */}
-      {showAdmin && isAuthenticated && (
-        <AdminPanel onClose={() => setShowAdmin(false)} />
-      )}
+        {/* Admin Panel (authenticated) */}
+        {showAdmin && isAuthenticated && (
+          <AdminPanel onClose={() => setShowAdmin(false)} />
+        )}
+      </Suspense>
 
       <Cart isOpen={showCart} onClose={() => setShowCart(false)} />
 
