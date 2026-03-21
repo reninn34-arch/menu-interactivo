@@ -365,6 +365,57 @@ export const SiteConfigEditor = () => {
             </p>
           </div>
         </div>
+      {/* REDES SOCIALES */}
+      <div className="bg-gradient-to-br from-pink-600 to-pink-700 rounded-2xl p-6 border-2 border-pink-400 shadow-xl space-y-4 mt-8">
+        <h3 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+          🌐 Redes Sociales
+          <span className="text-sm font-normal bg-white/20 px-3 py-1 rounded-full">Opcional</span>
+        </h3>
+        <p className="text-white/90 mb-4 text-sm">
+          Agrega los enlaces a tus redes sociales para que los clientes puedan encontrarte fácilmente.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-bold text-white mb-2">
+              Instagram
+            </label>
+            <input
+              type="url"
+              value={formData.instagram || ''}
+              onChange={e => setFormData({ ...formData, instagram: e.target.value })}
+              className="w-full px-4 py-3 bg-white/20 border-2 border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-white/30"
+              placeholder="https://instagram.com/tuusuario"
+              autoComplete="off"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-white mb-2">
+              Facebook
+            </label>
+            <input
+              type="url"
+              value={formData.facebook || ''}
+              onChange={e => setFormData({ ...formData, facebook: e.target.value })}
+              className="w-full px-4 py-3 bg-white/20 border-2 border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-white/30"
+              placeholder="https://facebook.com/tuusuario"
+              autoComplete="off"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-white mb-2">
+              TikTok
+            </label>
+            <input
+              type="url"
+              value={formData.tiktok || ''}
+              onChange={e => setFormData({ ...formData, tiktok: e.target.value })}
+              className="w-full px-4 py-3 bg-white/20 border-2 border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:border-white focus:bg-white/30"
+              placeholder="https://tiktok.com/@tuusuario"
+              autoComplete="off"
+            />
+          </div>
+        </div>
+      </div>
       </div>
 
       {/* HORARIOS DE OPERACIÓN */}

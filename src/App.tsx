@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, ShoppingCart, Menu, X, Clock, Loader2, AlertCircle } from 'lucide-react';
+import { MapPin, ShoppingCart, Menu, X, Clock, Loader2, AlertCircle, Instagram, Facebook, Music2 } from 'lucide-react';
 import { LayeredProductView } from './components/LayeredProductView';
 import { MeatSelector } from './components/MeatSelector';
 import { CategorySelector } from './components/CategorySelector';
@@ -267,7 +267,6 @@ export default function App() {
                     <X className="w-5 h-5 text-white" />
                   </button>
                 </div>
-                
                 <div className="space-y-2">
                   {categories.map(category => (
                     <button
@@ -304,6 +303,27 @@ export default function App() {
                       </div>
                     </button>
                   ))}
+                </div>
+              </div>
+              {/* Redes sociales SOLO en móvil (sidebar) */}
+              <div className="md:hidden p-6 mt-auto border-t border-white/10">
+                <p className="text-xs text-gray-500 mb-4 text-center">Síguenos en redes sociales</p>
+                <div className="flex justify-center gap-6">
+                  {siteConfig.instagram && (
+                    <a href={siteConfig.instagram} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                      <Instagram className="w-5 h-5 text-gray-400 hover:text-white" />
+                    </a>
+                  )}
+                  {siteConfig.facebook && (
+                    <a href={siteConfig.facebook} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                      <Facebook className="w-5 h-5 text-gray-400 hover:text-white" />
+                    </a>
+                  )}
+                  {siteConfig.tiktok && (
+                    <a href={siteConfig.tiktok} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                      <Music2 className="w-5 h-5 text-gray-400 hover:text-white" />
+                    </a>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -354,24 +374,46 @@ export default function App() {
               </h1>
             </div>
           )}
-          
-          {/* Carrito */}
-          <button
-            onClick={() => setShowCart(true)}
-            aria-label={`Abrir carrito de compras, ${itemCount} ${itemCount === 1 ? 'producto' : 'productos'}`}
-            className="relative w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/5 hover:bg-white/20 transition-colors"
-          >
-            <ShoppingCart className="w-5 h-5 text-white" aria-hidden="true" />
-            {itemCount > 0 && (
-              <span 
-                className="absolute -top-1 -right-1 w-5 h-5 text-white text-xs font-bold rounded-full flex items-center justify-center"
-                style={{ backgroundColor: siteConfig.primaryColor || '#FF9F0A' }}
-                aria-live="polite"
-              >
-                {itemCount}
-              </span>
-            )}
-          </button>
+
+          {/* Redes sociales SOLO en escritorio (header) */}
+          <div className="hidden md:flex items-center ml-auto gap-6">
+            <div className="flex items-center gap-4">
+              {siteConfig.instagram && (
+                <a href={siteConfig.instagram} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                  <Instagram className="w-5 h-5 text-gray-400 hover:text-white" />
+                </a>
+              )}
+              {siteConfig.facebook && (
+                <a href={siteConfig.facebook} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                  <Facebook className="w-5 h-5 text-gray-400 hover:text-white" />
+                </a>
+              )}
+              {siteConfig.tiktok && (
+                <a href={siteConfig.tiktok} target="_blank" rel="noopener noreferrer" className="hover:scale-110 transition-transform">
+                  <Music2 className="w-5 h-5 text-gray-400 hover:text-white" />
+                </a>
+              )}
+            </div>
+            {/* Separador visual */}
+            <div className="h-6 w-px bg-white/30 mx-2" />
+            {/* Carrito */}
+            <button
+              onClick={() => setShowCart(true)}
+              aria-label={`Abrir carrito de compras, ${itemCount} ${itemCount === 1 ? 'producto' : 'productos'}`}
+              className="relative w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/5 hover:bg-white/20 transition-colors"
+            >
+              <ShoppingCart className="w-5 h-5 text-white" aria-hidden="true" />
+              {itemCount > 0 && (
+                <span 
+                  className="absolute -top-1 -right-1 w-5 h-5 text-white text-xs font-bold rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: siteConfig.primaryColor || '#FF9F0A' }}
+                  aria-live="polite"
+                >
+                  {itemCount}
+                </span>
+              )}
+            </button>
+          </div>
         </header>
 
         {/* Restaurant Status Banner - Solo mostrar cuando está CERRADO */}

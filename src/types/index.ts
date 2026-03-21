@@ -122,6 +122,10 @@ export interface SiteConfig {
     sunday: { open: string; close: string; closed: boolean };
   };
   allowOrdersOutsideHours?: boolean; // Permitir pedidos fuera de horario
+  // Redes sociales
+  instagram?: string;
+  facebook?: string;
+  tiktok?: string;
 }
 
 export interface BurgerComponentProps {

@@ -381,6 +381,9 @@ export const siteConfigApi = {
       deliveryCost: config.delivery_cost,
       allowOrdersOutsideHours: config.allow_orders_outside_hours,
       openingHours: config.opening_hours,
+      instagram: config.instagram,
+      facebook: config.facebook,
+      tiktok: config.tiktok,
     };
   },
 
@@ -409,6 +412,9 @@ export const siteConfigApi = {
         delivery_cost: config.deliveryCost,
         allow_orders_outside_hours: config.allowOrdersOutsideHours,
         opening_hours: config.openingHours,
+        instagram: config.instagram,
+        facebook: config.facebook,
+        tiktok: config.tiktok,
       }),
     });
 
@@ -435,6 +441,9 @@ export const siteConfigApi = {
       deliveryCost: updated.delivery_cost,
       allowOrdersOutsideHours: updated.allow_orders_outside_hours,
       openingHours: updated.opening_hours,
+      instagram: updated.instagram,
+      facebook: updated.facebook,
+      tiktok: updated.tiktok,
     };
   },
 };

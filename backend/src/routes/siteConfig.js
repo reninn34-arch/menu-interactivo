@@ -57,7 +57,8 @@ router.put('/', authenticateToken, async (req, res) => {
       primary_color, secondary_color, background_color, text_color, accent_color,
       branch_name, currency, currency_symbol,
       whatsapp_number, whatsapp_number_pickup, whatsapp_number_delivery,
-      restaurant_address, delivery_cost, allow_orders_outside_hours, opening_hours
+      restaurant_address, delivery_cost, allow_orders_outside_hours, opening_hours,
+      instagram, facebook, tiktok
     } = req.body;
     
     // Ya NO guardamos archivos físicos. El frontend ya comprime el logo a Base64,
@@ -71,7 +72,8 @@ router.put('/', authenticateToken, async (req, res) => {
            text_color = $10, accent_color = $11, branch_name = $12, currency = $13,
            currency_symbol = $14, whatsapp_number = $15, whatsapp_number_pickup = $16,
            whatsapp_number_delivery = $17, restaurant_address = $18, delivery_cost = $19,
-           allow_orders_outside_hours = $20, opening_hours = $21
+           allow_orders_outside_hours = $20, opening_hours = $21,
+           instagram = $22, facebook = $23, tiktok = $24
        WHERE id = 1 
        RETURNING *`,
       [
@@ -80,7 +82,8 @@ router.put('/', authenticateToken, async (req, res) => {
         branch_name, currency, currency_symbol,
         whatsapp_number, whatsapp_number_pickup, whatsapp_number_delivery,
         restaurant_address, delivery_cost, allow_orders_outside_hours,
-        opening_hours ? JSON.stringify(opening_hours) : null
+        opening_hours ? JSON.stringify(opening_hours) : null,
+        instagram, facebook, tiktok
       ]
     );
     
