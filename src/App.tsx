@@ -396,11 +396,32 @@ export default function App() {
             </div>
             {/* Separador visual */}
             <div className="h-6 w-px bg-white/30 mx-2" />
-            {/* Carrito */}
+            {/* Carrito SOLO escritorio */}
             <button
               onClick={() => setShowCart(true)}
               aria-label={`Abrir carrito de compras, ${itemCount} ${itemCount === 1 ? 'producto' : 'productos'}`}
               className="relative w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/5 hover:bg-white/20 transition-colors"
+            >
+              <ShoppingCart className="w-5 h-5 text-white" aria-hidden="true" />
+              {itemCount > 0 && (
+                <span 
+                  className="absolute -top-1 -right-1 w-5 h-5 text-white text-xs font-bold rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: siteConfig.primaryColor || '#FF9F0A' }}
+                  aria-live="polite"
+                >
+                  {itemCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Carrito SOLO móvil (header) */}
+          <div className="flex md:hidden items-center ml-auto">
+            <button
+              onClick={() => setShowCart(true)}
+              aria-label={`Abrir carrito de compras, ${itemCount} ${itemCount === 1 ? 'producto' : 'productos'}`}
+              className="relative w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/5 hover:bg-white/20 transition-colors"
+              style={{ marginRight: '0.5rem' }}
             >
               <ShoppingCart className="w-5 h-5 text-white" aria-hidden="true" />
               {itemCount > 0 && (
