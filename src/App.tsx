@@ -1,24 +1,22 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, ShoppingCart, Menu, X, Clock, Loader2, AlertCircle, Instagram, Facebook, Music2 } from 'lucide-react';
-import { LayeredProductView } from './components/LayeredProductView';
-import { MeatSelector } from './components/MeatSelector';
-import { CategorySelector } from './components/CategorySelector';
-import { ProductCard } from './components/ProductCard';
-import { InteractiveProductView } from './components/InteractiveProductView';
-import { NutritionalInfo } from './components/NutritionalInfo';
-import { OrderButton } from './components/OrderButton';
+import { ShoppingCart, Menu, X, Clock, Loader2, AlertCircle, Instagram, Facebook, Music2 } from 'lucide-react';
 import { AdminPanel } from './components/Admin';
 import { AdminLogin } from './components/AdminLogin';
 import { Cart } from './components/Cart';
-import { ProductOptionsModal } from './components/ProductOptionsModal';
+import { CategorySelector } from './components/CategorySelector';
+import { BurgerView } from './components/Views/BurgerView';
+import { InteractiveView } from './components/Views/InteractiveView';
+import { GridView } from './components/Views/GridView';
 import { useMenu } from './contexts/MenuContext';
 import { useCart } from './contexts/CartContext';
 import { useAuth } from './contexts/AuthContext';
+import { useSiteEffects } from './hooks/useSiteEffects';
+import { useTouchNavigation } from './hooks/useTouchNavigation';
 import { isRestaurantOpen, getScheduleDisplay } from './utils/openingHours';
 
 export default function App() {
-  // TODOS LOS HOOKS VAN AL INICIO
+  // ALL HOOKS GO FIRST
   const { products, categories, optionGroups, siteConfig, isLoading, error } = useMenu();
   const { itemCount, addItem } = useCart();
   const { isAuthenticated } = useAuth();
@@ -26,50 +24,26 @@ export default function App() {
   const [selectedProductIndex, setSelectedProductIndex] = useState(0);
   const [meatIndex, setMeatIndex] = useState(0);
   const [prevMeatIndex, setPrevMeatIndex] = useState(0);
-  const [isCollapsed, setIsCollapsed] = useState(true);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showCart, setShowCart] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
-  const [showMeatSelector, setShowMeatSelector] = useState(false);
-  const [meatSelected, setMeatSelected] = useState(false);
-  const [showBurgerOptions, setShowBurgerOptions] = useState(false);
-  const touchStartX = useRef<number | null>(null);
 
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && (e.key === 'A' || e.key === 'a')) {
-        e.preventDefault();
-        setShowAdmin(true);
-      }
-    };
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, []);
+  // ✅ Issue 1 & 6: Centralized site side effects
+  useSiteEffects({ siteConfig, onOpenAdmin: () => setShowAdmin(true) });
 
-  useEffect(() => {
-    let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
-    if (siteConfig.faviconUrl) {
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = 'icon';
-        document.head.appendChild(link);
-      }
-      link.href = siteConfig.faviconUrl;
-    } else {
-      if (link) {
-        link.remove();
-      }
-    }
-  }, [siteConfig.faviconUrl]);
+  // ✅ Issue 1: Touch navigation extracted to hook
+  // NOTE: Must be called here (before early returns) to satisfy React's rules of hooks.
+  // categoryProducts will be computed after the early returns for rendering, but
+  // this hook receives live state values that update correctly.
+  const categoryProductsForHook = products.filter(p => p.enabled && p.categoryId === selectedCategoryId);
+  const { handleTouchStart, handleTouchEnd } = useTouchNavigation({
+    itemCount: categoryProductsForHook.length,
+    currentIndex: selectedProductIndex,
+    onNavigate: setSelectedProductIndex,
+  });
 
-  useEffect(() => {
-    if (siteConfig.siteName) {
-      document.title = siteConfig.siteName;
-    }
-  }, [siteConfig.siteName]);
-
-  // Forzar la selección de la categoría principal al cargar si la actual no existe
+  // Force correct category selection on load
   useEffect(() => {
     if (categories.length > 0 && !categories.find(c => c.id === selectedCategoryId)) {
       const fallbackCat = categories.find(c => c.isMain) || categories[0];
@@ -78,15 +52,13 @@ export default function App() {
     }
   }, [categories, selectedCategoryId]);
 
-  // (El useEffect de selección de categoría principal se movió arriba)
-
-  // Loading state y error state DESPUÉS de los hooks
+  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#4A1410] via-[#2D0D0A] to-[#0A0604] flex items-center justify-center">
         <div className="text-center">
-          <Loader2 
-            className="w-12 h-12 animate-spin mx-auto mb-4" 
+          <Loader2
+            className="w-12 h-12 animate-spin mx-auto mb-4"
             style={{ color: siteConfig?.primaryColor || '#FF9F0A' }}
           />
           <p className="text-white text-lg">Cargando menú...</p>
@@ -108,12 +80,8 @@ export default function App() {
             style={{
               background: `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.filter = 'brightness(1.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.filter = 'brightness(1)';
-            }}
+            onMouseEnter={(e) => { e.currentTarget.style.filter = 'brightness(1.1)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.filter = 'brightness(1)'; }}
           >
             Reintentar
           </button>
@@ -122,26 +90,15 @@ export default function App() {
     );
   }
 
-  // Restaurant status
+  // Derived data
   const restaurantStatus = isRestaurantOpen(siteConfig);
-
-  // Solo permitir acceso al admin si está autenticado
-  const handleAdminAccess = () => {
-    if (isAuthenticated) {
-      setShowAdmin(true);
-    }
-  };
-  
-
-  // Filtrar productos por categoría seleccionada
   const categoryProducts = products.filter(p => p.enabled && p.categoryId === selectedCategoryId);
   const selectedProduct = categoryProducts[selectedProductIndex] || categoryProducts[0];
   const selectedCategory = categories.find(c => c.id === selectedCategoryId);
 
-  // Obtener carnes desde el grupo de opciones vinculado dinámicamente al producto
   const linkedGroupId = selectedProduct?.linkedOptionGroupId || 'meat-type';
   const meatOptionGroup = optionGroups.find(g => g.id === linkedGroupId);
-  
+
   const meats = meatOptionGroup?.values.filter(v => v.enabled).map(v => ({
     id: v.id,
     name: v.name,
@@ -155,59 +112,25 @@ export default function App() {
     image: v.image,
   })) || [];
 
-  // Evitar errores si no hay carnes configuradas
   const fallbackMeat = { id: 'none', name: 'Original', shortName: '', style: '', price: 0, calories: 0, protein: 0, fat: 0, carbs: 0 };
   const selectedMeat = meats[meatIndex] || meats[0] || fallbackMeat;
 
-  // (El useEffect de selección de categoría principal está arriba, junto a los demás hooks)
-
-  // Detectar si la categoría actual es la Principal (marcada en Admin)
   const isBurgerCategory = selectedCategory?.isMain === true;
-
-  // Determinar si mostrar vista interactiva
-  const hasInteractiveProducts = categoryProducts.some(p => p.optionGroupIds && p.optionGroupIds.length > 0);
-  const showInteractiveView = !isBurgerCategory; // Aplicarlo a todas las demás categorías para tener un diseño premium
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.targetTouches[0].clientX;
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (!touchStartX.current) return;
-    const touchEndX = e.changedTouches[0].clientX;
-    const distance = touchStartX.current - touchEndX; // Positivo = swipe hacia la izquierda (next)
-    
-    if (distance > 50 && selectedProductIndex < categoryProducts.length - 1) {
-      setSelectedProductIndex(selectedProductIndex + 1);
-    } else if (distance < -50 && selectedProductIndex > 0) {
-      setSelectedProductIndex(selectedProductIndex - 1);
-    }
-    touchStartX.current = null;
-  };
+  const showInteractiveView = !isBurgerCategory;
 
   const handleMeatChange = (newIndex: number) => {
     setPrevMeatIndex(meatIndex);
     setMeatIndex(newIndex);
-    
-    // Separar hamburguesa al cambiar carne
-    setIsCollapsed(false);
-    
-    // Juntar después de 800ms
-    setTimeout(() => {
-      setIsCollapsed(true);
-    }, 800);
   };
-
-  const direction = meatIndex > prevMeatIndex ? 1 : -1;
 
   const handleCategoryChange = (categoryId: string) => {
     setSelectedCategoryId(categoryId);
-    setSelectedProductIndex(0); // Reset product selection when changing category
+    setSelectedProductIndex(0);
   };
 
   return (
     <>
-      {/* Mostrar AdminLogin si intenta acceder sin autenticar */}
+      {/* Admin Login (unauthenticated) */}
       {showAdmin && !isAuthenticated && (
         <div className="fixed inset-0 z-50">
           <AdminLogin />
@@ -220,18 +143,17 @@ export default function App() {
         </div>
       )}
 
-      {/* Mostrar AdminPanel solo si está autenticado */}
+      {/* Admin Panel (authenticated) */}
       {showAdmin && isAuthenticated && (
         <AdminPanel onClose={() => setShowAdmin(false)} />
       )}
 
       <Cart isOpen={showCart} onClose={() => setShowCart(false)} />
 
-      {/* Sidebar lateral para categ orías */}
+      {/* Category Sidebar */}
       <AnimatePresence>
         {showSidebar && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -240,19 +162,13 @@ export default function App() {
               onClick={() => setShowSidebar(false)}
               className="fixed inset-0 bg-black/60 z-40"
             />
-            
-            {/* Sidebar */}
             <motion.div
               initial={{ x: -300 }}
               animate={{ x: 0 }}
               exit={{ x: -300 }}
-              transition={{ 
-                type: "tween", 
-                duration: 0.2,
-                ease: [0.4, 0, 0.2, 1]
-              }}
+              transition={{ type: "tween", duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
               className="fixed left-0 top-0 bottom-0 w-72 border-r border-white/10 z-50 overflow-y-auto"
-              style={{ 
+              style={{
                 willChange: 'transform',
                 background: `linear-gradient(to bottom, ${siteConfig.backgroundColor || '#111827'}, ${siteConfig.backgroundColor ? `${siteConfig.backgroundColor}DD` : '#000000'})`
               }}
@@ -305,7 +221,7 @@ export default function App() {
                   ))}
                 </div>
               </div>
-              {/* Redes sociales SOLO en móvil (sidebar) */}
+              {/* Social links – mobile sidebar only */}
               <div className="md:hidden p-6 mt-auto border-t border-white/10">
                 <p className="text-xs text-gray-500 mb-4 text-center">Síguenos en redes sociales</p>
                 <div className="flex justify-center gap-6">
@@ -331,20 +247,15 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      <div 
+      <div
         className="min-h-screen font-sans flex flex-col overflow-hidden relative"
-        style={{ 
+        style={{
           background: `linear-gradient(to bottom right, ${siteConfig.backgroundColor || '#320A0A'}, #0A0604)`,
           color: siteConfig.textColor || '#FFFFFF'
         }}
       >
-        
-        {/* Decorative gradient overlay - Opcional */}
-        {/* <div className="absolute inset-0 bg-gradient-to-b from-[#6B1F1A]/20 via-transparent to-black/40 pointer-events-none" /> */}
-        
         {/* Header */}
         <header className="flex items-center justify-between p-4 sm:p-6 z-20 max-w-7xl mx-auto w-full relative">
-          {/* Botón de menú hamburguesa */}
           <button
             onClick={() => setShowSidebar(true)}
             aria-label="Abrir menú de navegación"
@@ -353,7 +264,7 @@ export default function App() {
             <Menu className="w-5 h-5 text-white" aria-hidden="true" />
           </button>
 
-          {/* Logo del restaurante */}
+          {/* Logo */}
           {siteConfig.logo ? (
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
               <img
@@ -375,7 +286,7 @@ export default function App() {
             </div>
           )}
 
-          {/* Redes sociales SOLO en escritorio (header) */}
+          {/* Social + cart – desktop */}
           <div className="hidden md:flex items-center ml-auto gap-6">
             <div className="flex items-center gap-4">
               {siteConfig.instagram && (
@@ -394,9 +305,7 @@ export default function App() {
                 </a>
               )}
             </div>
-            {/* Separador visual */}
             <div className="h-6 w-px bg-white/30 mx-2" />
-            {/* Carrito SOLO escritorio */}
             <button
               onClick={() => setShowCart(true)}
               aria-label={`Abrir carrito de compras, ${itemCount} ${itemCount === 1 ? 'producto' : 'productos'}`}
@@ -404,7 +313,7 @@ export default function App() {
             >
               <ShoppingCart className="w-5 h-5 text-white" aria-hidden="true" />
               {itemCount > 0 && (
-                <span 
+                <span
                   className="absolute -top-1 -right-1 w-5 h-5 text-white text-xs font-bold rounded-full flex items-center justify-center"
                   style={{ backgroundColor: siteConfig.primaryColor || '#FF9F0A' }}
                   aria-live="polite"
@@ -415,7 +324,7 @@ export default function App() {
             </button>
           </div>
 
-          {/* Carrito SOLO móvil (header) */}
+          {/* Cart – mobile */}
           <div className="flex md:hidden items-center ml-auto">
             <button
               onClick={() => setShowCart(true)}
@@ -425,7 +334,7 @@ export default function App() {
             >
               <ShoppingCart className="w-5 h-5 text-white" aria-hidden="true" />
               {itemCount > 0 && (
-                <span 
+                <span
                   className="absolute -top-1 -right-1 w-5 h-5 text-white text-xs font-bold rounded-full flex items-center justify-center"
                   style={{ backgroundColor: siteConfig.primaryColor || '#FF9F0A' }}
                   aria-live="polite"
@@ -437,7 +346,7 @@ export default function App() {
           </div>
         </header>
 
-        {/* Restaurant Status Banner - Solo mostrar cuando está CERRADO */}
+        {/* Closed restaurant banner */}
         {siteConfig.openingHours && !restaurantStatus.isOpen && (
           <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 mb-2 sm:mb-4 z-20 relative">
             <motion.div
@@ -449,12 +358,8 @@ export default function App() {
               <div className="flex items-center gap-2 sm:gap-3">
                 <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-red-400" />
                 <div>
-                  <p className="font-bold text-sm sm:text-base text-red-400">
-                    ❌ Cerrado
-                  </p>
-                  <p className="text-xs sm:text-sm text-white/80">
-                    {restaurantStatus.message}
-                  </p>
+                  <p className="font-bold text-sm sm:text-base text-red-400">❌ Cerrado</p>
+                  <p className="text-xs sm:text-sm text-white/80">{restaurantStatus.message}</p>
                 </div>
               </div>
               <button
@@ -471,7 +376,6 @@ export default function App() {
         <AnimatePresence>
           {showScheduleModal && (
             <>
-              {/* Backdrop */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -479,8 +383,6 @@ export default function App() {
                 onClick={() => setShowScheduleModal(false)}
                 className="fixed inset-0 bg-black/60 z-50"
               />
-              
-              {/* Modal */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -490,10 +392,7 @@ export default function App() {
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-2xl font-bold text-white flex items-center gap-2">
-                      <Clock 
-                        className="w-6 h-6" 
-                        style={{ color: siteConfig.primaryColor || '#FF9F0A' }}
-                      />
+                      <Clock className="w-6 h-6" style={{ color: siteConfig.primaryColor || '#FF9F0A' }} />
                       Horarios de Atención
                     </h3>
                     <button
@@ -508,10 +407,7 @@ export default function App() {
                     {getScheduleDisplay(siteConfig).map((daySchedule, index) => {
                       const [dayName, hours] = daySchedule.split(': ');
                       return (
-                        <div
-                          key={index}
-                          className="flex justify-between items-center p-3 bg-white/5 rounded-lg"
-                        >
+                        <div key={index} className="flex justify-between items-center p-3 bg-white/5 rounded-lg">
                           <span className="text-white font-medium">{dayName}</span>
                           <span className="text-gray-400">{hours}</span>
                         </div>
@@ -521,9 +417,7 @@ export default function App() {
 
                   {siteConfig.allowOrdersOutsideHours && (
                     <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-lg">
-                      <p className="text-sm text-green-400 text-center">
-                        ✅ Pedidos disponibles 24/7
-                      </p>
+                      <p className="text-sm text-green-400 text-center">✅ Pedidos disponibles 24/7</p>
                     </div>
                   )}
                 </div>
@@ -532,411 +426,54 @@ export default function App() {
           )}
         </AnimatePresence>
 
-        {/* Contenido principal */}
+        {/* Main content */}
         <main className="flex-1 max-w-7xl mx-auto w-full px-3 sm:px-6 pb-2 sm:pb-8 relative">
-          {/* Vista de Hamburguesas */}
+          {/* ✅ Issue 1: Views extracted to dedicated components */}
           {isBurgerCategory && selectedProduct ? (
-            <div className="z-20 w-full">
-              
-              {/* ✨ Selector de productos - Carrusel en móvil, botones en desktop ✨ */}
-              {categoryProducts.length > 0 && (
-                <>
-                  {/* Desktop: Botones horizontales */}
-                  <div className="hidden md:flex gap-2 lg:gap-3 pb-2 lg:pb-4 mb-4 lg:mb-6 justify-center flex-wrap">
-                    {categoryProducts.map((prod, index) => (
-                      <button
-                        key={prod.id}
-                        onClick={() => setSelectedProductIndex(index)}
-                        className="flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-medium transition-all"
-                        style={selectedProductIndex === index ? {
-                          background: `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`,
-                          color: '#FFFFFF',
-                          boxShadow: `0 10px 15px -3px ${siteConfig.primaryColor || '#FF9F0A'}4D`
-                        } : {
-                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                          color: '#D1D5DB'
-                        }}
-                        onMouseEnter={(e) => {
-                          if (selectedProductIndex !== index) {
-                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (selectedProductIndex !== index) {
-                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                          }
-                        }}
-                      >
-                        {prod?.name}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Móvil: Carrusel con drag */}
-                  <div className="md:hidden mb-4">
-                    <div className="relative overflow-hidden">
-                      <motion.div
-                        drag="x"
-                        dragConstraints={{ left: 0, right: 0 }}
-                        dragElastic={0.2}
-                        onDragEnd={(e, { offset, velocity }) => {
-                          const swipeThreshold = 50;
-                          const velocityThreshold = 200;
-                          
-                          if ((offset.x < -swipeThreshold || velocity.x < -velocityThreshold) && selectedProductIndex < categoryProducts.length - 1) {
-                            setSelectedProductIndex(selectedProductIndex + 1);
-                          } else if ((offset.x > swipeThreshold || velocity.x > velocityThreshold) && selectedProductIndex > 0) {
-                            setSelectedProductIndex(selectedProductIndex - 1);
-                          }
-                        }}
-                        className="cursor-grab active:cursor-grabbing"
-                      >
-                        <motion.div
-                          key={selectedProductIndex}
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -20 }}
-                          className="flex justify-center px-4"
-                        >
-                          <div 
-                            className="text-white px-6 py-3 rounded-xl text-center font-medium max-w-full"
-                            style={{
-                              background: `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`,
-                              boxShadow: `0 10px 15px -3px ${siteConfig.primaryColor || '#FF9F0A'}4D`
-                            }}
-                          >
-                            {categoryProducts[selectedProductIndex]?.name}
-                          </div>
-                        </motion.div>
-                      </motion.div>
-                    </div>
-                    {/* Indicadores de carrusel */}
-                    <div className="flex justify-center gap-1.5 mt-3">
-                      {categoryProducts.map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={() => setSelectedProductIndex(index)}
-                          className="h-1.5 rounded-full transition-all"
-                          style={selectedProductIndex === index ? {
-                            width: '1.5rem',
-                            backgroundColor: siteConfig.primaryColor || '#FF9F0A'
-                          } : {
-                            width: '0.375rem',
-                            backgroundColor: '#4B5563'
-                          }}
-                          onMouseEnter={(e) => {
-                            if (selectedProductIndex !== index) {
-                              e.currentTarget.style.backgroundColor = '#6B7280';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (selectedProductIndex !== index) {
-                              e.currentTarget.style.backgroundColor = '#4B5563';
-                            }
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-
-              {/* El contenedor original de la hamburguesa */}
-              <div className="flex flex-col lg:flex-row items-center justify-center gap-0 lg:gap-8 xl:gap-16">
-                {/* Burger Visualization */}
-                <div className="w-full lg:w-1/2 relative flex flex-col items-center justify-end py-0 lg:py-8 z-10 min-h-[160px] lg:min-h-[400px]">
-                  <LayeredProductView 
-                    isCollapsed={!showMeatSelector}
-                    product={selectedProduct}
-                    selectedOptions={{
-                      [selectedProduct.linkedOptionGroupId || 'meat-type']: selectedMeat.id
-                    }}
-                    direction={direction}
-                    shouldAnimate={!showSidebar && !showCart}
-                  />
-                </div>
-
-              {/* Info Panel */}
-              <div className="w-full lg:w-1/2 flex flex-col z-20 bg-[#0A0A0A]/40 lg:bg-transparent p-3 sm:p-4 lg:p-0 rounded-2xl lg:rounded-[2rem] backdrop-blur-md border border-white/5 lg:border-none shadow-2xl lg:shadow-none">
-                <motion.div
-                  key={selectedProduct.id + '-title'}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4 }}
-                  className="mb-0 lg:mb-4 text-center lg:text-left"
-                >
-                  <h1 className="text-lg sm:text-xl lg:text-4xl xl:text-5xl font-bold mb-0 lg:mb-3 tracking-tight">{selectedProduct?.name}</h1>
-                  <div className="flex items-center justify-center lg:justify-start gap-1 text-gray-400 text-[10px] lg:text-base">
-                    <MapPin className="w-2.5 h-2.5 lg:w-4 lg:h-4" />
-                    <span>Sucursal Principal</span>
-                  </div>
-                </motion.div>
-
-                {selectedMeat ? (
-                  <NutritionalInfo meat={{
-                    id: selectedMeat.id,
-                    name: selectedMeat?.name,
-                    style: '',
-                    price: selectedProduct.price + selectedMeat.price,
-                    calories: (selectedProduct.calories || 0) + selectedMeat.calories,
-                    protein: (selectedProduct.protein || 0) + selectedMeat.protein,
-                    fat: (selectedProduct.fat || 0) + selectedMeat.fat,
-                    carbs: (selectedProduct.carbs || 0) + selectedMeat.carbs,
-                    shortName: selectedMeat?.name,
-                  }} />
-                ) : (
-                  <div className="text-center text-gray-400 py-4">No hay información nutricional.</div>
-                )}
-
-                {/* Botón Seleccionar con estilo glass */}
-                {!showMeatSelector && !meatSelected && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    onClick={() => {
-                      setShowMeatSelector(true);
-                    }}
-                    className="w-full mt-1 lg:mt-6 px-6 py-2.5 lg:py-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white font-semibold hover:bg-white/20 transition-all shadow-lg hover:shadow-xl text-sm lg:text-lg"
-                  >
-                    Seleccionar
-                  </motion.button>
-                )}
-                
-
-
-                <AnimatePresence>
-                  {showMeatSelector && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.3 }}
-                      className="mb-2 lg:mb-6"
-                    >
-                      <h3 className="text-xs font-semibold text-gray-400 mb-1 lg:mb-3 text-center lg:text-left">
-                        {meatOptionGroup ? meatOptionGroup.name : 'Selecciona tu opción'}
-                      </h3>
-                      <MeatSelector 
-                        meats={meats}
-                        selectedIndex={meatIndex}
-                        onSelect={handleMeatChange}
-                      />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {showMeatSelector && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                    onClick={() => {
-                      // Mostrar modal de opciones extra si existen y están habilitadas
-                      const extraOptions = (selectedProduct.optionGroupIds?.filter(id => id !== linkedGroupId) || []).filter(id => {
-                        const group = optionGroups.find(g => g.id === id);
-                        return group && group.enabled;
-                      });
-                      if (extraOptions.length > 0) {
-                        setShowMeatSelector(false);
-                        setMeatSelected(true);
-                        setShowBurgerOptions(true);
-                      } else {
-                        // Agregamos el producto al carrito de inmediato (el contador 🛒 subirá)
-                        addItem(selectedProduct, meats[meatIndex], undefined, 1);
-                        // Ocultamos el selector para que inicie la animación de colapso
-                        setShowMeatSelector(false);
-                        // NO reseteamos la carne ni el estado visual
-                      }
-                    }}
-                    className="w-full text-white rounded-full py-2 sm:py-2.5 lg:py-4 px-4 sm:px-6 lg:px-8 flex items-center justify-center font-bold text-sm sm:text-base lg:text-xl relative overflow-hidden"
-                    style={{
-                      background: `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`,
-                      boxShadow: `0 10px 25px rgba(${parseInt(siteConfig.primaryColor?.slice(1, 3) || 'FF', 16)}, ${parseInt(siteConfig.primaryColor?.slice(3, 5) || '9F', 16)}, ${parseInt(siteConfig.primaryColor?.slice(5, 7) || '0A', 16)}, 0.4)`
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-[1.5s]" />
-                    <span className="relative z-10">Elegir</span>
-                  </motion.button>
-                )}
-              </div>
-            </div>
-
-            {/* ✨ NUEVO: Modal que se abrirá con las opciones extra de la hamburguesa */}
-            {showBurgerOptions && (
-              <ProductOptionsModal
-                product={selectedProduct}
-                isOpen={showBurgerOptions}
-                onClose={() => setShowBurgerOptions(false)}
-                excludedGroupIds={[linkedGroupId]} // Ocultamos la carne para que no la pida doble
-                basePriceOverride={selectedProduct.price + selectedMeat.price} // Le pasamos el precio con la carne incluida
-                onConfirm={(selectedOptions, notes) => {
-                  // Agregar al carrito
-                  addItem(selectedProduct, selectedMeat, selectedOptions, 1, notes);
-                  // Cerrar modales (inicia la animación de colapso en el fondo)
-                  setShowBurgerOptions(false);
-                  // NO reseteamos la carne ni el estado visual
-                }}
-              />
-            )}
-            </div>
+            <BurgerView
+              categoryProducts={categoryProducts}
+              selectedProduct={selectedProduct}
+              selectedProductIndex={selectedProductIndex}
+              onSelectProductIndex={setSelectedProductIndex}
+              meats={meats}
+              meatIndex={meatIndex}
+              prevMeatIndex={prevMeatIndex}
+              onMeatChange={handleMeatChange}
+              optionGroups={optionGroups}
+              linkedGroupId={linkedGroupId}
+              selectedMeat={selectedMeat}
+              siteConfig={siteConfig}
+              showSidebar={showSidebar}
+              showCart={showCart}
+              onAddItem={addItem}
+            />
           ) : showInteractiveView && selectedProduct ? (
-            /* Vista Interactiva para Productos con Opciones */
-            <div 
-              className="z-20 w-full"
+            <InteractiveView
+              categoryProducts={categoryProducts}
+              selectedProduct={selectedProduct}
+              selectedProductIndex={selectedProductIndex}
+              onSelectProductIndex={setSelectedProductIndex}
+              siteConfig={siteConfig}
+              onAddToCart={(selectedOptions, notes) => {
+                addItem(selectedProduct, undefined, selectedOptions, 1, notes);
+                setShowCart(true);
+              }}
               onTouchStart={handleTouchStart}
               onTouchEnd={handleTouchEnd}
-            >
-              {/* Product Selector si hay múltiples productos - Responsive */}
-              {categoryProducts.length > 1 && (
-                <>
-                  {/* Desktop: Botones horizontales */}
-                  <div className="hidden md:flex gap-2 lg:gap-3 pb-2 lg:pb-4 mb-4 lg:mb-6 justify-center flex-wrap">
-                    {categoryProducts.map((prod, index) => (
-                      <button
-                        key={prod.id}
-                        onClick={() => setSelectedProductIndex(index)}
-                        className="flex-shrink-0 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-medium transition-all"
-                        style={selectedProductIndex === index ? {
-                          background: `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`,
-                          color: '#FFFFFF',
-                          boxShadow: `0 10px 15px -3px ${siteConfig.primaryColor || '#FF9F0A'}4D`
-                        } : {
-                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                          color: '#D1D5DB'
-                        }}
-                        onMouseEnter={(e) => {
-                          if (selectedProductIndex !== index) {
-                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (selectedProductIndex !== index) {
-                            e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                          }
-                        }}
-                      >
-                        {prod?.name}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Móvil: Carrusel con drag */}
-                  <div className="md:hidden mb-4">
-                    <div className="relative overflow-hidden">
-                      <motion.div
-                        drag="x"
-                        dragConstraints={{ left: 0, right: 0 }}
-                        dragElastic={0.2}
-                        onDragEnd={(e, { offset, velocity }) => {
-                          const swipeThreshold = 50;
-                          const velocityThreshold = 200;
-                          
-                          if ((offset.x < -swipeThreshold || velocity.x < -velocityThreshold) && selectedProductIndex < categoryProducts.length - 1) {
-                            setSelectedProductIndex(selectedProductIndex + 1);
-                          } else if ((offset.x > swipeThreshold || velocity.x > velocityThreshold) && selectedProductIndex > 0) {
-                            setSelectedProductIndex(selectedProductIndex - 1);
-                          }
-                        }}
-                        className="cursor-grab active:cursor-grabbing"
-                      >
-                        <motion.div
-                          key={selectedProductIndex}
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -20 }}
-                          className="flex justify-center px-4"
-                        >
-                          <div 
-                            className="text-white px-6 py-3 rounded-xl text-center font-medium max-w-full"
-                            style={{
-                              background: `linear-gradient(to right, ${siteConfig.primaryColor || '#FF9F0A'}, ${siteConfig.secondaryColor || '#FF7A00'})`,
-                              boxShadow: `0 10px 15px -3px ${siteConfig.primaryColor || '#FF9F0A'}4D`
-                            }}
-                          >
-                            {categoryProducts[selectedProductIndex]?.name}
-                          </div>
-                        </motion.div>
-                      </motion.div>
-                    </div>
-                    {/* Indicadores de carrusel */}
-                    <div className="flex justify-center gap-1.5 mt-3">
-                      {categoryProducts.map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={() => setSelectedProductIndex(index)}
-                          className="h-1.5 rounded-full transition-all"
-                          style={selectedProductIndex === index ? {
-                            width: '1.5rem',
-                            backgroundColor: siteConfig.primaryColor || '#FF9F0A'
-                          } : {
-                            width: '0.375rem',
-                            backgroundColor: '#4B5563'
-                          }}
-                          onMouseEnter={(e) => {
-                            if (selectedProductIndex !== index) {
-                              e.currentTarget.style.backgroundColor = '#6B7280';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (selectedProductIndex !== index) {
-                              e.currentTarget.style.backgroundColor = '#4B5563';
-                            }
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-
-              <InteractiveProductView
-                product={selectedProduct}
-                onAddToCart={(selectedOptions, notes) => {
-                  addItem(selectedProduct, undefined, selectedOptions, 1, notes);
-                  setShowCart(true);
-                }}
-              />
-            </div>
+            />
           ) : (
-            /* Vista de Otras Categorías (Grid de Productos) */
-            <div className="z-20">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 lg:mb-8"
-              >
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">{selectedCategory?.name}</h2>
-                {selectedCategory?.description && (
-                  <p className="text-sm sm:text-base text-gray-400">{selectedCategory.description}</p>
-                )}
-              </motion.div>
-
-              {categoryProducts.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
-                  {categoryProducts.map((product) => (
-                    <ProductCard
-                      {...{ key: product.id }}
-                      product={product}
-                      onOrder={() => {
-                        addItem(product, undefined, undefined, 1);
-                        setShowCart(true);
-                      }}
-                      onOrderWithOptions={(selectedOptions, notes) => {
-                        addItem(product, undefined, selectedOptions, 1, notes);
-                        setShowCart(true);
-                      }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-16 sm:py-20">
-                  <p className="text-gray-400 text-base sm:text-lg">No hay productos disponibles en esta categoría</p>
-                </div>
-              )}
-            </div>
+            <GridView
+              categoryProducts={categoryProducts}
+              selectedCategory={selectedCategory}
+              onOrder={(product) => {
+                addItem(product, undefined, undefined, 1);
+                setShowCart(true);
+              }}
+              onOrderWithOptions={(product, selectedOptions, notes) => {
+                addItem(product, undefined, selectedOptions, 1, notes);
+                setShowCart(true);
+              }}
+            />
           )}
         </main>
       </div>

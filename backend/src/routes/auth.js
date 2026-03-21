@@ -77,7 +77,9 @@ router.post('/verify-password', authenticateToken, async (req, res) => {
   }
 });
 
-router.post('/register', async (req, res) => {
+// ✅ Issue 3: Protected route – only an authenticated admin can create new users.
+// Without a valid JWT token this returns 401 Unauthorized.
+router.post('/register', authenticateToken, async (req, res) => {
   try {
     const { username, password } = req.body;
 

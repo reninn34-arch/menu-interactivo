@@ -4,6 +4,13 @@
  */
 
 import type { Product, Category, Ingredient, ProductOptionGroup as OptionGroup, SiteConfig } from '../types';
+import type {
+  ProductApiResponse,
+  CategoryApiResponse,
+  IngredientApiResponse,
+  OptionGroupApiResponse,
+  OptionValueApiResponse,
+} from '../types/api';
 import * as api from './api';
 
 const STORAGE_MODE = import.meta.env.VITE_STORAGE_MODE || 'localStorage';
@@ -87,13 +94,13 @@ const saveToLocalStorage = <T,>(key: string, value: T): void => {
   }
 };
 
-// Transform functions for API data
-const transformProductFromAPI = (product: any): Product => ({
+// ✅ Issue 4: Transform functions use typed API response interfaces instead of `any`
+const transformProductFromAPI = (product: ProductApiResponse): Product => ({
   id: product.id,
   categoryId: product.category_id,
   name: product.name,
   description: product.description,
-  price: parseFloat(product.price),
+  price: parseFloat(String(product.price)),
   image: product.image,
   enabled: product.enabled,
   featured: product.featured,
@@ -109,14 +116,14 @@ const transformProductFromAPI = (product: any): Product => ({
   carbs: product.nutritional_info?.carbs,
   // Handle both shapes: products_full view (arrays of objects) and PUT/POST response (flat ID arrays)
   ingredientIds: product.ingredient_ids
-    || product.ingredients?.map((i: any) => i.id)
+    || product.ingredients?.map((i) => i.id)
     || [],
   optionGroupIds: product.option_group_ids
-    || product.option_groups?.map((g: any) => g.id)
+    || product.option_groups?.map((g) => g.id)
     || [],
 });
 
-const transformCategoryFromAPI = (category: any): Category => ({
+const transformCategoryFromAPI = (category: CategoryApiResponse): Category => ({
   id: category.id,
   name: category.name,
   description: category.description,
@@ -127,17 +134,17 @@ const transformCategoryFromAPI = (category: any): Category => ({
   isMain: category.is_main,
 });
 
-const transformIngredientFromAPI = (ingredient: any): Ingredient => ({
+const transformIngredientFromAPI = (ingredient: IngredientApiResponse): Ingredient => ({
   id: ingredient.id,
   name: ingredient.name,
-  type: ingredient.type,
+  type: ingredient.type as Ingredient['type'],
   enabled: ingredient.enabled,
   order: ingredient.order_index,
   isVariable: ingredient.is_variable,
   image: ingredient.image,
 });
 
-const transformOptionGroupFromAPI = (group: any): OptionGroup => ({
+const transformOptionGroupFromAPI = (group: OptionGroupApiResponse): OptionGroup => ({
   id: group.id,
   name: group.name,
   description: group.description,
@@ -149,10 +156,10 @@ const transformOptionGroupFromAPI = (group: any): OptionGroup => ({
   order: group.order_index,
   is3DLayer: group.is_3d_layer || false,
   layerOrder: group.layer_order || 5,
-  values: group.values?.map((v: any) => ({
+  values: group.values?.map((v: OptionValueApiResponse) => ({
     id: v.id,
     name: v.name,
-    priceModifier: parseFloat(v.price_modifier || 0),
+    priceModifier: parseFloat(String(v.price_modifier || 0)),
     enabled: v.enabled,
     order: v.order_index,
     image: v.image,
@@ -170,7 +177,7 @@ export const storageAdapter = {
   async loadCategories(defaultValue: Category[]): Promise<Category[]> {
     if (STORAGE_MODE === 'api') {
       try {
-        const data = await api.categoriesApi.getAll();
+        const data = await api.categoriesApi.getAll() as unknown as CategoryApiResponse[];
         return data.map(transformCategoryFromAPI);
       } catch (error) {
         console.error('Failed to load categories from API:', error);
@@ -190,7 +197,7 @@ export const storageAdapter = {
 
   async addCategory(category: Category): Promise<Category> {
     if (STORAGE_MODE === 'api') {
-      const result = await api.categoriesApi.create(category);
+      const result = await api.categoriesApi.create(category) as unknown as CategoryApiResponse;
       return transformCategoryFromAPI(result);
     }
     return category;
@@ -198,7 +205,7 @@ export const storageAdapter = {
 
   async updateCategory(id: string, category: Category): Promise<Category> {
     if (STORAGE_MODE === 'api') {
-      const result = await api.categoriesApi.update(id, category);
+      const result = await api.categoriesApi.update(id, category) as unknown as CategoryApiResponse;
       return transformCategoryFromAPI(result);
     }
     return category;
@@ -214,7 +221,7 @@ export const storageAdapter = {
   async loadProducts(defaultValue: Product[]): Promise<Product[]> {
     if (STORAGE_MODE === 'api') {
       try {
-        const data = await api.productsApi.getAll();
+        const data = await api.productsApi.getAll() as unknown as ProductApiResponse[];
         return data.map(transformProductFromAPI);
       } catch (error) {
         console.error('Failed to load products from API:', error);
@@ -233,7 +240,7 @@ export const storageAdapter = {
 
   async addProduct(product: Product): Promise<Product> {
     if (STORAGE_MODE === 'api') {
-      const result = await api.productsApi.create(product);
+      const result = await api.productsApi.create(product) as unknown as ProductApiResponse;
       return transformProductFromAPI(result);
     }
     return product;
@@ -241,7 +248,7 @@ export const storageAdapter = {
 
   async updateProduct(id: string, product: Product): Promise<Product> {
     if (STORAGE_MODE === 'api') {
-      const result = await api.productsApi.update(id, product);
+      const result = await api.productsApi.update(id, product) as unknown as ProductApiResponse;
       return transformProductFromAPI(result);
     }
     return product;
@@ -257,7 +264,7 @@ export const storageAdapter = {
   async loadIngredients(defaultValue: Ingredient[]): Promise<Ingredient[]> {
     if (STORAGE_MODE === 'api') {
       try {
-        const data = await api.ingredientsApi.getAll();
+        const data = await api.ingredientsApi.getAll() as unknown as IngredientApiResponse[];
         return data.map(transformIngredientFromAPI);
       } catch (error) {
         console.error('Failed to load ingredients from API:', error);
@@ -276,7 +283,7 @@ export const storageAdapter = {
 
   async addIngredient(ingredient: Ingredient): Promise<Ingredient> {
     if (STORAGE_MODE === 'api') {
-      const result = await api.ingredientsApi.create(ingredient);
+      const result = await api.ingredientsApi.create(ingredient) as unknown as IngredientApiResponse;
       return transformIngredientFromAPI(result);
     }
     return ingredient;
@@ -284,7 +291,7 @@ export const storageAdapter = {
 
   async updateIngredient(id: string, ingredient: Ingredient): Promise<Ingredient> {
     if (STORAGE_MODE === 'api') {
-      const result = await api.ingredientsApi.update(id, ingredient);
+      const result = await api.ingredientsApi.update(id, ingredient) as unknown as IngredientApiResponse;
       return transformIngredientFromAPI(result);
     }
     return ingredient;
@@ -300,7 +307,7 @@ export const storageAdapter = {
   async loadOptionGroups(defaultValue: OptionGroup[]): Promise<OptionGroup[]> {
     if (STORAGE_MODE === 'api') {
       try {
-        const data = await api.optionGroupsApi.getAll();
+        const data = await api.optionGroupsApi.getAll() as unknown as OptionGroupApiResponse[];
         return data.map(transformOptionGroupFromAPI);
       } catch (error) {
         console.error('Failed to load option groups from API:', error);
@@ -319,7 +326,7 @@ export const storageAdapter = {
 
   async addOptionGroup(group: OptionGroup): Promise<OptionGroup> {
     if (STORAGE_MODE === 'api') {
-      const result = await api.optionGroupsApi.create(group);
+      const result = await api.optionGroupsApi.create(group) as unknown as OptionGroupApiResponse;
       return transformOptionGroupFromAPI(result);
     }
     return group;
@@ -327,7 +334,7 @@ export const storageAdapter = {
 
   async updateOptionGroup(id: string, group: OptionGroup): Promise<OptionGroup> {
     if (STORAGE_MODE === 'api') {
-      const result = await api.optionGroupsApi.update(id, group);
+      const result = await api.optionGroupsApi.update(id, group) as unknown as OptionGroupApiResponse;
       return transformOptionGroupFromAPI(result);
     }
     return group;

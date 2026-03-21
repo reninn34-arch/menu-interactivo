@@ -31,6 +31,20 @@ export const CategoryEditor = () => {
   };
 
   const handleSave = () => {
+    if (!formData.name?.trim()) {
+      alert('⚠️ La categoría debe tener un nombre.');
+      return;
+    }
+    
+    // Verificar nombres duplicados
+    const isDuplicate = categories.some(
+      c => c.name.trim().toLowerCase() === formData.name?.trim().toLowerCase() && c.id !== formData.id
+    );
+    if (isDuplicate) {
+      alert('⚠️ Ya existe una categoría con este nombre. Por favor, elige otro.');
+      return;
+    }
+
     if (isAdding && formData.id) {
       addCategory(formData as Category);
       setIsAdding(false);

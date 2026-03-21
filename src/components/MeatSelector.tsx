@@ -51,7 +51,17 @@ export const MeatSelector = ({ meats, selectedIndex, onSelect }: MeatSelectorPro
                 className="w-full h-full object-contain drop-shadow-lg"
               />
             ) : (
-              <div className={`w-full h-full rounded-[12px] bg-gradient-to-b ${meat.style} shadow-[inset_0_-4px_8px_rgba(0,0,0,0.6),0_4px_8px_rgba(0,0,0,0.4)] relative overflow-hidden`}>
+              // ✅ Issue 5: Use inline style instead of dynamic Tailwind class interpolation.
+              // Tailwind cannot detect classes built via string interpolation (e.g. `bg-gradient-to-b ${meat.style}`)
+              // and purges them in production. Inline styles always work for runtime-dynamic values.
+              <div
+                className="w-full h-full rounded-[12px] shadow-[inset_0_-4px_8px_rgba(0,0,0,0.6),0_4px_8px_rgba(0,0,0,0.4)] relative overflow-hidden"
+                style={{
+                  background: meat.style?.includes('#') || meat.style?.includes('rgb')
+                    ? `linear-gradient(to bottom, ${meat.style})`
+                    : 'linear-gradient(to bottom, #4B5563, #1F2937)' // Default gray fallback
+                }}
+              >
                 {/* Mini grill marks for thumbnail */}
                 <div className="absolute inset-0 flex justify-around items-center opacity-30 transform -rotate-12 scale-150">
                   <div className="w-1 h-full bg-black blur-[1px]" />

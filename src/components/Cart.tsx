@@ -390,6 +390,7 @@ export const Cart = ({ isOpen, onClose }: CartProps) => {
         subtotal={total}
         deliveryCost={siteConfig.deliveryCost || 0}
         currencySymbol={siteConfig.currencySymbol}
+        siteConfig={siteConfig}
       />
 
       {/* Modal de Restaurante Cerrado */}

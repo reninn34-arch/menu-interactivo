@@ -182,6 +182,7 @@ export const InteractiveProductView = ({ product, onAddToCart }: InteractiveProd
       <div className="w-full lg:w-1/2 max-w-md mx-auto">
         <motion.div
           className="relative"
+          style={{ willChange: 'transform' }}
           animate={isAnimating ? { scale: [1, 0.95, 1.05, 1] } : {}}
           transition={{ duration: 0.6 }}
         >

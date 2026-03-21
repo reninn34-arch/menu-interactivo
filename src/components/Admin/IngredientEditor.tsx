@@ -30,6 +30,20 @@ export const IngredientEditor = () => {
   };
 
   const handleSave = () => {
+    if (!formData.name?.trim()) {
+      alert('⚠️ El ingrediente debe tener un nombre.');
+      return;
+    }
+    
+    // Verificar nombres duplicados
+    const isDuplicate = ingredients.some(
+      i => i.name.trim().toLowerCase() === formData.name?.trim().toLowerCase() && i.id !== formData.id
+    );
+    if (isDuplicate) {
+      alert('⚠️ Ya existe un ingrediente con este nombre. Por favor, elige otro.');
+      return;
+    }
+
     if (isAdding && formData.id) {
       addIngredient(formData as Ingredient);
       setIsAdding(false);

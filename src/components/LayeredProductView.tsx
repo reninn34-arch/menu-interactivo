@@ -138,6 +138,7 @@ export const LayeredProductView = ({
 
   return (
     <motion.div 
+      style={{ willChange: 'transform' }}
       animate={shouldAnimate ? { 
         y: isCollapsed ? [0, -5, 0] : [0, -8, 0],
       } : { y: 0 }}
@@ -164,7 +165,7 @@ export const LayeredProductView = ({
               <motion.div
                 key={`${product.id}-${layer.id}`}
                 className="absolute w-full flex justify-center"
-                style={{ zIndex, bottom: 0 }}
+                style={{ zIndex, bottom: 0, willChange: 'transform' }}
                 animate={{ y: isCollapsed ? yCollapsed : yExpanded }}
                 transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
               >
@@ -175,13 +176,9 @@ export const LayeredProductView = ({
                       src={layer.image}
                       alt={layer.name}
                       className="w-56 h-auto"
+                      style={{ filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.25))', willChange: 'transform' }}
                       initial={{ x: direction > 0 ? 100 : -100, opacity: 0, rotateY: direction > 0 ? 45 : -45 }}
-                      animate={{
-                        x: 0, opacity: 1, rotateY: 0,
-                        filter: isCollapsed
-                          ? 'drop-shadow(0 0px 0px rgba(0,0,0,0))'
-                          : 'drop-shadow(0 20px 25px rgba(0,0,0,0.3))'
-                      }}
+                      animate={{ x: 0, opacity: 1, rotateY: 0 }}
                       exit={{ x: direction > 0 ? -100 : 100, opacity: 0, rotateY: direction > 0 ? -45 : 45 }}
                       transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
                     />
@@ -216,13 +213,8 @@ export const LayeredProductView = ({
                 src={layer.image}
                 alt={layer.name}
                 className="absolute w-56 h-auto"
-                style={{ zIndex, bottom: 0 }}
-                animate={{
-                  filter: isCollapsed
-                    ? 'drop-shadow(0 0px 0px rgba(0,0,0,0))'
-                    : 'drop-shadow(0 20px 25px rgba(0,0,0,0.3))',
-                  y: isCollapsed ? yCollapsed : yExpanded,
-                }}
+                style={{ zIndex, bottom: 0, filter: 'drop-shadow(0 10px 15px rgba(0,0,0,0.25))', willChange: 'transform' }}
+                animate={{ y: isCollapsed ? yCollapsed : yExpanded }}
                 transition={{ duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
               />
             );

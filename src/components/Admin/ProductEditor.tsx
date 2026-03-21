@@ -51,6 +51,15 @@ export const ProductEditor = () => {
       return;
     }
 
+    // Verificar nombres duplicados
+    const isDuplicate = products.some(
+      p => p.name.trim().toLowerCase() === formData.name?.trim().toLowerCase() && p.id !== formData.id
+    );
+    if (isDuplicate) {
+      alert('⚠️ Ya existe un producto con este nombre. Por favor, elige otro.');
+      return;
+    }
+
     // Validar vista por capas si está activada (Eliminado, ya no requiere anclas legacy)
 
     // Guardar

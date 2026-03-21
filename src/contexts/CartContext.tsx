@@ -29,18 +29,37 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
 
   const addItem = (product: Product, meat?: MeatOption, selectedOptions?: SelectedOption[], quantity: number = 1, notes?: string) => {
-    const itemId = `${product.id}-${meat?.id || 'no-meat'}-${Date.now()}`;
-    
-    const newItem: CartItem = {
-      id: itemId,
-      product,
-      meat,
-      selectedOptions,
-      quantity,
-      notes,
-    };
+    setItems(prev => {
+      // ✅ Issue 2: Search for an existing item with the same product, meat, and options
+      // Use JSON.stringify for deep comparison of selectedOptions array
+      const existingItem = prev.find(item =>
+        item.product.id === product.id &&
+        (item.meat?.id ?? null) === (meat?.id ?? null) &&
+        JSON.stringify(item.selectedOptions) === JSON.stringify(selectedOptions) &&
+        (item.notes ?? '') === (notes ?? '')
+      );
 
-    setItems(prev => [...prev, newItem]);
+      if (existingItem) {
+        // Increment quantity instead of creating a duplicate line
+        return prev.map(item =>
+          item.id === existingItem.id
+            ? { ...item, quantity: item.quantity + quantity }
+            : item
+        );
+      }
+
+      // New item – create with a unique id
+      const itemId = `${product.id}-${meat?.id || 'no-meat'}-${Date.now()}`;
+      const newItem: CartItem = {
+        id: itemId,
+        product,
+        meat,
+        selectedOptions,
+        quantity,
+        notes,
+      };
+      return [...prev, newItem];
+    });
   };
 
   const removeItem = (itemId: string) => {
@@ -64,12 +83,14 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const itemCount = items.reduce((total, item) => total + item.quantity, 0);
   
   const total = items.reduce((sum, item) => {
-    const meatPrice = item.meat?.price || 0;
+    const meatPrice = Number(item.meat?.price) || 0;
     const optionsPrice = Array.isArray(item.selectedOptions) 
-      ? item.selectedOptions.reduce((optSum, opt) => optSum + opt.totalPrice, 0) 
+      ? item.selectedOptions.reduce((optSum, opt) => optSum + (Number(opt.totalPrice) || 0), 0) 
       : 0;
-    const itemPrice = item.product.price + meatPrice + optionsPrice;
-    return sum + (itemPrice * item.quantity);
+    const basePrice = Number(item.product?.price) || 0;
+    const itemPrice = basePrice + meatPrice + optionsPrice;
+    const quantity = Number(item.quantity) || 1;
+    return sum + (itemPrice * quantity);
   }, 0);
 
   return (

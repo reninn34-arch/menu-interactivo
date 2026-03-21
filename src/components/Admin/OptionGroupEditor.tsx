@@ -41,6 +41,20 @@ export const OptionGroupEditor = () => {
   };
 
   const handleSaveGroup = () => {
+    if (!groupFormData.name?.trim()) {
+      alert('⚠️ El grupo de opciones debe tener un nombre.');
+      return;
+    }
+    
+    // Verificar nombres duplicados
+    const isDuplicate = optionGroups.some(
+      g => g.name.trim().toLowerCase() === groupFormData.name?.trim().toLowerCase() && g.id !== groupFormData.id
+    );
+    if (isDuplicate) {
+      alert('⚠️ Ya existe un grupo de opciones con este nombre. Por favor, elige otro.');
+      return;
+    }
+
     if (isAddingGroup && groupFormData.id) {
       addOptionGroup(groupFormData as ProductOptionGroup);
       setIsAddingGroup(false);
