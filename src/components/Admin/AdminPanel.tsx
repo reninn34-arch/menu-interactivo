@@ -1,11 +1,15 @@
-import { useState, ElementType } from 'react';
+import { useState, useEffect, ElementType } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Salad, X, Settings, FolderOpen, Package, Sliders, Store, Palette, LogOut } from 'lucide-react';
+import { Salad, X, Settings, FolderOpen, Package, Sliders, Store, Palette, LogOut, LayoutDashboard, Eye, Wand2 } from 'lucide-react';
+import { useConfirm, ConfirmModal } from './ConfirmModal';
 import { IngredientEditor } from './IngredientEditor';
 import { SiteConfigEditor } from './SiteConfigEditor';
 import { CategoryEditor } from './CategoryEditor';
 import { ProductEditor } from './ProductEditor';
 import { OptionGroupEditor } from './OptionGroupEditor';
+import { Dashboard } from './Dashboard';
+import { MenuPreviewModal } from './MenuPreviewModal';
+import { ProductWizard } from './ProductWizard';
 import { useMenu } from '../../contexts/MenuContext';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -13,7 +17,7 @@ interface AdminPanelProps {
   onClose: () => void;
 }
 
-type TabType = 'settings' | 'categories' | 'products' | 'options' | 'ingredients';
+type TabType = 'dashboard' | 'settings' | 'categories' | 'products' | 'options' | 'ingredients';
 
 interface TabConfig {
   id: TabType;
@@ -25,18 +29,69 @@ interface TabConfig {
 }
 
 export const AdminPanel = ({ onClose }: AdminPanelProps) => {
-  const [activeTab, setActiveTab] = useState<TabType>('settings');
+  const [activeTab, setActiveTab] = useState<TabType>('dashboard');
+  const [showPreview, setShowPreview] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
   const { products, categories, optionGroups, ingredients } = useMenu();
   const { logout } = useAuth();
+  const { confirm, close, state: confirmState } = useConfirm();
 
   const handleLogout = () => {
-    if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
-      logout();
-      onClose();
-    }
+    confirm({
+      title: 'Cerrar Sesión',
+      message: '¿Estás seguro de que quieres cerrar sesión? Tendrás que volver a ingresar tus credenciales.',
+      type: 'warning',
+      onConfirm: () => {
+        logout();
+        onClose();
+      }
+    });
   };
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape: Close modals/panel
+      if (e.key === 'Escape') {
+        if (showPreview) setShowPreview(false);
+        else if (showWizard) setShowWizard(false);
+        else onClose();
+      }
+      // Ctrl+N: Open product wizard (only in admin)
+      if (e.ctrlKey && e.key === 'n') {
+        e.preventDefault();
+        setActiveTab('products');
+        setShowWizard(true);
+      }
+      // Ctrl+D: Go to Dashboard
+      if (e.ctrlKey && e.key === 'd') {
+        e.preventDefault();
+        setActiveTab('dashboard');
+      }
+      // Ctrl+1-6: Switch tabs
+      if (e.ctrlKey && ['1', '2', '3', '4', '5', '6'].includes(e.key)) {
+        e.preventDefault();
+        const tabIndex = parseInt(e.key) - 1;
+        const availableTabs = tabs.map(t => t.id);
+        if (availableTabs[tabIndex]) {
+          setActiveTab(availableTabs[tabIndex] as TabType);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showPreview, showWizard, onClose]);
+
   const tabs: TabConfig[] = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      icon: LayoutDashboard,
+      description: 'Resumen y estadísticas',
+      color: 'from-orange-500 to-orange-600',
+      group: 'config'
+    },
     {
       id: 'settings',
       label: 'Configuración',
@@ -306,6 +361,13 @@ export const AdminPanel = ({ onClose }: AdminPanelProps) => {
                   transition={{ duration: 0.2 }}
                   className="bg-gray-900/50 rounded-xl md:rounded-2xl p-4 md:p-6 border border-gray-800/50"
                 >
+                  {activeTab === 'dashboard' && (
+                    <Dashboard 
+                      onNavigate={setActiveTab}
+                      onOpenPreview={() => setShowPreview(true)}
+                      onOpenWizard={() => setShowWizard(true)}
+                    />
+                  )}
                   {activeTab === 'settings' && <SiteConfigEditor />}
                   {activeTab === 'categories' && <CategoryEditor />}
                   {activeTab === 'products' && <ProductEditor />}
@@ -313,6 +375,28 @@ export const AdminPanel = ({ onClose }: AdminPanelProps) => {
                   {activeTab === 'ingredients' && <IngredientEditor />}
                 </motion.div>
               </AnimatePresence>
+
+              {/* Menu Preview Modal */}
+              <MenuPreviewModal 
+                isOpen={showPreview} 
+                onClose={() => setShowPreview(false)} 
+              />
+
+              {/* Product Wizard */}
+              <ProductWizard
+                isOpen={showWizard}
+                onClose={() => setShowWizard(false)}
+              />
+
+              {/* Confirm Modal */}
+              <ConfirmModal
+                isOpen={confirmState.isOpen}
+                onClose={close}
+                onConfirm={confirmState.onConfirm}
+                title={confirmState.title}
+                message={confirmState.message}
+                type={confirmState.type}
+              />
             </div>
           </div>
         </div>
