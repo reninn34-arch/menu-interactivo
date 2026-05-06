@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 const { authenticateToken } = require('../middleware/auth');
+const { validateProduct } = require('../middleware/validation');
 
 router.get('/', async (req, res) => {
   try {
@@ -48,7 +49,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, validateProduct, async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');

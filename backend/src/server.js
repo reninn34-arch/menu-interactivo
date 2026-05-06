@@ -1,11 +1,30 @@
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const pool = require('./config/database');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 100,
+  message: { error: 'Demasiadas solicitudes, intenta de nuevo en un minuto' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Demasiados intentos de inicio de sesión' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use(globalLimiter);
 
 // Configuración de CORS para permitir múltiples orígenes
 const allowedOrigins = [
@@ -80,7 +99,7 @@ app.use('/api/products', productsRoutes);
 app.use('/api/ingredients', ingredientsRoutes);
 app.use('/api/option-groups', optionGroupsRoutes);
 app.use('/api/site-config', siteConfigRoutes);
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use(manifestRoutes); // Sirve manifest.json dinámicamente
 
 app.use((err, req, res, next) => {

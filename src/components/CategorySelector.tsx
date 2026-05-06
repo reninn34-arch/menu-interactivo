@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { Category } from '../types';
 import { useMenu } from '../contexts/MenuContext';
@@ -8,9 +9,13 @@ interface CategorySelectorProps {
   onSelect: (categoryId: string) => void;
 }
 
-export const CategorySelector = ({ categories, selectedId, onSelect }: CategorySelectorProps) => {
+export const CategorySelector = memo(function CategorySelector({ categories, selectedId, onSelect }: CategorySelectorProps) {
   const { siteConfig } = useMenu();
-  const enabledCategories = categories.filter(cat => cat.enabled);
+  
+  const enabledCategories = useMemo(
+    () => categories.filter(cat => cat.enabled),
+    [categories]
+  );
 
   return (
     <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-3 sm:pb-4 scrollbar-hide mb-6 sm:mb-8 -mx-3 px-3 sm:-mx-4 sm:px-4 lg:mx-0 lg:px-0">
@@ -49,4 +54,4 @@ export const CategorySelector = ({ categories, selectedId, onSelect }: CategoryS
       ))}
     </div>
   );
-};
+});

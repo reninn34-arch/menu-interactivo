@@ -1,3 +1,4 @@
+import { memo, FC, ReactNode } from 'react';
 import { motion } from 'motion/react';
 import { ProductCard } from '../ProductCard';
 import { Product, Category, SelectedOption } from '../../types';
@@ -9,13 +10,8 @@ interface GridViewProps {
   onOrderWithOptions: (product: Product, selectedOptions: SelectedOption[], notes?: string) => void;
 }
 
-export const GridView = ({
-  categoryProducts,
-  selectedCategory,
-  onOrder,
-  onOrderWithOptions,
-}: GridViewProps) => {
-  return (
+export const GridView: FC<GridViewProps> = memo(({ categoryProducts, selectedCategory, onOrder, onOrderWithOptions }) => {
+  const renderContent = () => (
     <div className="z-20">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -32,7 +28,7 @@ export const GridView = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6">
           {categoryProducts.map((product) => (
             <ProductCard
-              {...{ key: product.id }}
+              key={product.id}
               product={product}
               onOrder={() => onOrder(product)}
               onOrderWithOptions={(selectedOptions, notes) => onOrderWithOptions(product, selectedOptions, notes)}
@@ -46,4 +42,6 @@ export const GridView = ({
       )}
     </div>
   );
-};
+
+  return renderContent();
+});

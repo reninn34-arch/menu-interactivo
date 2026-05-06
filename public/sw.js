@@ -1,79 +1,96 @@
-const CACHE_NAME = 'menu-interactivo-v3';
-const urlsToCache = [
+const CACHE_NAME = 'menu-interactivo-v4';
+const API_CACHE_NAME = 'menu-api-v1';
+const STATIC_CACHE_NAME = 'menu-static-v1';
+
+const staticUrls = [
   '/',
-  '/index.html'
-  // NO incluir manifest.json para que siempre se obtenga actualizado del servidor
+  '/index.html',
 ];
 
-// Instalación del Service Worker
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Cache abierto');
-        return cache.addAll(urlsToCache);
-      })
+    Promise.all([
+      caches.open(STATIC_CACHE_NAME).then(cache => cache.addAll(staticUrls)),
+      caches.open(CACHE_NAME),
+    ]).then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
-// Activación del Service Worker
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Eliminando cache antiguo:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys().then(keys => Promise.all(
+      keys.filter(k => 
+        k !== CACHE_NAME && 
+        k !== API_CACHE_NAME && 
+        k !== STATIC_CACHE_NAME
+      ).map(caches.delete)
+    )).then(() => self.clients.claim()))
   );
-  self.clients.claim();
 });
 
-// Estrategia: Network First, fallback a Cache
-self.addEventListener('fetch', (event) => {
-  // Solo cachear requests GET con esquema http/https
-  const url = new URL(event.request.url);
-  const isValidScheme = url.protocol === 'http:' || url.protocol === 'https:';
-  const isGetRequest = event.request.method === 'GET';
+const apiCacheStrategy = async (request) => {
+  const cached = await caches.match(request);
+  if (cached) return cached;
   
-  // NUNCA cachear manifest.json para que siempre se obtenga actualizado
-  if (url.pathname === '/manifest.json') {
-    event.respondWith(fetch(event.request));
-    return;
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(API_CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return new Response(JSON.stringify({ error: 'Offline' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
+};
+
+const staticCacheStrategy = async (request) => {
+  const cached = await caches.match(request);
+  if (cached) return cached;
   
-  if (!isValidScheme || !isGetRequest) {
-    // No cachear extensiones, chrome://, POST, PUT, etc.
+  const response = await fetch(request);
+  if (response.ok) {
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(request, response.clone());
+  }
+  return response;
+};
+
+const networkFirstStrategy = async (request) => {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    return cached || new Response('Offline', { status: 503 });
+  }
+};
+
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  const isGet = event.request.method === 'GET';
+  
+  if (!isGet) {
     event.respondWith(fetch(event.request));
     return;
   }
 
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Si la respuesta es válida, guardarla en cache
-        if (response && response.status === 200 && response.type === 'basic') {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        // Si falla la red, usar cache
-        return caches.match(event.request).then((response) => {
-          if (response) {
-            return response;
-          }
-          // Si no hay en cache, devolver página offline
-          return caches.match('/');
-        });
-      })
-  );
+  if (url.pathname === '/manifest.json' || url.pathname.startsWith('/api/')) {
+    event.respondWith(apiCacheStrategy(event.request));
+    return;
+  }
+
+  if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css') || url.pathname.endsWith('.woff2')) {
+    event.respondWith(staticCacheStrategy(event.request));
+    return;
+  }
+
+  event.respondWith(networkFirstStrategy(event.request));
 });

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
+import { BrowserRouter, Routes, Route, useParams, useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShoppingCart, Menu, X, Clock, Loader2, AlertCircle, Instagram, Facebook, Music2 } from 'lucide-react';
 
@@ -18,10 +19,20 @@ import { useTouchNavigation } from './hooks/useTouchNavigation';
 import { isRestaurantOpen, getScheduleDisplay } from './utils/openingHours';
 
 export default function App() {
-  // ALL HOOKS GO FIRST
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
+  );
+}
+
+function AppContent() {
   const { products, categories, optionGroups, siteConfig, isLoading, error } = useMenu();
   const { itemCount, addItem } = useCart();
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const { categoryId } = useParams<{ categoryId?: string }>();
+  
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [selectedProductIndex, setSelectedProductIndex] = useState(0);
   const [meatIndex, setMeatIndex] = useState(0);
@@ -53,6 +64,14 @@ export default function App() {
       setSelectedProductIndex(0);
     }
   }, [categories, selectedCategoryId]);
+
+  // ✅ Route param: sync category from URL
+  useEffect(() => {
+    if (categoryId && categories.find(c => c.id === categoryId)) {
+      setSelectedCategoryId(categoryId);
+      setSelectedProductIndex(0);
+    }
+  }, [categoryId, categories]);
 
   // Loading state
   if (isLoading) {
@@ -189,8 +208,9 @@ export default function App() {
                 </div>
                 <div className="space-y-2">
                   {categories.map(category => (
-                    <button
+                    <Link
                       key={category.id}
+                      to={`/menu/${category.id}`}
                       onClick={() => {
                         setSelectedCategoryId(category.id);
                         setShowSidebar(false);
@@ -221,7 +241,7 @@ export default function App() {
                           <div className="text-xs opacity-75 line-clamp-1">{category.description}</div>
                         )}
                       </div>
-                    </button>
+                    </Link>
                   ))}
                 </div>
               </div>
